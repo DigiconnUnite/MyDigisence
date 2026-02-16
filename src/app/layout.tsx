@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { QueryProvider } from "@/lib/queryProvider";
+import SmoothScroll from "@/components/SmoothScroll";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -46,7 +47,9 @@ export default function RootLayout({
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
-              {children}
+              <SmoothScroll>
+                {children}
+              </SmoothScroll>
               <Toaster />
             </AuthProvider>
           </QueryProvider>

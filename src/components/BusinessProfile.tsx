@@ -331,6 +331,8 @@ export default function BusinessProfile({
     autoPlay: true,
     transitionSpeed: 5,
   };
+  // Ensure heroContent.slides is always an array (defensive check)
+  const safeSlides = Array.isArray(heroContent.slides) ? heroContent.slides : [];
 
   // Autoplay functionality for hero carousel
   useEffect(() => {
@@ -357,9 +359,9 @@ export default function BusinessProfile({
   }, [heroContent.slides?.length]);
 
   // Default brand content if not set
-  const brandContent = (business.brandContent as any) || {
-    brands: [],
-  };
+  const brandContent = (business.brandContent as any) || { brands: [] };
+  // Ensure brandContent.brands is always an array (defensive check)
+  const safeBrands = Array.isArray(brandContent.brands) ? brandContent.brands : [];
 
   // Default category content if not set
   const categoryContent = business.category
@@ -372,6 +374,8 @@ export default function BusinessProfile({
 
   // Default portfolio content if not set
   const portfolioContent = (business.portfolioContent as any) || { images: [] };
+  // Ensure portfolioContent.images is always an array (defensive check)
+  const safePortfolioImages = Array.isArray(portfolioContent.images) ? portfolioContent.images : [];
 
   // Categories and filtered products for search/filter - memoized for performance
   const { categories, filteredProducts } = useMemo(() => {
@@ -1427,7 +1431,7 @@ export default function BusinessProfile({
           <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8 pt-4 space-y-6 lg:space-y-8">
             <section className="relative w-full mx-auto">
               <div className=" aspect-4/2 bg-center md:aspect-3/1 w-full rounded-xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl bg-gray-900 relative">
-                {heroContent.slides && heroContent.slides.length > 0 ? (
+                {heroContent.slides && safeSlides.length > 0 ? (
                   <>
                     {/* Check if first slide is a video */}
                     {(() => {
@@ -1536,10 +1540,12 @@ export default function BusinessProfile({
                               setTouchEnd(null);
                             }}
                           >
-                            {heroContent.slides.map(
-                              (slide: any, index: number) => {
-                                const mediaUrl = slide.media || slide.image;
-                                return (
+                            {safeSlides
+                              .filter((slide: any) => slide !== null && slide !== undefined)
+                              .map(
+                                (slide: any, index: number) => {
+                                  const mediaUrl = slide.media || slide.image;
+                                  return (
                                   <div
                                     key={index}
                                     className="w-full shrink-0 h-full relative"
@@ -1580,7 +1586,7 @@ export default function BusinessProfile({
 
                           {/* Navigation Arrows - Size decreased on mobile */}
                           {heroContent.showArrows !== false &&
-                            heroContent.slides.length > 1 && (
+                            safeSlides.length > 1 && (
                               <>
                                 <button
                                   onClick={() =>
@@ -1621,10 +1627,12 @@ export default function BusinessProfile({
 
                           {/* Pagination Dots - Size decreased on mobile */}
                           {heroContent.showDots !== false &&
-                            heroContent.slides.length > 1 && (
+                            safeSlides.length > 1 && (
                               <div className="absolute bottom-2  left-0 right-0 flex justify-center items-center space-x-2 md:space-x-3 z-20">
-                                {heroContent.slides.map(
-                                  (_: any, index: number) => (
+                                {safeSlides
+                                  .filter((slide: any) => slide !== null && slide !== undefined)
+                                  .map(
+                                    (_: any, index: number) => (
                                     <button
                                       key={index}
                                       onClick={() =>
@@ -1665,7 +1673,7 @@ export default function BusinessProfile({
               <BusinessInfoCard />
             </div>
 
-            {brandContent.brands?.length > 0 && (
+            {safeBrands.length > 0 && (
               <section
                 id="brands"
                 ref={brandsRef}
@@ -1688,9 +1696,11 @@ export default function BusinessProfile({
                   </div>
                   {viewAllBrands ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                      {brandContent.brands.map((brand: any, index: number) => (
-                        <div
-                          key={index}
+                      {safeBrands
+                        .filter((brand: any) => brand !== null && brand !== undefined)
+                        .map((brand: any, index: number) => (
+                          <div
+                            key={index}
                           className="flex flex-col h-full cursor-pointer transition-all duration-300"
                           onClick={() =>
                             setSelectedBrand(
@@ -1753,8 +1763,10 @@ export default function BusinessProfile({
                       suppressHydrationWarning
                     >
                       <CarouselContent>
-                        {brandContent.brands.map(
-                          (brand: any, index: number) => (
+                        {safeBrands
+                          .filter((brand: any) => brand !== null && brand !== undefined)
+                          .map(
+                            (brand: any, index: number) => (
                             <CarouselItem
                               key={index}
                               className="basis-1/2 md:basis-1/4 lg:basis-1/5"
@@ -2069,7 +2081,7 @@ export default function BusinessProfile({
             )}
 
             {/* Portfolio Section - Enhanced for Mobile */}
-            {portfolioContent.images?.length > 0 && (
+            {safePortfolioImages.length > 0 && (
               <section
                 className="w-full my-8 md:my-12 px-0"
                 id="portfolio"
@@ -2080,7 +2092,8 @@ export default function BusinessProfile({
                 </div>
 
                 <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-4 md:grid-rows-2">
-                  {portfolioContent.images
+                  {safePortfolioImages
+                    .filter((image: any) => image !== null && image !== undefined)
                     .slice(0, 6)
                     .map((image: any, index: number) => {
                       // Define grid positions for bento layout
