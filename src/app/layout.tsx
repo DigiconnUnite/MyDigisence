@@ -39,17 +39,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-     
+    <html lang="en" className="text-[80%]" suppressHydrationWarning>
       <body
         className={`${archivo.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
-              <SmoothScroll>
-                {children}
-              </SmoothScroll>
+              <SmoothScroll>{children}</SmoothScroll>
               <Toaster />
             </AuthProvider>
           </QueryProvider>

@@ -34,7 +34,8 @@ import {
   Megaphone,
   Plane,
   Cog,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react'
 import { FaWhatsapp } from 'react-icons/fa'
 
@@ -90,6 +91,7 @@ function BusinessesContent() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [loadingCardId, setLoadingCardId] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -286,7 +288,18 @@ function BusinessesContent() {
                         href={`/catalog/${business.slug}`}
                         className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
                         aria-label={`View details for ${business.name}`}
+                        onClick={() => setLoadingCardId(business.id)}
                       />
+
+                      {/* Loading Overlay */}
+                      {loadingCardId === business.id && (
+                        <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-3xl flex items-center justify-center">
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
+                            <span className="text-sm text-slate-600 font-medium">Loading...</span>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="relative z-10 flex flex-col h-full p-3 sm:p-4 pointer-events-none">
                         {/* Header Section */}

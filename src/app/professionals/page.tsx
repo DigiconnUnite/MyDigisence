@@ -34,7 +34,8 @@ import {
   Pill,
   Wrench,
   Truck,
-  UserCheck
+  UserCheck,
+  Loader2
 } from 'lucide-react'
 import { FaWhatsapp } from 'react-icons/fa'
 import UnifiedPublicLayout from '@/components/UnifiedPublicLayout'
@@ -87,6 +88,7 @@ function ProfessionalsContent() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [loadingCardId, setLoadingCardId] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -283,8 +285,18 @@ function ProfessionalsContent() {
                       key={professional.id}
                       href={`/pcard/${professional.slug}`}
                       className="block"
+                      onClick={() => setLoadingCardId(professional.id)}
                     >
                       <Card className="overflow-hidden py-0 rounded-4xl pt-0 bg-white backdrop-blur-sm shadow-none border border-slate-500/50 hover:border-slate-800 hover:shadow-lg transition-all duration-300 relative h-full">
+                        {/* Loading Overlay */}
+                        {loadingCardId === professional.id && (
+                          <div className="absolute inset-0 z-30 bg-white/80 backdrop-blur-sm rounded-4xl flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-2">
+                              <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
+                              <span className="text-sm text-slate-600 font-medium">Loading...</span>
+                            </div>
+                          </div>
+                        )}
                         <div
                           className="relative h-24 md:h-32 m-1 mb-0 pb-0 rounded-3xl overflow-hidden"
                           style={{ minHeight: "96px" }}
