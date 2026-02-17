@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
     }
   };
   return (
-    <div className="min-h-screen relative w-full flex flex-col md:flex-row bg-slate-50 font-sans">
+    <div className="min-h-screen max-h-screen relative w-full flex flex-col md:flex-row bg-slate-50 font-sans">
       <div className="flex-1 flex flex-col justify-center relative w-full px-4 sm:px-6 lg:px-12 py-10 lg:py-0 z-10">
         <div className="w-full absolute top-0 left-0 right-0 max-w-7xl mx-auto p-4 sm:p-6 flex justify-between items-center z-50">
           <Link href="/" className="flex items-center space-x-2 group">
@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
             <ArrowLeft className="h-4 w-4 mr-2" /> Back
           </Button>
         </div>
-   
+
         <div className="w-full max-w-md mx-auto space-y-6 sm:space-y-8 mt-12 sm:mt-4">
           {/* Header Text */}
           <div className="text-center space-y-2">

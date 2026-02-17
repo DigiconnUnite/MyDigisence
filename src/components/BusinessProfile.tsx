@@ -1106,7 +1106,7 @@ export default function BusinessProfile({
         </aside>
 
         {/* Main Content Skeleton */}
-        <main className="md:col-span-3 h-full overflow-y-auto mb-5 relative scroll-smooth min-w-0">
+        <main className="md:col-span-3 h-full overflow-y-auto mb-5 relative  min-w-0">
           <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8 pt-4 space-y-6 lg:space-y-8">
             {/* Hero Section */}
             <section className="relative w-full mx-auto">

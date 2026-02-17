@@ -3,8 +3,15 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 
-export default function SmoothScroll({ children }: { children: React.ReactNode }) {
+interface SmoothScrollProps {
+  children: React.ReactNode;
+  enabled?: boolean;
+}
+
+export default function SmoothScroll({ children, enabled = true }: SmoothScrollProps) {
   useEffect(() => {
+    if (!enabled) return;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -26,7 +33,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     return () => {
       lenis.destroy();
     };
-  }, []);
+  }, [enabled]);
 
   return <>{children}</>;
 }

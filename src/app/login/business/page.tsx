@@ -106,7 +106,7 @@ export default function BusinessLoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row font-sans bg-slate-200">
+    <div className="min-h-screen max-h-screen w-full flex flex-col lg:flex-row font-sans bg-slate-200">
       {/* --- LEFT SIDE: FORM --- */}
       <div className="flex-1 flex flex-col justify-center relative w-full px-4 sm:px-6 lg:px-12 py-10 lg:py-0 z-10">
         {/* Top Header */}
@@ -295,7 +295,8 @@ export default function BusinessLoginPage() {
               Welcome Back to Your Business Dashboard
             </h3>
             <p className="text-base text-gray-200 opacity-90 leading-relaxed max-w-lg mx-auto font-light">
-              Access your business tools and manage your digital presence with ease.
+              Access your business tools and manage your digital presence with
+              ease.
             </p>
           </div>
           <div className="flex-1"></div>

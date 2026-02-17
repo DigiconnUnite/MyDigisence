@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { QueryProvider } from "@/lib/queryProvider";
-import SmoothScroll from "@/components/SmoothScroll";
+import SmoothScrollProvider from "@/components/SmoothScrollProvider";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -39,14 +39,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="text-[88%]" suppressHydrationWarning>
+    <html lang="en" className="text-[89%]" suppressHydrationWarning>
       <body
         className={`${archivo.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
           <QueryProvider>
-            <AuthProvider>
-              <SmoothScroll>{children}</SmoothScroll>
+            <AuthProvider>{children}
               <Toaster />
             </AuthProvider>
           </QueryProvider>
