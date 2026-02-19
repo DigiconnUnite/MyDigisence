@@ -76,7 +76,6 @@ export default async function BusinessPage({ params }: PageProps) {
           },
         } as any,
         orderBy: { createdAt: 'desc' },
-        take: 20, // Limit to 20 products for faster initial load
       },
     },
   })
