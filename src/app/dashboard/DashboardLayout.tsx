@@ -122,7 +122,7 @@ export default function DashboardLayout({
 
         {/* Page Content */}
         <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0 bg-transparent">
-          <div className="p-4 sm:p-6">
+          <div className="p-4 max-w-7xl mx-auto sm:p-6">
             {typeof children === 'function' ? children({ isMobile }) : children}
           </div>
         </div>

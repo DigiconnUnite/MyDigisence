@@ -167,9 +167,9 @@ export default function SharedSidebar({
         <div className="flex items-center py-2 justify-between">
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
-              <img src="/logo.svg" alt="DigiSense" className="h-8 w-auto" />
+              <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
               <span className="h-8 border-l border-gray-300 mx-2"></span>
-              <span className="font-semibold">{headerTitle}</span>
+              <span className="font-semibold line-clamp-1 ">{headerTitle}</span>
             </div>
           )}
           <button

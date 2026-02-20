@@ -32,12 +32,21 @@ import {
 
 import { UnifiedModal } from "@/components/ui/UnifiedModal";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Edit,
   Trash2,
@@ -184,12 +193,20 @@ export default function BusinessAdminDashboard() {
   // Dialog states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showProductDialog, setShowProductDialog] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [confirmDialogData, setConfirmDialogData] = useState<{
-    title: string;
-    description: string;
-    action: () => void;
-  } | null>(null);
+
+  // Individual delete dialog states
+  const [showDeleteProductDialog, setShowDeleteProductDialog] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [showDeleteBrandDialog, setShowDeleteBrandDialog] = useState(false);
+  const [brandToDeleteIndex, setBrandToDeleteIndex] = useState<number | null>(null);
+  const [brandToDeleteName, setBrandToDeleteName] = useState<string>("");
+  const [showDeletePortfolioDialog, setShowDeletePortfolioDialog] = useState(false);
+  const [portfolioToDeleteIndex, setPortfolioToDeleteIndex] = useState<number | null>(null);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [showBulkActivateDialog, setShowBulkActivateDialog] = useState(false);
+  const [showBulkDeactivateDialog, setShowBulkDeactivateDialog] = useState(false);
 
   // Form states
   const [productFormData, setProductFormData] = useState({
@@ -273,6 +290,10 @@ export default function BusinessAdminDashboard() {
   const [updatingInquiry, setUpdatingInquiry] = useState<string | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Pagination state for products
+  const [productCurrentPage, setProductCurrentPage] = useState(1);
+  const [productItemsPerPage, setProductItemsPerPage] = useState(10);
 
   // Categories management state
   const [categoryFormData, setCategoryFormData] = useState({
@@ -531,50 +552,51 @@ export default function BusinessAdminDashboard() {
     });
   };
 
-  const handleProductDelete = async (product: Product) => {
-    setConfirmDialogData({
-      title: "Delete Product",
-      description: `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
-      action: async () => {
-        setDeletingProduct(product.id);
-        try {
-          const response = await fetch(`/api/business/products/${product.id}`, {
-            method: "DELETE",
-          });
+  const handleProductDelete = (product: Product) => {
+    setProductToDelete(product);
+    setShowDeleteProductDialog(true);
+  };
 
-          if (response.ok) {
-            setProducts((prev) => prev.filter((p) => p.id !== product.id));
-            setStats((prev) => ({
-              ...prev,
-              totalProducts: prev.totalProducts - 1,
-              activeProducts: product.isActive
-                ? prev.activeProducts - 1
-                : prev.activeProducts,
-            }));
-            toast({
-              title: "Success",
-              description: "Product deleted successfully!",
-            });
-          } else {
-            const errorResult = await response.json();
-            toast({
-              title: "Error",
-              description: `Failed to delete product: ${errorResult.error}`,
-              variant: "destructive",
-            });
-          }
-        } catch (error) {
-          toast({
-            title: "Error",
-            description: "Failed to delete product. Please try again.",
-            variant: "destructive",
-          });
-        } finally {
-          setDeletingProduct(null);
-        }
-      },
-    });
-    setShowConfirmDialog(true);
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setDeletingProduct(productToDelete.id);
+    try {
+      const response = await fetch(`/api/business/products/${productToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+        setStats((prev) => ({
+          ...prev,
+          totalProducts: prev.totalProducts - 1,
+          activeProducts: productToDelete.isActive
+            ? prev.activeProducts - 1
+            : prev.activeProducts,
+        }));
+        toast({
+          title: "Success",
+          description: "Product deleted successfully!",
+        });
+        setShowDeleteProductDialog(false);
+        setProductToDelete(null);
+      } else {
+        const errorResult = await response.json();
+        toast({
+          title: "Error",
+          description: `Failed to delete product: ${errorResult.error}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete product. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingProduct(null);
+    }
   };
 
   const handleInquiryStatusUpdate = async (
@@ -841,43 +863,224 @@ export default function BusinessAdminDashboard() {
     setShowCategoryModal(true);
   };
 
-  const handleDeleteCategory = async (category: Category) => {
-    setConfirmDialogData({
-      title: "Delete Category",
-      description: `Are you sure you want to delete "${category.name}"? This action cannot be undone.`,
-      action: async () => {
-        try {
-          const response = await fetch(
-            `/api/business/categories?id=${category.id}`,
-            {
-              method: "DELETE",
-            },
-          );
+  const handleDeleteCategory = (category: Category) => {
+    setCategoryToDelete(category);
+    setShowDeleteCategoryDialog(true);
+  };
 
-          if (response.ok) {
-            await fetchData();
-            toast({
-              title: "Success",
-              description: "Category deleted successfully!",
-            });
-          } else {
-            const errorResult = await response.json();
-            toast({
-              title: "Error",
-              description: `Failed to delete category: ${errorResult.error}`,
-              variant: "destructive",
-            });
-          }
-        } catch (error) {
-          toast({
-            title: "Error",
-            description: "Failed to delete category. Please try again.",
-            variant: "destructive",
-          });
-        }
-      },
-    });
-    setShowConfirmDialog(true);
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+    try {
+      const response = await fetch(
+        `/api/business/categories?id=${categoryToDelete.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.ok) {
+        await fetchData();
+        toast({
+          title: "Success",
+          description: "Category deleted successfully!",
+        });
+        setShowDeleteCategoryDialog(false);
+        setCategoryToDelete(null);
+      } else {
+        const errorResult = await response.json();
+        toast({
+          title: "Error",
+          description: `Failed to delete category: ${errorResult.error}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete category. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmDeleteBrand = async () => {
+    if (brandToDeleteIndex === null) return;
+    const updatedBrands = brandContent.brands.filter(
+      (_, i) => i !== brandToDeleteIndex,
+    );
+
+    try {
+      const response = await fetch("/api/business", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          brandContent: {
+            brands: updatedBrands,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        setBrandContent((prev) => ({
+          ...prev,
+          brands: updatedBrands,
+        }));
+        toast({
+          title: "Success",
+          description: "Brand deleted successfully!",
+        });
+        setShowDeleteBrandDialog(false);
+        setBrandToDeleteIndex(null);
+        setBrandToDeleteName("");
+      } else {
+        const errorResult = await response.json();
+        toast({
+          title: "Error",
+          description: `Failed to delete brand: ${errorResult.error}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete brand. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmDeletePortfolio = async () => {
+    if (portfolioToDeleteIndex === null) return;
+    const updatedImages = (portfolioContent.images || []).filter(
+      (_, i) => i !== portfolioToDeleteIndex,
+    );
+
+    try {
+      const response = await fetch("/api/business", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          portfolioContent: { images: updatedImages },
+        }),
+      });
+
+      if (response.ok) {
+        setPortfolioContent((prev) => ({
+          ...prev,
+          images: updatedImages,
+        }));
+        toast({
+          title: "Success",
+          description: "Portfolio image deleted successfully!",
+        });
+        setShowDeletePortfolioDialog(false);
+        setPortfolioToDeleteIndex(null);
+      } else {
+        const errorResult = await response.json();
+        toast({
+          title: "Error",
+          description: `Failed to delete portfolio image: ${errorResult.error}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete portfolio image. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmBulkActivate = async () => {
+    try {
+      await Promise.all(
+        selectedProducts.map((id) =>
+          fetch(`/api/business/products/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              isActive: true,
+            }),
+          }),
+        ),
+      );
+      await fetchData();
+      setSelectedProducts([]);
+      toast({
+        title: "Success",
+        description: "Products activated successfully!",
+      });
+      setShowBulkActivateDialog(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to activate products",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmBulkDeactivate = async () => {
+    try {
+      await Promise.all(
+        selectedProducts.map((id) =>
+          fetch(`/api/business/products/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              isActive: false,
+            }),
+          }),
+        ),
+      );
+      await fetchData();
+      setSelectedProducts([]);
+      toast({
+        title: "Success",
+        description: "Products deactivated successfully!",
+      });
+      setShowBulkDeactivateDialog(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to deactivate products",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    try {
+      await Promise.all(
+        selectedProducts.map((id) =>
+          fetch(`/api/business/products/${id}`, {
+            method: "DELETE",
+          }),
+        ),
+      );
+      await fetchData();
+      setSelectedProducts([]);
+      toast({
+        title: "Success",
+        description: "Products deleted successfully!",
+      });
+      setShowBulkDeleteDialog(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete products",
+        variant: "destructive",
+      });
+    }
   };
 
   const renderSkeletonContent = () => {
@@ -1114,7 +1317,7 @@ export default function BusinessAdminDashboard() {
           <div
             className={`flex-1  bg-white/50 backdrop-blur-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 ease-in-out pb-20 md:pb-0`}
           >
-            <div className="flex-1 p-4 sm:p-6 overflow-auto hide-scrollbar">
+            <div className="flex-1 p-4 max-w-7xl mx-auto sm:p-6 overflow-auto hide-scrollbar">
               {renderSkeletonContent()}
             </div>
           </div>
@@ -1201,7 +1404,7 @@ export default function BusinessAdminDashboard() {
 
   return (
     <div className="min-h-screen flex h-screen  relative">
-  <div className="fixed inset-0  bg-slate-200  bg-center blur-lg  -z-10"></div>
+      <div className="fixed inset-0  bg-slate-200  bg-center blur-lg  -z-10"></div>
 
       {/* Main Layout: Sidebar + Content */}
       <div className="flex flex-1 overflow-hidden">
@@ -1228,7 +1431,7 @@ export default function BusinessAdminDashboard() {
             <div className="flex justify-between items-center px-4 sm:px-6 py-2">
               <div className="hidden md:flex"></div>
               <div className="flex items-center md:hidden">
-                <img src="/logo.svg" alt="DigiSense" className="h-8 w-auto" />
+                <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
                 <span className="h-8 border-l border-gray-300 mx-2"></span>
                 <div>
                   <span className="font-semibold">{business.name}</span>
@@ -1240,11 +1443,13 @@ export default function BusinessAdminDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(`/catalog/${business.slug}`, "_blank")}
+                    onClick={() =>
+                      window.open(`/catalog/${business.slug}`, "_blank")
+                    }
                     className="rounded-full px-4 py-0.2  bg-slate-900 hover:bg-slate-800  text-white hover:text-white  border-0 hover:opacity-90 transition-opacity"
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    View 
+                    View
                   </Button>
                 </div>
                 {/* Mobile View Profile Button */}
@@ -1252,7 +1457,9 @@ export default function BusinessAdminDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(`/catalog/${business.slug}`, "_blank")}
+                    onClick={() =>
+                      window.open(`/catalog/${business.slug}`, "_blank")
+                    }
                     className="rounded-full px-3 py-0  bg-slate-800  text-white border-0 hover:text-white hover:opacity-90 transition-opacity"
                   >
                     <Eye className="h-3.5 w-3.5 mr-1.5" />
@@ -1292,217 +1499,215 @@ export default function BusinessAdminDashboard() {
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0">
-            <div className="p-4 sm:p-6">
+            <div className="p-4 max-w-7xl mx-auto sm:p-6">
               {/* Main Content based on activeSection */}
               {activeSection === "dashboard" && (
                 <>
                   {/* Stats Overview */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                      <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-900">
-                            Total Products
-                          </CardTitle>
-                          <Package className="h-4 w-4 text-gray-400" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {stats.totalProducts}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {stats.activeProducts} active
-                          </p>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-900">
-                            Total Inquiries
-                          </CardTitle>
-                          <Mail className="h-4 w-4 text-gray-400" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {stats.totalInquiries}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {stats.newInquiries} new
-                          </p>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-900">
-                            Profile Completion
-                          </CardTitle>
-                          <BarChart3 className="h-4 w-4 text-gray-400" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {business
-                              ? (() => {
-                                  const keys = [
-                                    business.name ? 25 : 0,
-                                    business.description ? 25 : 0,
-                                    business.logo ? 25 : 0,
-                                    business.address ? 25 : 0,
-                                    business.phone ? 25 : 0,
-                                    business.email != null ? 25 : 0,
-                                    business.website ? 25 : 0,
-                                    heroSlides && heroSlides.length > 0
-                                      ? 25
-                                      : 0,
-                                  ];
-                                  let percent = keys.reduce(
-                                    (sum, val) => sum + val,
-                                    0,
-                                  );
-                                  // prevent >100%
-                                  percent = Math.min(percent, 100);
-                                  return percent + "%";
-                                })()
-                              : "0%"}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            Profile completion
-                          </p>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-900">
-                            Business Health
-                          </CardTitle>
-                          <Building className="h-4 w-4 text-gray-400" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {business.isActive ? "Active" : "Inactive"}
-                          </div>
-                          <p className="text-xs text-gray-500">Status</p>
-                        </CardContent>
-                      </Card>
-                    </div>
+                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-900">
+                          Total Products
+                        </CardTitle>
+                        <Package className="h-4 w-4 text-gray-400" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {stats.totalProducts}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {stats.activeProducts} active
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-900">
+                          Total Inquiries
+                        </CardTitle>
+                        <Mail className="h-4 w-4 text-gray-400" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {stats.totalInquiries}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {stats.newInquiries} new
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-900">
+                          Profile Completion
+                        </CardTitle>
+                        <BarChart3 className="h-4 w-4 text-gray-400" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {business
+                            ? (() => {
+                                const keys = [
+                                  business.name ? 25 : 0,
+                                  business.description ? 25 : 0,
+                                  business.logo ? 25 : 0,
+                                  business.address ? 25 : 0,
+                                  business.phone ? 25 : 0,
+                                  business.email != null ? 25 : 0,
+                                  business.website ? 25 : 0,
+                                  heroSlides && heroSlides.length > 0 ? 25 : 0,
+                                ];
+                                let percent = keys.reduce(
+                                  (sum, val) => sum + val,
+                                  0,
+                                );
+                                // prevent >100%
+                                percent = Math.min(percent, 100);
+                                return percent + "%";
+                              })()
+                            : "0%"}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Profile completion
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-gray-900">
+                          Business Health
+                        </CardTitle>
+                        <Building className="h-4 w-4 text-gray-400" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">
+                          {business.isActive ? "Active" : "Inactive"}
+                        </div>
+                        <p className="text-xs text-gray-500">Status</p>
+                      </CardContent>
+                    </Card>
+                  </div>
 
-                    {/* Quick Actions and Recent Activity */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card className="rounded-3xl transition-all duration-300 hover:shadow-lg">
-                        <CardHeader>
-                          <CardTitle>Quick Actions</CardTitle>
-                          <CardDescription>
-                            Common tasks to get you started
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <Button
-                            variant="default"
-                            onClick={() => {
-                              setActiveSection("products");
-                              setEditingProduct(null);
-                              setProductFormData({
-                                name: "",
-                                description: "",
-                                price: "",
-                                image: "",
-                                categoryId: "",
-                                brandName: "",
-                                additionalInfo: {},
-                                inStock: true,
-                                isActive: true,
-                              });
-                              setShowProductDialog(true);
-                            }}
-                            className="rounded-xl  text-white hover:opacity-90 transition-opacity"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add New Product
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => setActiveSection("info")}
-                            className="w-full justify-start rounded-2xl"
-                          >
-                            <Settings className="h-4 w-4 mr-2" />
-                            Update Business Profile
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => setActiveSection("inquiries")}
-                            className="w-full justify-start rounded-2xl"
-                          >
-                            <Mail className="h-4 w-4 mr-2" />
-                            Check New Inquiries
-                          </Button>
-                        </CardContent>
-                      </Card>
+                  {/* Quick Actions and Recent Activity */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card className="rounded-3xl transition-all duration-300 hover:shadow-lg">
+                      <CardHeader>
+                        <CardTitle>Quick Actions</CardTitle>
+                        <CardDescription>
+                          Common tasks to get you started
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Button
+                          variant="default"
+                          onClick={() => {
+                            setActiveSection("products");
+                            setEditingProduct(null);
+                            setProductFormData({
+                              name: "",
+                              description: "",
+                              price: "",
+                              image: "",
+                              categoryId: "",
+                              brandName: "",
+                              additionalInfo: {},
+                              inStock: true,
+                              isActive: true,
+                            });
+                            setShowProductDialog(true);
+                          }}
+                          className="rounded-xl  text-white hover:opacity-90 transition-opacity"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add New Product
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setActiveSection("info")}
+                          className="w-full justify-start rounded-2xl"
+                        >
+                          <Settings className="h-4 w-4 mr-2" />
+                          Update Business Profile
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setActiveSection("inquiries")}
+                          className="w-full justify-start rounded-2xl"
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          Check New Inquiries
+                        </Button>
+                      </CardContent>
+                    </Card>
 
-                      <Card className="rounded-3xl transition-all duration-300 hover:shadow-lg">
-                        <CardHeader>
-                          <CardTitle>Recent Activity</CardTitle>
-                          <CardDescription>
-                            Latest updates and interactions
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            {inquiries.slice(0, 3).map((inquiry) => (
-                              <div
-                                key={inquiry.id}
-                                className="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl"
-                              >
-                                <div className="shrink-0">
-                                  <Mail className="h-5 w-5 text-blue-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 truncate">
-                                    New inquiry from {inquiry.name}
-                                  </p>
-                                  <p className="text-sm text-gray-500 truncate">
-                                    {formatDate(inquiry.createdAt)}
-                                  </p>
-                                </div>
-                                {/* Custom Status Badge with Indicator Dot */}
-                                <div
-                                  className={`flex items-center gap-1.5 px-1.5 w-fit py-0.5 rounded-full border text-xs font-medium ${
-                                    inquiry.status === "NEW"
-                                      ? "bg-red-500/10 border-red-500/30 text-red-600"
-                                      : inquiry.status === "READ"
-                                        ? "bg-blue-500/10 border-blue-500/30 text-blue-700"
-                                        : inquiry.status === "REPLIED"
-                                          ? "bg-green-500/10 border-green-500/30 text-green-700"
-                                          : "bg-gray-500/10 border-gray-500/30 text-gray-600"
-                                  }`}
-                                >
-                                  <span
-                                    className={`w-2 h-2 rounded-full ${
-                                      inquiry.status === "NEW"
-                                        ? "bg-red-500"
-                                        : inquiry.status === "READ"
-                                          ? "bg-blue-500"
-                                          : inquiry.status === "REPLIED"
-                                            ? "bg-green-500"
-                                            : "bg-gray-500"
-                                    }`}
-                                  ></span>
-                                  {inquiry.status === "NEW"
-                                    ? "New"
-                                    : inquiry.status === "READ"
-                                      ? "Read"
-                                      : inquiry.status === "REPLIED"
-                                        ? "Replied"
-                                        : "Closed"}
-                                </div>
+                    <Card className="rounded-3xl transition-all duration-300 hover:shadow-lg">
+                      <CardHeader>
+                        <CardTitle>Recent Activity</CardTitle>
+                        <CardDescription>
+                          Latest updates and interactions
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {inquiries.slice(0, 3).map((inquiry) => (
+                            <div
+                              key={inquiry.id}
+                              className="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl"
+                            >
+                              <div className="shrink-0">
+                                <Mail className="h-5 w-5 text-blue-500" />
                               </div>
-                            ))}
-                            {inquiries.length === 0 && (
-                              <p className="text-sm text-gray-500 text-center py-4">
-                                No recent activity
-                              </p>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  New inquiry from {inquiry.name}
+                                </p>
+                                <p className="text-sm text-gray-500 truncate">
+                                  {formatDate(inquiry.createdAt)}
+                                </p>
+                              </div>
+                              {/* Custom Status Badge with Indicator Dot */}
+                              <div
+                                className={`flex items-center gap-1.5 px-1.5 w-fit py-0.5 rounded-full border text-xs font-medium ${
+                                  inquiry.status === "NEW"
+                                    ? "bg-red-500/10 border-red-500/30 text-red-600"
+                                    : inquiry.status === "READ"
+                                      ? "bg-blue-500/10 border-blue-500/30 text-blue-700"
+                                      : inquiry.status === "REPLIED"
+                                        ? "bg-green-500/10 border-green-500/30 text-green-700"
+                                        : "bg-gray-500/10 border-gray-500/30 text-gray-600"
+                                }`}
+                              >
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    inquiry.status === "NEW"
+                                      ? "bg-red-500"
+                                      : inquiry.status === "READ"
+                                        ? "bg-blue-500"
+                                        : inquiry.status === "REPLIED"
+                                          ? "bg-green-500"
+                                          : "bg-gray-500"
+                                  }`}
+                                ></span>
+                                {inquiry.status === "NEW"
+                                  ? "New"
+                                  : inquiry.status === "READ"
+                                    ? "Read"
+                                    : inquiry.status === "REPLIED"
+                                      ? "Replied"
+                                      : "Closed"}
+                              </div>
+                            </div>
+                          ))}
+                          {inquiries.length === 0 && (
+                            <p className="text-sm text-gray-500 text-center py-4">
+                              No recent activity
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </>
               )}
 
@@ -1881,64 +2086,9 @@ export default function BusinessAdminDashboard() {
                                           size="sm"
                                           variant="outline"
                                           onClick={() => {
-                                            setConfirmDialogData({
-                                              title: "Delete Brand",
-                                              description: `Are you sure you want to delete "${brand.name}"?`,
-                                              action: async () => {
-                                                const updatedBrands =
-                                                  brandContent.brands.filter(
-                                                    (_, i) => i !== index,
-                                                  );
-
-                                                try {
-                                                  const response = await fetch(
-                                                    "/api/business",
-                                                    {
-                                                      method: "PUT",
-                                                      headers: {
-                                                        "Content-Type":
-                                                          "application/json",
-                                                      },
-                                                      body: JSON.stringify({
-                                                        brandContent: {
-                                                          brands: updatedBrands,
-                                                        },
-                                                      }),
-                                                    },
-                                                  );
-
-                                                  if (response.ok) {
-                                                    setBrandContent((prev) => ({
-                                                      ...prev,
-                                                      brands: updatedBrands,
-                                                    }));
-                                                    toast({
-                                                      title: "Success",
-                                                      description:
-                                                        "Brand deleted successfully!",
-                                                    });
-                                                  } else {
-                                                    const errorResult =
-                                                      await response.json();
-                                                    toast({
-                                                      title: "Error",
-                                                      description: `Failed to delete brand: ${errorResult.error}`,
-                                                      variant: "destructive",
-                                                    });
-                                                  }
-                                                } catch (error) {
-                                                  toast({
-                                                    title: "Error",
-                                                    description:
-                                                      "Failed to delete brand. Please try again.",
-                                                    variant: "destructive",
-                                                  });
-                                                }
-
-                                                setShowConfirmDialog(false);
-                                              },
-                                            });
-                                            setShowConfirmDialog(true);
+                                            setBrandToDeleteIndex(index);
+                                            setBrandToDeleteName(brand.name);
+                                            setShowDeleteBrandDialog(true);
                                           }}
                                           className="rounded-xl"
                                         >
@@ -2239,21 +2389,8 @@ export default function BusinessAdminDashboard() {
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          setConfirmDialogData({
-                                            title: "Delete Portfolio Image",
-                                            description:
-                                              "Are you sure you want to remove this image?",
-                                            action: async () => {
-                                              const updatedImages = (
-                                                portfolioContent.images || []
-                                              ).filter((_, i) => i !== index);
-                                              await savePortfolioImages(
-                                                updatedImages,
-                                              );
-                                              setShowConfirmDialog(false);
-                                            },
-                                          });
-                                          setShowConfirmDialog(true);
+                                          setPortfolioToDeleteIndex(index);
+                                          setShowDeletePortfolioDialog(true);
                                         }}
                                         className="bg-white/90 backdrop-blur text-gray-700 hover:text-red-600 hover:bg-white p-2 rounded-full shadow-lg transition-transform hover:scale-105"
                                         title="Delete Image"
@@ -2528,14 +2665,18 @@ export default function BusinessAdminDashboard() {
                         placeholder="Search products..."
                         className="w-full bg-white rounded-2xl"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setProductCurrentPage(1); // Reset to first page on search
+                        }}
                       />
                     </div>
                     <Select
                       value={selectedCategory}
-                      onValueChange={(value) =>
-                        setSelectedCategory(value === "all" ? "" : value)
-                      }
+                      onValueChange={(value) => {
+                        setSelectedCategory(value === "all" ? "" : value);
+                        setProductCurrentPage(1); // Reset to first page on filter change
+                      }}
                     >
                       <SelectTrigger className="w-full bg-white sm:w-48 rounded-2xl">
                         <SelectValue placeholder="Filter by category" />
@@ -2563,48 +2704,7 @@ export default function BusinessAdminDashboard() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                setConfirmDialogData({
-                                  title: "Activate Products",
-                                  description: `Are you sure you want to activate ${selectedProducts.length} product${selectedProducts.length > 1 ? "s" : ""}?`,
-                                  action: async () => {
-                                    try {
-                                      await Promise.all(
-                                        selectedProducts.map((id) =>
-                                          fetch(
-                                            `/api/business/products/${id}`,
-                                            {
-                                              method: "PUT",
-                                              headers: {
-                                                "Content-Type":
-                                                  "application/json",
-                                              },
-                                              body: JSON.stringify({
-                                                isActive: true,
-                                              }),
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                      await fetchData();
-                                      setSelectedProducts([]);
-                                      toast({
-                                        title: "Success",
-                                        description:
-                                          "Products activated successfully!",
-                                      });
-                                    } catch (error) {
-                                      toast({
-                                        title: "Error",
-                                        description:
-                                          "Failed to activate products",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  },
-                                });
-                                setShowConfirmDialog(true);
-                              }}
+                              onClick={() => setShowBulkActivateDialog(true)}
                               className="rounded-xl"
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
@@ -2613,48 +2713,7 @@ export default function BusinessAdminDashboard() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                setConfirmDialogData({
-                                  title: "Deactivate Products",
-                                  description: `Are you sure you want to deactivate ${selectedProducts.length} product${selectedProducts.length > 1 ? "s" : ""}?`,
-                                  action: async () => {
-                                    try {
-                                      await Promise.all(
-                                        selectedProducts.map((id) =>
-                                          fetch(
-                                            `/api/business/products/${id}`,
-                                            {
-                                              method: "PUT",
-                                              headers: {
-                                                "Content-Type":
-                                                  "application/json",
-                                              },
-                                              body: JSON.stringify({
-                                                isActive: false,
-                                              }),
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                      await fetchData();
-                                      setSelectedProducts([]);
-                                      toast({
-                                        title: "Success",
-                                        description:
-                                          "Products deactivated successfully!",
-                                      });
-                                    } catch (error) {
-                                      toast({
-                                        title: "Error",
-                                        description:
-                                          "Failed to deactivate products",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  },
-                                });
-                                setShowConfirmDialog(true);
-                              }}
+                              onClick={() => setShowBulkDeactivateDialog(true)}
                               className="rounded-xl"
                             >
                               <Pause className="h-4 w-4 mr-2" />
@@ -2663,41 +2722,7 @@ export default function BusinessAdminDashboard() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                setConfirmDialogData({
-                                  title: "Delete Products",
-                                  description: `Are you sure you want to delete ${selectedProducts.length} product${selectedProducts.length > 1 ? "s" : ""}? This action cannot be undone.`,
-                                  action: async () => {
-                                    try {
-                                      await Promise.all(
-                                        selectedProducts.map((id) =>
-                                          fetch(
-                                            `/api/business/products/${id}`,
-                                            {
-                                              method: "DELETE",
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                      await fetchData();
-                                      setSelectedProducts([]);
-                                      toast({
-                                        title: "Success",
-                                        description:
-                                          "Products deleted successfully!",
-                                      });
-                                    } catch (error) {
-                                      toast({
-                                        title: "Error",
-                                        description:
-                                          "Failed to delete products",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  },
-                                });
-                                setShowConfirmDialog(true);
-                              }}
+                              onClick={() => setShowBulkDeleteDialog(true)}
                               className="rounded-xl"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
@@ -2737,7 +2762,7 @@ export default function BusinessAdminDashboard() {
                                     const filteredProducts = products.filter(
                                       (p) =>
                                         p.name
-                                          .toLowerCase()  
+                                          .toLowerCase()
                                           .includes(searchTerm.toLowerCase()) &&
                                         (selectedCategory === "" ||
                                           p.categoryId === selectedCategory),
@@ -2776,16 +2801,25 @@ export default function BusinessAdminDashboard() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {products
-                              .filter(
+                            {(() => {
+                              // Filter products based on search and category
+                              const filteredProducts = products.filter(
                                 (product) =>
                                   product.name
                                     .toLowerCase()
                                     .includes(searchTerm.toLowerCase()) &&
                                   (selectedCategory === "" ||
                                     product.categoryId === selectedCategory),
-                              )
-                              .map((product) => (
+                              );
+                              
+                              // Calculate pagination
+                              const totalFilteredProducts = filteredProducts.length;
+                              const totalPages = Math.ceil(totalFilteredProducts / productItemsPerPage);
+                              const startIndex = (productCurrentPage - 1) * productItemsPerPage;
+                              const endIndex = startIndex + productItemsPerPage;
+                              const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+                              
+                              return paginatedProducts.map((product) => (
                                 <TableRow key={product.id}>
                                   <TableCell>
                                     <Checkbox
@@ -2913,7 +2947,8 @@ export default function BusinessAdminDashboard() {
                                     </div>
                                   </TableCell>
                                 </TableRow>
-                              ))}
+                              ));
+                            })()}
                           </TableBody>
                         </Table>
                       </div>
@@ -2947,6 +2982,39 @@ export default function BusinessAdminDashboard() {
                             <Plus className="h-4 w-4 mr-2" />
                             Add Product
                           </Button>
+                        </div>
+                      )}
+                      {/* Pagination Component */}
+                      {products.length > 0 && (
+                        <div className="p-4 border-t border-gray-200">
+                          <Pagination
+                            currentPage={productCurrentPage}
+                            totalPages={Math.ceil(
+                              products.filter(
+                                (p) =>
+                                  p.name
+                                    .toLowerCase()
+                                    .includes(searchTerm.toLowerCase()) &&
+                                  (selectedCategory === "" ||
+                                    p.categoryId === selectedCategory),
+                              ).length / productItemsPerPage
+                            )}
+                            totalItems={products.filter(
+                              (p) =>
+                                p.name
+                                  .toLowerCase()
+                                  .includes(searchTerm.toLowerCase()) &&
+                                (selectedCategory === "" ||
+                                  p.categoryId === selectedCategory),
+                            ).length}
+                            itemsPerPage={productItemsPerPage}
+                            onPageChange={setProductCurrentPage}
+                            onItemsPerPageChange={(limit) => {
+                              setProductItemsPerPage(limit);
+                              setProductCurrentPage(1); // Reset to first page when changing items per page
+                            }}
+                            className="flex-wrap"
+                          />
                         </div>
                       )}
                     </CardContent>
@@ -3260,7 +3328,11 @@ export default function BusinessAdminDashboard() {
               }
             }}
             title={editingCategory ? "Edit Category" : "Add New Category"}
-            description={editingCategory ? "Update category details" : "Create a new category for your products"}
+            description={
+              editingCategory
+                ? "Update category details"
+                : "Create a new category for your products"
+            }
             footer={
               <>
                 <Button
@@ -3435,10 +3507,7 @@ export default function BusinessAdminDashboard() {
                     {categories
                       .filter((cat) => !cat.parentId)
                       .map((category) => (
-                        <SelectItem
-                          key={category.id}
-                          value={category.id}
-                        >
+                        <SelectItem key={category.id} value={category.id}>
                           {category.name}
                         </SelectItem>
                       ))}
@@ -3470,7 +3539,11 @@ export default function BusinessAdminDashboard() {
             }
           }}
           title={editingProduct ? "Edit Product" : "Add New Product"}
-          description={editingProduct ? "Update product details" : "Create a new product or service"}
+          description={
+            editingProduct
+              ? "Update product details"
+              : "Create a new product or service"
+          }
           footer={
             <>
               <Button
@@ -3546,9 +3619,7 @@ export default function BusinessAdminDashboard() {
                           ]);
                         }
                         // Update stats if active status changed
-                        if (
-                          editingProduct.isActive !== data.product.isActive
-                        ) {
+                        if (editingProduct.isActive !== data.product.isActive) {
                           setStats((prev) => ({
                             ...prev,
                             activeProducts: data.product.isActive
@@ -3725,8 +3796,7 @@ export default function BusinessAdminDashboard() {
                     const MAX_URL_LENGTH = 32;
                     let displayUrl = image;
                     if (image.length > MAX_URL_LENGTH) {
-                      displayUrl =
-                        image.slice(0, MAX_URL_LENGTH) + "...";
+                      displayUrl = image.slice(0, MAX_URL_LENGTH) + "...";
                     }
                     return (
                       <SelectItem
@@ -3810,10 +3880,7 @@ export default function BusinessAdminDashboard() {
                     <SelectContent>
                       <div className="max-h-48 overflow-y-auto">
                         {(brandContent.brands || []).map((brand) => (
-                          <SelectItem
-                            key={brand.name}
-                            value={brand.name}
-                          >
+                          <SelectItem key={brand.name} value={brand.name}>
                             {brand.name}
                           </SelectItem>
                         ))}
@@ -3855,9 +3922,7 @@ export default function BusinessAdminDashboard() {
 
             {/* Additional Information Section */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">
-                Additional Information
-              </h3>
+              <h3 className="text-lg font-medium">Additional Information</h3>
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="relative">
@@ -3889,9 +3954,7 @@ export default function BusinessAdminDashboard() {
                       type="button"
                       variant="outline"
                       onClick={handleAddInfo}
-                      disabled={
-                        !newInfoKey?.trim() || !newInfoValue?.trim()
-                      }
+                      disabled={!newInfoKey?.trim() || !newInfoValue?.trim()}
                       className="rounded-md"
                     >
                       <Plus className="h-4 w-4" />
@@ -3899,41 +3962,36 @@ export default function BusinessAdminDashboard() {
                   </div>
                 </div>
                 {productFormData.additionalInfo &&
-                  Object.keys(productFormData.additionalInfo).length >
-                    0 && (
+                  Object.keys(productFormData.additionalInfo).length > 0 && (
                     <div className="overflow-x-auto mt-4">
                       <table className="min-w-full bg-gray-50 rounded-md">
                         <tbody>
-                          {Object.entries(
-                            productFormData.additionalInfo,
-                          ).map(([key, value], index) => (
-                            <tr
-                              key={index}
-                              className="border-b last:border-b-0"
-                            >
-                              <td className="px-3 py-2 font-medium text-sm">
-                                {key}
-                              </td>
-                              <td className="px-3 py-2 text-sm">
-                                {value}
-                              </td>
-                              <td className="py-2 text-right pr-4">
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveInfo(key)}
-                                  className="h-6 w-6 p-0 hover:bg-gray-200 rounded-full flex items-center justify-center ml-auto"
-                                  title="Remove field"
-                                >
-                                  <span className="sr-only">
-                                    Remove
-                                  </span>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
+                          {Object.entries(productFormData.additionalInfo).map(
+                            ([key, value], index) => (
+                              <tr
+                                key={index}
+                                className="border-b last:border-b-0"
+                              >
+                                <td className="px-3 py-2 font-medium text-sm">
+                                  {key}
+                                </td>
+                                <td className="px-3 py-2 text-sm">{value}</td>
+                                <td className="py-2 text-right pr-4">
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveInfo(key)}
+                                    className="h-6 w-6 p-0 hover:bg-gray-200 rounded-full flex items-center justify-center ml-auto"
+                                    title="Remove field"
+                                  >
+                                    <span className="sr-only">Remove</span>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ),
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -3943,46 +4001,148 @@ export default function BusinessAdminDashboard() {
           </div>
         </UnifiedModal>
 
-        {/* Confirmation Dialog */}
-        <UnifiedModal
-          isOpen={showConfirmDialog}
-          onClose={setShowConfirmDialog}
-          title={confirmDialogData?.title || "Confirm Action"}
-          description={confirmDialogData?.description}
-          footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setShowConfirmDialog(false)}
-                className="rounded-xl"
-              >
+        {/* Individual Delete/Confirmation Dialogs */}
+        
+        {/* Delete Product Dialog */}
+        <Dialog open={showDeleteProductDialog} onOpenChange={setShowDeleteProductDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Product</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteProductDialog(false)}>
                 Cancel
               </Button>
-              <Button
-                onClick={() => {
-                  confirmDialogData?.action();
-                  setShowConfirmDialog(false);
-                }}
-                className="rounded-xl bg-red-600 text-white hover:bg-red-700"
-              >
-                Confirm
+              <Button variant="destructive" onClick={confirmDeleteProduct}>
+                Delete
               </Button>
-            </>
-          }
-        >
-          <div className="py-4">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
-              </div>
-            </div>
-            <p className="text-center text-gray-600">
-              {confirmDialogData?.description}
-            </p>
-          </div>
-        </UnifiedModal>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Category Dialog */}
+        <Dialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Category</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{categoryToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteCategoryDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteCategory}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Brand Dialog */}
+        <Dialog open={showDeleteBrandDialog} onOpenChange={setShowDeleteBrandDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Brand</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{brandToDeleteName}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteBrandDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteBrand}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Portfolio Image Dialog */}
+        <Dialog open={showDeletePortfolioDialog} onOpenChange={setShowDeletePortfolioDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Portfolio Image</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this portfolio image? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeletePortfolioDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeletePortfolio}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Activate Products Dialog */}
+        <Dialog open={showBulkActivateDialog} onOpenChange={setShowBulkActivateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Activate Products</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to activate {selectedProducts.length} product{selectedProducts.length > 1 ? "s" : ""}?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBulkActivateDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={confirmBulkActivate}>
+                Activate
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Deactivate Products Dialog */}
+        <Dialog open={showBulkDeactivateDialog} onOpenChange={setShowBulkDeactivateDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Deactivate Products</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to deactivate {selectedProducts.length} product{selectedProducts.length > 1 ? "s" : ""}?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBulkDeactivateDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmBulkDeactivate}>
+                Deactivate
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Delete Products Dialog */}
+        <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Products</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete {selectedProducts.length} product{selectedProducts.length > 1 ? "s" : ""}? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBulkDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmBulkDelete}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-    
     </div>
   );
 }

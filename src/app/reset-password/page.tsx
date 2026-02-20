@@ -80,7 +80,7 @@ function ResetPasswordForm() {
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="bg-primary/10 p-1.5 rounded-md text-primary">
               <img
-                src="/logo.svg"
+                src="/logo.png"
                 alt="DigiSence Logo"
                 className="h-5 w-auto"
               />

@@ -1104,7 +1104,7 @@ const Preloader = () => (
     <div className="mb-10 flex flex-row items-center">
       {/* Digisence Logo */}
       <img
-        src="/logo.svg"
+        src="/logo.png"
         alt="Digisence Logo"
         className="w-8 h-8 mb-2 object-contain"
       />

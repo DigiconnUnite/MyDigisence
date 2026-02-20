@@ -17,30 +17,25 @@ import {
 function LoginContent() {
   // useRouter is no longer needed
   const searchParams = useSearchParams();
-  const role = searchParams.get("role"); // "professional" | "business"
+  const role = searchParams.get("role"); 
 
   // If no role is selected, show the Role Selection Cards
   if (!role) {
     return (
       <div className="min-h-screen flex flex-col w-full bg-slate-200">
         <div className="flex-1 flex flex-col justify-center items-center w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-          
           {/* Top Nav */}
-          <div className="w-full absolute top-0 left-0 right-0  mx-auto p-4 sm:p-6 flex justify-between items-center z-50">
-            <Link href="/" className="flex items-center space-x-2 group">
-              {/* ACTUAL LOGO IMAGE */}
-              <Image
-                src="/logo.svg"
-                alt="DigiSence Logo"
-                width={32}
-                height={32}
-                className="h-8 w-auto"
-              />
-              <span className="font-bold text-xl sm:text-2xl text-slate-800 tracking-tight">
-                DigiSence
-              </span>
+          <div className="w-full absolute top-0 left-0 right-0  mx-auto p-4  sm:p-6 flex justify-between items-center z-50">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="relative">
+                <img
+                  src="/logo-header.png"
+                  alt="DigiSence Logo"
+                  className="h-10 w-auto  transition-transform duration-300 group-hover:scale-110"
+                />
+              </div>
             </Link>
-            
+
             {/* CHANGED: Used asChild to merge Button with Link */}
             <Button
               variant="ghost"
@@ -57,7 +52,6 @@ function LoginContent() {
           {/* Role Selection Grid */}
           <div className="w-full max-w-7xl space-y-8 sm:space-y-10 mt-12 sm:mt-20">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-              
               {/* CHANGED: Wrapped Professional Card in Link */}
               <Link href="/login/professional" className="block w-full h-full">
                 <Card className="group relative border-none transition-all duration-500 rounded-3xl border-primary shadow-xl w-full overflow-hidden cursor-pointer hover:shadow-2xl max-h-[500px] md:min-h-[500px]">
@@ -75,7 +69,6 @@ function LoginContent() {
                   </div>
 
                   <div className="flex flex-col items-center justify-between h-full relative z-20 px-6 py-8 sm:py-12">
-                    
                     {/* Icon Section - Fixed alt attribute */}
                     <div className="flex-1 flex items-center justify-center w-full pt-4">
                       <div className="shrink-0 drop-shadow-2xl transition-transform duration-300 group-hover:scale-110">
@@ -96,7 +89,8 @@ function LoginContent() {
                         Continue as Professional
                       </CardTitle>
                       <CardDescription className="text-sm sm:text-base md:text-lg text-slate-100 font-medium leading-relaxed drop-shadow-md">
-                        Access your professional dashboard and manage your profile.
+                        Access your professional dashboard and manage your
+                        profile.
                       </CardDescription>
                     </CardHeader>
                   </div>
@@ -119,7 +113,6 @@ function LoginContent() {
                   </div>
 
                   <div className="flex flex-col items-center justify-between h-full relative z-20 px-6 py-8 sm:py-12">
-                    
                     {/* Icon Section - Fixed alt attribute */}
                     <div className="flex-1 flex items-center justify-center w-full pt-4">
                       <div className="shrink-0 drop-shadow-2xl transition-transform duration-300 group-hover:scale-110">
@@ -140,13 +133,13 @@ function LoginContent() {
                         Continue as Business
                       </CardTitle>
                       <CardDescription className="text-sm sm:text-base md:text-lg text-slate-100 font-medium leading-relaxed drop-shadow-md">
-                        Manage your business dashboard and connect with professionals.
+                        Manage your business dashboard and connect with
+                        professionals.
                       </CardDescription>
                     </CardHeader>
                   </div>
                 </Card>
               </Link>
-
             </div>
 
             {/* Footer Link */}

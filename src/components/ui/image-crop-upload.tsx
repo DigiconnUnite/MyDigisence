@@ -21,9 +21,10 @@ import {
   FileVideo,
   File as FileIcon,
   Ratio,
-
+  Pencil,
   Check,
   Eye,
+  Edit,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -36,7 +37,7 @@ type AspectRatioPreset = {
 
 type UploadMode = 'crop' | 'direct' | 'auto'
 
-type LayoutVariant = 'card' | 'compact' | 'minimal' | 'dropzone'
+type LayoutVariant = 'card' | 'compact' | 'minimal' | 'dropzone' | 'avatar'
 
 interface ImageCropUploadProps {
   /** Called with the uploaded URL after successful upload */
@@ -582,9 +583,9 @@ export default function ImageCropUpload({
             )}
 
             {/* Crop area + Preview side by side */}
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-4">
               {/* Main crop area */}
-              <div className="flex-1 overflow-hidden relative bg-gray-100 rounded-lg" style={{ maxHeight: '70vh', minHeight: '400px' }}>
+              <div className="flex-1 overflow-hidden relative justify-center  items-center bg-gray-100 rounded-lg" >
                 <ReactImageCrop
                   crop={crop}
                   onChange={(_pixelCrop, percentCrop) => setCrop(percentCrop)}
@@ -802,6 +803,63 @@ export default function ImageCropUpload({
           )}
           {uploading ? 'Uploading...' : (placeholder || 'Upload Image')}
         </Button>
+        {fileInput}
+        {cropModal}
+      </>
+    )
+  }
+
+  // Avatar variant (circular avatar with edit overlay)
+  if (variant === 'avatar') {
+    return (
+      <>
+        <div
+          className={cn(
+            'relative group cursor-pointer',
+            disabled && 'cursor-not-allowed opacity-70',
+            className
+          )}
+          onClick={() => !disabled && openFileDialog()}
+          role="button"
+          tabIndex={0}
+        >
+          {/* Circular Avatar */}
+          <div className={cn(
+            'rounded-full overflow-hidden border-2 border-white shadow-sm bg-gray-100 transition-all',
+            'h-32 w-32 md:h-44 md:w-44',
+            uploading && 'opacity-70'
+          )}>
+            {uploading ? (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+              </div>
+            ) : displayUrl ? (
+              <img
+                src={displayUrl}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-3xl font-bold">
+                {placeholder?.charAt(0)?.toUpperCase() || <ImageIcon className="w-10 h-10" />}
+              </div>
+            )}
+          </div>
+
+          {/* Edit Icon Overlay - positioned at bottom-right edge of circle */}
+          {!disabled && (
+            <div className={cn(
+              'absolute',
+              'bottom-0 right-0',
+              'w-9 h-9 md:w-11 md:h-11',
+              'rounded-full bg-white shadow-lg border-2 border-gray-100',
+              'flex items-center justify-center',
+              'transition-all duration-200',
+            )}>
+              <Edit className="w-4 h-4 md:w-5 md:h-5 text-gray-600 group-hover:text-slate-800" />
+            </div>
+          )}
+        </div>
         {fileInput}
         {cropModal}
       </>

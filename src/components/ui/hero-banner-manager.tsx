@@ -527,22 +527,24 @@ export default function HeroBannerManager({ heroContent, onChange }: HeroBannerM
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="max-w-md z-50">
-          <DialogHeader>
-            <DialogTitle>Delete Banner</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this banner? This action cannot be undone.
+        <DialogContent className="rounded-2xl max-w-sm p-4 z-50">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-base">Delete Banner</DialogTitle>
+            <DialogDescription className="text-xs">
+              Delete this banner? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex justify-end gap-2 mt-4">
+          <DialogFooter className="pt-2 gap-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setShowDeleteDialog(false)}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               Cancel
             </Button>
-            <Button onClick={confirmDelete} className="rounded-2xl bg-red-500 hover:bg-red-600">
+            <Button size="sm" onClick={confirmDelete} className="rounded-xl bg-red-500 hover:bg-red-600">
+              <Trash2 className="h-3 w-3 mr-1" />
               Delete
             </Button>
           </DialogFooter>

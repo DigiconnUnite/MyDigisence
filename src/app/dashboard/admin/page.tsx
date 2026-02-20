@@ -6067,7 +6067,6 @@ const renderRightPanel = () => {
   if (loading || isLoading) {
     return (
       <div className="min-h-screen relative flex flex-col">
-     
         <div className="fixed inset-0     bg-center bg-slate-200  -z-10"></div>
         {/* Top Header Bar */}
         <div className="bg-white border border-gray-200 shadow-sm">
@@ -6128,7 +6127,7 @@ const renderRightPanel = () => {
           <div
             className={`flex-1 m-4 rounded-3xl bg-white/50 backdrop-blur-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 ease-in-out pb-20 md:pb-0`}
           >
-            <div className="flex-1 p-4 sm:p-6 overflow-auto hide-scrollbar">
+            <div className="flex-1   p-4 max-w-7xl mx-auto sm:p-6 overflow-auto hide-scrollbar">
               {renderSkeletonContent()}
             </div>
           </div>
@@ -6187,7 +6186,7 @@ const renderRightPanel = () => {
             <div className="flex justify-between items-center px-4 sm:px-6 py-2">
               <div className="hidden md:flex"></div>
               <div className="flex items-center md:hidden">
-                <img src="/logo.svg" alt="DigiSense" className="h-8 w-auto" />
+                <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
                 <span className="h-8 border-l border-gray-300 mx-2"></span>
                 <div>
                   <span className="font-semibold">Super Admin</span>
@@ -6212,7 +6211,7 @@ const renderRightPanel = () => {
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0">
-            <div className="p-4 sm:p-6">{renderMiddleContent()}</div>
+            <div className="p-4 max-w-7xl mx-auto sm:p-6">{renderMiddleContent()}</div>
           </div>
         </div>
 
@@ -6436,51 +6435,45 @@ const renderRightPanel = () => {
 
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+        <DialogContent className="rounded-2xl max-w-sm p-4">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
               Confirm Bulk Delete
             </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {selectedBusinessIds.size} businesses? 
-              This action cannot be undone and will permanently remove all selected businesses and their associated users.
+            <DialogDescription className="text-xs">
+              Delete {selectedBusinessIds.size} businesses? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
-            <p className="text-sm text-red-700">
-              <strong>Warning:</strong> This will permanently delete:
-            </p>
-            <ul className="text-sm text-red-600 mt-2 list-disc list-inside">
-              <li>All selected business accounts</li>
-              <li>Associated admin users</li>
-              <li>All business data (products, inquiries, etc.)</li>
-              <li>This action is irreversible</li>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+            <p className="text-xs text-red-700 font-medium">This will permanently delete:</p>
+            <ul className="text-xs text-red-600 mt-1 list-disc list-inside space-y-0.5">
+              <li>Selected business accounts</li>
+              <li>Associated admin users & data</li>
             </ul>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-2 gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => setShowBulkDeleteDialog(false)}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               Cancel
             </Button>
             <Button 
               variant="destructive" 
+              size="sm"
               onClick={confirmBulkDelete}
               disabled={bulkActionLoading}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               {bulkActionLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Deleting...
-                </>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete {selectedBusinessIds.size} Businesses
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete ({selectedBusinessIds.size})
                 </>
               )}
             </Button>
@@ -6490,53 +6483,48 @@ const renderRightPanel = () => {
 
       {/* Delete Business Confirmation Dialog */}
       <Dialog open={showDeleteBusinessDialog} onOpenChange={setShowDeleteBusinessDialog}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+        <DialogContent className="rounded-2xl max-w-sm p-4">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
               Delete Business
             </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{deleteBusiness?.name}"? This action cannot be undone and will permanently remove the business and all associated data.
+            <DialogDescription className="text-xs">
+              Delete "{deleteBusiness?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
-            <p className="text-sm text-red-700">
-              <strong>Warning:</strong> This will permanently delete:
-            </p>
-            <ul className="text-sm text-red-600 mt-2 list-disc list-inside">
-              <li>Business account and listing</li>
-              <li>Associated admin user</li>
-              <li>All business products and inquiries</li>
-              <li>This action is irreversible</li>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+            <p className="text-xs text-red-700 font-medium">This will permanently delete:</p>
+            <ul className="text-xs text-red-600 mt-1 list-disc list-inside space-y-0.5">
+              <li>Business account & listing</li>
+              <li>Associated admin user & data</li>
             </ul>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-2 gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => {
                 setShowDeleteBusinessDialog(false);
                 setDeleteBusiness(null);
               }}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               Cancel
             </Button>
             <Button 
               variant="destructive" 
+              size="sm"
               onClick={confirmDeleteBusiness}
               disabled={deletingBusiness}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               {deletingBusiness ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Deleting...
-                </>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Business
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete
                 </>
               )}
             </Button>
@@ -6546,53 +6534,48 @@ const renderRightPanel = () => {
 
       {/* Delete Professional Confirmation Dialog */}
       <Dialog open={showDeleteProfessionalDialog} onOpenChange={setShowDeleteProfessionalDialog}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+        <DialogContent className="rounded-2xl max-w-sm p-4">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
               Delete Professional
             </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{professionalToDelete?.name}"? This action cannot be undone and will permanently remove the professional profile and all associated data.
+            <DialogDescription className="text-xs">
+              Delete "{professionalToDelete?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
-            <p className="text-sm text-red-700">
-              <strong>Warning:</strong> This will permanently delete:
-            </p>
-            <ul className="text-sm text-red-600 mt-2 list-disc list-inside">
-              <li>Professional profile and account</li>
-              <li>All associated skills, education, and experience</li>
-              <li>Portfolio items and services offered</li>
-              <li>This action is irreversible</li>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+            <p className="text-xs text-red-700 font-medium">This will permanently delete:</p>
+            <ul className="text-xs text-red-600 mt-1 list-disc list-inside space-y-0.5">
+              <li>Professional profile & account</li>
+              <li>Skills, education & portfolio</li>
             </ul>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-2 gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => {
                 setShowDeleteProfessionalDialog(false);
                 setProfessionalToDelete(null);
               }}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               Cancel
             </Button>
             <Button 
               variant="destructive" 
+              size="sm"
               onClick={confirmDeleteProfessional}
               disabled={deletingProfessional}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               {deletingProfessional ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Deleting...
-                </>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Professional
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete
                 </>
               )}
             </Button>
@@ -6602,44 +6585,43 @@ const renderRightPanel = () => {
 
       {/* Delete Category Confirmation Dialog */}
       <Dialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+        <DialogContent className="rounded-2xl max-w-sm p-4">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
               Delete Category
             </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{categoryToDelete?.name}"? This action cannot be undone and will permanently remove the category and all associated data.
+            <DialogDescription className="text-xs">
+              Delete "{categoryToDelete?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
-            <p className="text-sm text-red-700">
-              <strong>Warning:</strong> This will permanently delete:
-            </p>
-            <ul className="text-sm text-red-600 mt-2 list-disc list-inside">
-              <li>Category and its subcategories</li>
-              <li>All businesses associated with this category</li>
-              <li>This action is irreversible</li>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+            <p className="text-xs text-red-700 font-medium">This will permanently delete:</p>
+            <ul className="text-xs text-red-600 mt-1 list-disc list-inside space-y-0.5">
+              <li>Category & subcategories</li>
+              <li>Associated business references</li>
             </ul>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-2 gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => {
                 setShowDeleteCategoryDialog(false);
                 setCategoryToDelete(null);
               }}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               Cancel
             </Button>
             <Button 
               variant="destructive" 
+              size="sm"
               onClick={confirmDeleteCategory}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Category
+              <Trash2 className="h-3 w-3 mr-1" />
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -6647,70 +6629,66 @@ const renderRightPanel = () => {
 
       {/* Reject Registration Request Dialog */}
       <Dialog open={showRejectInquiryDialog} onOpenChange={setShowRejectInquiryDialog}>
-        <DialogContent className="rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+        <DialogContent className="rounded-2xl max-w-sm p-4">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
               Reject Registration Request
             </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to reject the registration request from "{inquiryToReject?.name}"? This will send a rejection notification to the user.
+            <DialogDescription className="text-xs">
+              Reject request from "{inquiryToReject?.name}"? A notification will be sent.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="text-gray-500">Type:</span>
-                  <span className="font-medium text-gray-900 ml-2">{inquiryToReject?.type}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Email:</span>
-                  <span className="font-medium text-gray-900 ml-2">{inquiryToReject?.email}</span>
-                </div>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-gray-500">Type:</span>
+                <span className="font-medium text-gray-900 ml-1">{inquiryToReject?.type}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Email:</span>
+                <span className="font-medium text-gray-900 ml-1 truncate">{inquiryToReject?.email}</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="rejectReason" className="text-sm font-medium text-gray-900">
-                Reason for Rejection (optional)
-              </Label>
-              <Textarea
-                id="rejectReason"
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Enter a reason for rejection..."
-                className="rounded-xl resize-none"
-                rows={3}
-              />
-            </div>
           </div>
-          <DialogFooter>
+          <div className="space-y-1.5">
+            <Label htmlFor="rejectReason" className="text-xs font-medium text-gray-900">
+              Reason (optional)
+            </Label>
+            <Textarea
+              id="rejectReason"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter reason..."
+              className="rounded-xl resize-none text-xs h-16"
+            />
+          </div>
+          <DialogFooter className="pt-2 gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => {
                 setShowRejectInquiryDialog(false);
                 setInquiryToReject(null);
                 setRejectReason("");
               }}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               Cancel
             </Button>
             <Button 
               variant="destructive" 
+              size="sm"
               onClick={confirmRejectInquiry}
               disabled={creatingAccount === inquiryToReject?.id}
-              className="rounded-2xl"
+              className="rounded-xl"
             >
               {creatingAccount === inquiryToReject?.id ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Rejecting...
-                </>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <>
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject Request
+                  <XCircle className="h-3 w-3 mr-1" />
+                  Reject
                 </>
               )}
             </Button>

@@ -2186,7 +2186,7 @@ export default function BusinessProfile({
             )}
 
             {/* About Us Text & Opening Hours (Moved to Main Content) */}
-            <section className="w-full py-8   md:py-12 bg-white rounded-3xl shadow-sm px-6 md:px-8">
+            <section className="w-full py-8 mb-20   md:py-12 bg-white rounded-3xl shadow-sm px-6 md:px-8">
               <div className="flex flex-col md:flex-row gap-8 md:gap-12">
                 {/* Right Side: Opening Hours & GST Number */}
                 <div className="flex-1">

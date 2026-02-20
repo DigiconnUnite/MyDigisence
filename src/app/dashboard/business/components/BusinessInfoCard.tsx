@@ -1,6 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Edit,
@@ -25,13 +23,6 @@ import {
   Download,
 } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -39,8 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import ReactImageCrop, { Crop, PixelCrop } from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
+import ImageCropUpload from "@/components/ui/image-crop-upload";
 import { useToast } from "@/hooks/use-toast";
 
 interface BusinessInfoCardProps {
@@ -120,22 +110,23 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
     }
   }, [logoUrl]);
 
-  const [cropModalOpen, setCropModalOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [crop, setCrop] = useState<Crop>({
-    unit: "%",
-    x: 20,
-    y: 20,
-    width: 60,
-    height: 60,
-  });
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<PixelCrop | null>(
-    null,
-  );
   const [isSaving, setIsSaving] = useState(false);
   const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Handler for logo upload from ImageCropUpload component
+  const handleLogoUpload = useCallback((url: string) => {
+    setEditData((prev) => ({
+      ...prev,
+      logo: url,
+      logoPendingSave: true,
+    }));
+    if (onLogoUpload) onLogoUpload(url);
+    toast({
+      title: "Success",
+      description: "Logo uploaded successfully. Click Save to apply changes.",
+    });
+  }, [onLogoUpload, toast]);
 
   const handleEditClick = () => {
     if (onEdit) onEdit();
@@ -230,122 +221,6 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
     }
   };
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (files && files.length > 0) {
-        const file = files[0];
-        if (file.type.startsWith("image/")) {
-          setSelectedFile(file);
-          setCrop({ unit: "%", x: 15, y: 15, width: 70, height: 70 });
-          setCroppedAreaPixels(null);
-          setCropModalOpen(true);
-        }
-      }
-    },
-    [],
-  );
-
-  const cropImage = useCallback(async (): Promise<Blob> => {
-    const image = imgRef.current;
-    if (!image || !croppedAreaPixels)
-      throw new Error("Crop canvas does not exist");
-
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("No 2d context");
-
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    const scaledCropX = croppedAreaPixels.x * scaleX;
-    const scaledCropY = croppedAreaPixels.y * scaleY;
-    const scaledCropWidth = croppedAreaPixels.width * scaleX;
-    const scaledCropHeight = croppedAreaPixels.height * scaleY;
-
-    canvas.width = scaledCropWidth;
-    canvas.height = scaledCropHeight;
-
-    ctx.drawImage(
-      image,
-      scaledCropX,
-      scaledCropY,
-      scaledCropWidth,
-      scaledCropHeight,
-      0,
-      0,
-      scaledCropWidth,
-      scaledCropHeight,
-    );
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (!blob) throw new Error("Canvas blob failed");
-        resolve(blob);
-      }, selectedFile?.type || "image/jpeg");
-    });
-  }, [croppedAreaPixels, selectedFile]);
-
-  const handleConfirmCrop = useCallback(async () => {
-    if (!selectedFile) return;
-
-    try {
-      const croppedBlob = await cropImage();
-      if (!croppedBlob) return;
-
-      if (imgRef.current?.src) URL.revokeObjectURL(imgRef.current.src);
-
-      const croppedFile = new File([croppedBlob], selectedFile.name, {
-        type: selectedFile.type,
-      });
-
-      setCropModalOpen(false);
-      setSelectedFile(null);
-      setCroppedAreaPixels(null);
-
-      // 1. Upload the file
-      const formData = new FormData();
-      formData.append("file", croppedFile);
-      formData.append("type", "logo");
-
-      const uploadResponse = await fetch("/api/business/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const uploadData = await uploadResponse.json();
-      const permanentUrl = uploadData.url; // Assuming API returns { url: "..." }
-
-      if (!permanentUrl) throw new Error("No URL returned from upload server");
-
-      // 2. Update UI immediately but defer DB update until Save is clicked
-      setEditData((prev) => ({
-        ...prev,
-        logo: permanentUrl,
-        logoPendingSave: true,
-      }));
-      if (onLogoUpload) onLogoUpload(permanentUrl);
-
-      // 3. Show success toast for upload only
-      toast({
-        title: "Success",
-        description: "Logo uploaded successfully. Click Save to apply changes.",
-      });
-    } catch (error) {
-      console.error("Error cropping/uploading image:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to upload image.",
-        variant: "destructive",
-      });
-    }
-  }, [selectedFile, cropImage, onLogoUpload, toast]);
-
   const handlePdfFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
@@ -421,7 +296,7 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
   };
 
   return (
-    <Card className="w-full p-0 mx-auto border-none shadow-none bg-transparent">
+    <div className="w-full p-0 mx-auto border-none shadow-none bg-transparent">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* --- Profile Information Card --- */}
         <div className="md:col-span-2 bg-gray-50 rounded-2xl p-6 border border-gray-200 relative">
@@ -466,38 +341,26 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
-            {/* Column 1: Profile Picture */}
+            {/* Column 1: Profile Picture - Using ImageCropUpload with avatar variant */}
             <div className="md:col-span-1 flex justify-center md:justify-start">
-              <div className="shrink-0 relative">
-                <Avatar className="h-32 w-32 md:h-44 md:w-44 border-2 border-white shadow-sm">
-                  {editData.logo ? (
-                    <AvatarImage
-                      src={editData.logo}
-                      alt={editData.businessName}
-                    />
-                  ) : (
-                    <AvatarFallback className="bg-gray-200 text-gray-600 text-3xl font-bold">
-                      {editData.businessName.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                {isEditing && (
-                  <label
-                    htmlFor="logo-upload"
-                    className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-100 transition-opacity cursor-pointer"
-                  >
-                    <Edit className="h-6 w-6 text-white" />
-                  </label>
-                )}
-                <input
-                  id="logo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  disabled={!isEditing}
-                />
-              </div>
+              <ImageCropUpload
+                onUpload={handleLogoUpload}
+                onError={(error) => {
+                  toast({
+                    title: "Error",
+                    description: error,
+                    variant: "destructive",
+                  });
+                }}
+                aspectRatio={1}
+                mode="crop"
+                variant="avatar"
+                currentImageUrl={editData.logo}
+                placeholder={editData.businessName}
+                uploadType="logo"
+                disabled={!isEditing}
+                className="shrink-0"
+              />
             </div>
 
             {/* Column 2: Business Name & Admin Name */}
@@ -1096,44 +959,7 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
           </div>
         </div>
 
-        {/* --- Image Cropper Modal --- */}
-        <Dialog open={cropModalOpen} onOpenChange={setCropModalOpen}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Crop Profile Image</DialogTitle>
-            </DialogHeader>
-            {selectedFile && (
-              <div className="h-96 relative flex justify-center bg-gray-100 rounded-lg overflow-hidden">
-                <ReactImageCrop
-                  crop={crop}
-                  onChange={(_pixelCrop, percentCrop) => setCrop(percentCrop)}
-                  onComplete={(c) => setCroppedAreaPixels(c)}
-                  aspect={1}
-                  circularCrop={true}
-                  className="max-h-full"
-                  minWidth={100}
-                  minHeight={100}
-                >
-                  <img
-                    ref={imgRef}
-                    src={URL.createObjectURL(selectedFile)}
-                    alt="Crop me"
-                    className="max-h-full object-contain"
-                  />
-                </ReactImageCrop>
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setCropModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleConfirmCrop} disabled={!croppedAreaPixels}>
-                Confirm Crop
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
-    </Card>
+    </div>
   );
 };

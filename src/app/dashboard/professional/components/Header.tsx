@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
     <div className="bg-white border rounded-3xl mt-3 mx-3 border-gray-200 shadow-sm">
       <div className="flex justify-between items-center px-3 sm:px-4 py-2">
         <div className="flex items-center">
-          <Image src="/logo.svg" alt="DigiSence" width={32} height={32} className="h-8 w-auto" />
+          <Image src="/logo.png" alt="DigiSence" width={32} height={32} className="h-8 w-auto" />
           <span className="h-8 border-l border-gray-300 mx-2"></span>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">

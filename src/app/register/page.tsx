@@ -25,7 +25,7 @@ function RegisterContent() {
           <Link href="/" className="flex items-center space-x-2 group">
             {/* ACTUAL LOGO IMAGE */}
             <Image
-              src="/logo.svg"
+              src="/logo.png"
               alt="DigiSence Logo"
               width={32}
               height={32}

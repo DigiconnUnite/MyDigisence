@@ -78,8 +78,8 @@ export const metadata: Metadata = {
     google: 'google-site-verification-code',
   },
   icons: {
-    icon: '/logo.svg',
-    apple: '/logo.svg',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
 };
 
@@ -89,13 +89,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="text-[89%]" suppressHydrationWarning>
+    <html lang="en" className="text-[90%]" suppressHydrationWarning>
+      <head>
+        <meta
+          name="google-site-verification"
+          content="aTFmc6hbCD9_PN52nvLV2QMS1pc-hC_Aue5oKd5lvWI"
+        />
+      </head>
       <body
         className={`${archivo.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
           <QueryProvider>
-            <AuthProvider>{children}
+            <AuthProvider>
+              {children}
               <Toaster />
             </AuthProvider>
           </QueryProvider>

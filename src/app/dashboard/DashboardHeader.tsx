@@ -21,7 +21,7 @@ export default function DashboardHeader({
     <div className="bg-white border border-gray-200 shadow-sm">
       <div className="flex justify-between items-center px-3 sm:px-4 py-3">
         <div className="flex items-center">
-          <img src="/logo.svg" alt="DigiSense" className="h-8 w-auto" />
+          <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
           <span className="h-8 border-l border-gray-300 mx-2"></span>
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">

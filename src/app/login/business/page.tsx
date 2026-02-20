@@ -111,19 +111,14 @@ export default function BusinessLoginPage() {
       <div className="flex-1 flex flex-col justify-center relative w-full px-4 sm:px-6 lg:px-12 py-10 lg:py-0 z-10">
         {/* Top Header */}
         <div className="absolute top-0 left-0 w-full px-4 sm:px-6 lg:px-12 py-4 lg:py-6 flex justify-between items-center z-20">
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="rounded-md text-primary">
-              <Image
-                src="/logo-tranparent.png"
+          <Link href="/" className="flex items-center space-x-3 group">
+            <div className="relative">
+              <img
+                src="/logo-header.png"
                 alt="DigiSence Logo"
-                width={32}
-                height={32}
-                className="h-8 w-auto"
+                className="h-10 w-auto  transition-transform duration-300 group-hover:scale-110"
               />
             </div>
-            <span className="font-bold text-xl text-slate-800 tracking-tight hidden sm:block">
-              DigiSence
-            </span>
           </Link>
           <Button
             onClick={() => router.push("/login")}

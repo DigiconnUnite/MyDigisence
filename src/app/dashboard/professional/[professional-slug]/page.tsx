@@ -78,20 +78,9 @@ import Link from "next/link";
 import { getOptimizedImageUrl, handleImageError, isValidImageUrl } from '@/lib/image-utils';
 import SharedSidebar from '../../components/SharedSidebar';
 
-// Import extracted components
-import InquiriesView from "./components/InquiriesView";
-import AnalyticsView from "./components/AnalyticsView";
-import ThemeView from "./components/ThemeView";
-import SettingsView from "./components/SettingsView";
-import CreateProfileView from "./components/CreateProfileView";
-import StatCard from "./components/StatCard";
-import ActionCard from "./components/ActionCard";
-import ProfileView from "./components/ProfileView";
-import OverviewView from "./components/OverviewView";
+
 import ImageUpload from "@/components/ui/image-upload";
-import InquiryDetailsDialog from "./components/InquiryDetailsDialog";
-import BannerUploadModal from "./components/BannerUploadModal";
-import ProfilePictureUploadModal from "./components/ProfilePictureUploadModal";
+import { ArrayFieldManager, ServiceForm, PortfolioItemForm } from "@/components/ui/array-field-manager";
 
 type ButtonVariant =
   | "link"
@@ -4800,7 +4789,7 @@ export default function ProfessionalDashboard() {
           <div
             className={`flex-1 m-4 rounded-3xl bg-white/50 backdrop-blur-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 ease-in-out pb-20 md:pb-0`}
           >
-            <div className="flex-1 p-4 sm:p-6 overflow-auto hide-scrollbar">
+            <div className="flex-1 p-4 max-w-7xl mx-auto sm:p-6 overflow-auto hide-scrollbar">
               {renderSkeletonContent()}
             </div>
           </div>
@@ -4970,7 +4959,7 @@ export default function ProfessionalDashboard() {
               <div className="flex justify-between items-center px-4 sm:px-6 py-2">
                 <div className="hidden md:flex"></div>
                 <div className="flex items-center md:hidden">
-                  <img src="/logo.svg" alt="DigiSense" className="h-8 w-auto" />
+                  <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
                   <span className="h-8 border-l border-gray-300 mx-2"></span>
                   <div>
                     <span className="font-semibold">Professional</span>
@@ -5047,7 +5036,7 @@ export default function ProfessionalDashboard() {
 
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0">
-              <div className="p-4 sm:p-6">{renderMiddleContent()}</div>
+              <div className="p-4 max-w-7xl mx-auto sm:p-6">{renderMiddleContent()}</div>
             </div>
           </div>
         </div>

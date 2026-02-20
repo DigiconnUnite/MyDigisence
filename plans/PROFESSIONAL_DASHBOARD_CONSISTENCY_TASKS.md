@@ -46,7 +46,7 @@ This file contains the detailed implementation tasks for making the Professional
   <div className="flex justify-between items-center px-4 sm:px-6 py-2">
     <div className="hidden md:flex"></div>
     <div className="flex items-center md:hidden">
-      <img src="/logo.svg" alt="DigiSense" className="h-8 w-auto" />
+      <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
       <span className="h-8 border-l border-gray-300 mx-2"></span>
       <div><span className="font-semibold">Professional</span></div>
     </div>

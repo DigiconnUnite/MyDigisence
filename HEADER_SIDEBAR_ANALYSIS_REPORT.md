@@ -128,7 +128,7 @@ Sidebar Structure:
 ```tsx
 <nav className={cn("fixed inset-x-0 top-0 z-30", navTransparent ? "bg-transparent" : "bg-white border-b border-gray-200 shadow-sm")}>
   {/* Logo with special handling */}
-  <img src="/logo.svg" className={navTransparent ? "filter invert hue-rotate-180" : " "} />
+  <img src="/logo.png" className={navTransparent ? "filter invert hue-rotate-180" : " "} />
   
   {/* Nav Items with icons */}
   <Link className="flex items-center space-x-1">
@@ -145,7 +145,7 @@ Sidebar Structure:
 ```tsx
 <nav className="fixed inset-x-0 top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
   {/* Standard logo */}
-  <img src="/logo.svg" />
+  <img src="/logo.png" />
   
   {/* Nav Items with icons */}
   <Link className="flex items-center">
@@ -191,7 +191,7 @@ Sidebar Structure:
 <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl">
   {/* Header with logo */}
   <div className="flex items-center justify-between p-4 border-b">
-    <Link href="/"><img src="/logo.svg" /></Link>
+    <Link href="/"><img src="/logo.png" /></Link>
     <button><X className="h-5 w-5" /></button>
   </div>
   

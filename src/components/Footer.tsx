@@ -26,12 +26,11 @@ export default function Footer() {
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <img
-                  src="/logo.svg"
+                  src="/logo-header.png"
                   alt="DigiSence Logo"
-                  className="h-10 w-10 filter invert hue-rotate-180 transition-transform duration-300 group-hover:scale-110"
+                  className="h-auto w-auto filter invert hue-rotate-180 transition-transform duration-300 group-hover:scale-110"
                 />
               </div>
-              <span className="text-2xl font-bold text-white">DigiSence</span>
             </Link>
             <p className="text-gray-300 text-sm lg:text-base leading-relaxed">
               Create professional digital profiles for your business. Showcase

@@ -149,7 +149,7 @@ export default function PublicPageSidebar({
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <Link href="/" className="flex items-center space-x-2">
-              <img src="/logo.svg" alt="DigiSence" className="h-7 w-auto" />
+              <img src="/logo.png" alt="DigiSence" className="h-7 w-auto" />
               <span className="font-bold text-xl text-slate-800">
                 DigiSence
               </span>

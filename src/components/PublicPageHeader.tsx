@@ -140,35 +140,22 @@ export default function PublicPageHeader({
           "fixed inset-x-0 top-0 z-30",
           isTransparent
             ? "bg-transparent"
-            : "bg-white border-b border-gray-200 shadow-sm"
+            : "bg-white border-b border-gray-200 shadow-sm",
         )}
       >
         <div className="mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex justify-between items-center h-14 md:h-16">
-            {/* Logo */}
-            <Link
-              href="/"
-              className={cn(
-                "relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal",
-                isTransparent ? "text-white" : "text-gray-900"
-              )}
-            >
-              <img
-                src="/logo.svg"
-                alt="DigiSence"
-                className={cn(
-                  "h-6 w-auto sm:h-7",
-                  isTransparent ? "filter invert hue-rotate-180" : ""
-                )}
-              />
-              <span
-                className={cn(
-                  "font-bold text-lg sm:text-xl",
-                  isTransparent ? "text-white" : "text-slate-800"
-                )}
-              >
-                DigiSence
-              </span>
+          <div className="flex justify-between items-center relative h-14 md:h-16">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="relative">
+                <img
+                  src="/logo-header.png"
+                  alt="DigiSence Logo"
+                  className={cn(
+                    "h-10 w-auto transition-transform duration-300 group-hover:scale-110",
+                    isTransparent ? "filter invert hue-rotate-180    " : ""
+                  )}
+                />
+              </div>
             </Link>
 
             {/* Desktop Navigation */}
@@ -186,8 +173,8 @@ export default function PublicPageHeader({
                           ? "bg-white/20 text-white font-bold"
                           : "bg-white text-slate-800 font-bold"
                         : isTransparent
-                        ? "text-white"
-                        : "text-gray-700"
+                          ? "text-white"
+                          : "text-gray-700",
                     )}
                   >
                     <IconComponent className="h-4 w-4" />
@@ -206,7 +193,7 @@ export default function PublicPageHeader({
                     "text-white border-gray-800 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4",
                     isTransparent
                       ? "bg-slate-900/20 border-white/50 hover:bg-white/30"
-                      : "bg-slate-800 hover:bg-slate-700"
+                      : "bg-slate-800 hover:bg-slate-700",
                   )}
                   asChild
                 >
@@ -216,7 +203,8 @@ export default function PublicPageHeader({
                   variant="outline"
                   className={cn(
                     "bg-white text-gray-900 hover:bg-slate-800 hover:text-white border-gray-800 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4",
-                    isTransparent && "border-white/50 hover:bg-white hover:text-slate-800"
+                    isTransparent &&
+                      "border-white/50 hover:bg-white hover:text-slate-800",
                   )}
                   asChild
                 >
@@ -232,7 +220,7 @@ export default function PublicPageHeader({
                     "p-2 rounded-md hover:bg-gray-100 md:hidden",
                     isTransparent
                       ? "text-white hover:bg-white/10"
-                      : "text-gray-700"
+                      : "text-gray-700",
                   )}
                 >
                   <Menu className="h-5 w-5" />
@@ -281,11 +269,13 @@ export default function PublicPageHeader({
                           "px-3 py-1 text-xs sm:text-sm font-semibold hover:bg-slate-800 hover:text-white whitespace-nowrap cursor-pointer transition-all duration-200 shrink-0 border-r border-gray-300 last:border-r-0 flex items-center space-x-1 sm:space-x-2",
                           selectedCategory === category.name
                             ? "bg-slate-800 text-white"
-                            : "text-gray-500"
+                            : "text-gray-500",
                         )}
                       >
                         <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
-                        <span className="hidden sm:inline">{category.name}</span>
+                        <span className="hidden sm:inline">
+                          {category.name}
+                        </span>
                         <span className="sm:hidden">
                           {category.name.split(" ")[0]}
                         </span>

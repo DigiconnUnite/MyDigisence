@@ -79,7 +79,7 @@ export default function AdminLoginPage() {
         <div className="w-full absolute top-0 left-0 right-0 max-w-7xl mx-auto p-4 sm:p-6 flex justify-between items-center z-50">
           <Link href="/" className="flex items-center space-x-2 group">
             <Image
-              src="/logo.svg"
+              src="/logo.png"
               alt="DigiSence Logo"
               width={32}
               height={32}

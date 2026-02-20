@@ -18,7 +18,7 @@ export function generateOrganizationSchema(): string {
     url: baseUrl,
     logo: {
       '@type': 'ImageObject',
-      url: `${baseUrl}/logo.svg`,
+      url: `${baseUrl}/logo.png`,
       width: 512,
       height: 512,
     },
