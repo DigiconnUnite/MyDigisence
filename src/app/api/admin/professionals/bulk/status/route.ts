@@ -44,19 +44,28 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Emit Socket.IO events for real-time updates
+    // Emit single batched Socket.IO event for real-time updates
     if (global.io) {
-      for (const id of ids) {
-        const professional = await db.professional.findUnique({ where: { id } })
-        if (professional) {
-          global.io.emit('professional-status-updated', {
-            professional: { ...professional, isActive },
-            action: 'status_update',
-            timestamp: new Date().toISOString(),
-            adminId: admin.userId
-          })
+      // Get all updated professionals in single query
+      const updatedProfessionals = await db.professional.findMany({
+        where: { id: { in: ids } },
+        select: {
+          id: true,
+          name: true,
+          isActive: true,
+          email: true,
+          professionalHeadline: true,
         }
-      }
+      })
+      
+      global.io.emit('professionals-bulk-status-updated', {
+        professionals: updatedProfessionals,
+        isActive,
+        action: 'bulk_status_update',
+        timestamp: new Date().toISOString(),
+        adminId: admin.userId,
+        count: ids.length
+      })
     }
 
     return NextResponse.json({

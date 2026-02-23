@@ -203,7 +203,7 @@ export default function ProfessionalProfile({
 
           <div className="flex flex-col items-center gap-3 w-full">
             {/* Profile Picture - overlapping the banner */}
-            <div className="shrink-0 flex items-center justify-center mb-3 mt-16 relative z-10">
+            <div className="shrink-0 flex items-center justify-center mb-3  relative z-10">
               {professional.profilePicture ? (
                 <img
                   src={profileImage.src}
@@ -1156,13 +1156,11 @@ export default function ProfessionalProfile({
           {/* MAIN CONTENT AREA */}
           <main className="md:col-span-3 h-full overflow-y-auto mb-5 relative scroll-smooth min-w-0">
             <div className="mx-auto max-w-[1400px] pb-20 px-4 sm:px-6 lg:px-8 pt-4 space-y-6 lg:space-y-8">
-              {/* 1. Hero Section - Banner Image removed from main content */}
-              {/* Mobile View: Profile Card */}
+              
               <div className="md:hidden">
                 <ProfessionalInfoCard />
               </div>
 
-              {/* 2. Work Experience + Expert Area (2 Columns) */}
               <div
                 ref={aboutRef}
                 id="about"

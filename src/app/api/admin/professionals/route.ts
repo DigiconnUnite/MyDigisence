@@ -64,31 +64,31 @@ export async function GET(request: NextRequest) {
       whereClause.isActive = false
     }
 
-    // Get total count
-    const totalItems = await db.professional.count({ where: whereClause })
+    // Get total count and professionals in parallel
+    const [totalItems, professionals] = await Promise.all([
+      db.professional.count({ where: whereClause }),
+      db.professional.findMany({
+        where: whereClause,
+        include: {
+          admin: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
+          },
+          _count: {
+            select: {
+              inquiries: true,
+            },
+          },
+        },
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: limit,
+      })
+    ])
     const totalPages = Math.ceil(totalItems / limit)
-
-    // Get paginated professionals
-    const professionals = await db.professional.findMany({
-      where: whereClause,
-      include: {
-        admin: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-          },
-        },
-        _count: {
-          select: {
-            inquiries: true,
-          },
-        },
-      },
-      orderBy: { [sortBy]: sortOrder },
-      skip,
-      take: limit,
-    })
 
     console.log('Admin API returning professionals:', professionals.length, 'page:', page, 'total:', totalItems)
 

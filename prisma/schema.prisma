@@ -117,6 +117,10 @@ model Professional {
    @@index([isActive])
    @@index([professionName])
    @@index([createdAt])
+   // Compound indexes for common query patterns
+   @@index([isActive, createdAt])
+   @@index([isActive, professionName])
+   @@index([adminId, isActive])
    @@map("professionals")
 }
 

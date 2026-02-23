@@ -448,19 +448,49 @@ export function useBulkUpdateProfessionalStatus() {
   return useMutation({
     mutationFn: ({ ids, isActive }: { ids: string[]; isActive: boolean }) =>
       bulkUpdateProfessionalStatus(ids, isActive),
-    onSuccess: (_, { ids, isActive }) => {
-      queryClient.invalidateQueries({ queryKey: professionalKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      toast({
-        title: 'Success',
-        description: `${ids.length} professionals ${isActive ? 'activated' : 'deactivated'} successfully`,
+    onMutate: async ({ ids, isActive }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: professionalKeys.lists() });
+
+      // Snapshot previous value
+      const previousProfessionals = queryClient.getQueriesData<ProfessionalApiResponse>({
+        queryKey: professionalKeys.lists(),
       });
+
+      // Optimistically update
+      queryClient.setQueriesData<ProfessionalApiResponse>({ queryKey: professionalKeys.lists() }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          professionals: old.professionals.map((prof) =>
+            ids.includes(prof.id) ? { ...prof, isActive } : prof
+          ),
+        };
+      });
+
+      return { previousProfessionals };
     },
-    onError: (err) => {
+    onError: (err, { ids, isActive }, context) => {
+      // Rollback on error
+      if (context?.previousProfessionals) {
+        context.previousProfessionals.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast({
         title: 'Error',
         description: err.message || 'Failed to update professionals',
         variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: professionalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+    onSuccess: (_, { ids, isActive }) => {
+      toast({
+        title: 'Success',
+        description: `${ids.length} professionals ${isActive ? 'activated' : 'deactivated'} successfully`,
       });
     },
   });
@@ -475,19 +505,51 @@ export function useBulkDeleteProfessionals() {
 
   return useMutation({
     mutationFn: bulkDeleteProfessionals,
-    onSuccess: (_, ids) => {
-      queryClient.invalidateQueries({ queryKey: professionalKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      toast({
-        title: 'Success',
-        description: `${ids.length} professionals deleted successfully`,
+    onMutate: async (ids) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: professionalKeys.lists() });
+
+      // Snapshot previous value
+      const previousProfessionals = queryClient.getQueriesData<ProfessionalApiResponse>({
+        queryKey: professionalKeys.lists(),
       });
+
+      // Optimistically update - remove deleted professionals
+      queryClient.setQueriesData<ProfessionalApiResponse>({ queryKey: professionalKeys.lists() }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          professionals: old.professionals.filter((prof) => !ids.includes(prof.id)),
+          pagination: {
+            ...old.pagination,
+            totalItems: old.pagination.totalItems - ids.length,
+          },
+        };
+      });
+
+      return { previousProfessionals };
     },
-    onError: (err) => {
+    onError: (err, ids, context) => {
+      // Rollback on error
+      if (context?.previousProfessionals) {
+        context.previousProfessionals.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast({
         title: 'Error',
         description: err.message || 'Failed to delete professionals',
         variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: professionalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: 'Success',
+        description: `${ids.length} professionals deleted successfully`,
       });
     },
   });

@@ -110,28 +110,20 @@ export async function POST(request: NextRequest) {
 
     console.log(`Professional inquiry created with ID: ${inquiry.id}`)
 
-    // Send email notification to professional
-    try {
-      console.log('Sending email notification')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'professional_inquiry',
-          inquiryId: inquiry.id,
-        }),
-      })
-
-      if (response.ok) {
-        console.log('Email notification sent successfully')
-      } else {
-        console.error('Failed to send email notification:', response.status)
-      }
-    } catch (error) {
-      console.error('Email notification error:', error)
-    }
+    // Send email notification to professional (non-blocking - fire and forget)
+    // Email failures should not block the response
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'professional_inquiry',
+        inquiryId: inquiry.id,
+      }),
+    }).catch((error) => {
+      console.error('Email notification error (non-blocking):', error)
+    })
 
     console.log('Professional inquiry submission completed successfully')
     return NextResponse.json({

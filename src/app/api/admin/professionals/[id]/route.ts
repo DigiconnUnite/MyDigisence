@@ -48,15 +48,7 @@ export async function PUT(
     const body = await request.json()
     const { isActive } = body
 
-    // Check if professional exists
-    const existingProfessional = await db.professional.findUnique({
-      where: { id: professionalId },
-    })
-
-    if (!existingProfessional) {
-      return NextResponse.json({ error: 'Professional not found' }, { status: 404 })
-    }
-
+    // Direct update - Prisma handles non-existent records gracefully
     const professional = await db.professional.update({
       where: { id: professionalId },
       data: { isActive },
@@ -74,7 +66,11 @@ export async function PUT(
           },
         },
       },
-    })
+    }).catch(() => null)
+
+    if (!professional) {
+      return NextResponse.json({ error: 'Professional not found' }, { status: 404 })
+    }
 
     // Emit Socket.IO event for real-time update
     if (global.io) {
@@ -123,15 +119,7 @@ export async function POST(
     const body = await request.json()
     const updateData = updateProfessionalSchema.parse(body)
 
-    // Check if professional exists
-    const existingProfessional = await db.professional.findUnique({
-      where: { id: professionalId },
-    })
-
-    if (!existingProfessional) {
-      return NextResponse.json({ error: 'Professional not found' }, { status: 404 })
-    }
-
+    // Direct update - Prisma handles non-existent records gracefully
     const professional = await db.professional.update({
       where: { id: professionalId },
       data: {
@@ -148,7 +136,11 @@ export async function POST(
           },
         },
       },
-    })
+    }).catch(() => null)
+
+    if (!professional) {
+      return NextResponse.json({ error: 'Professional not found' }, { status: 404 })
+    }
 
     // Emit Socket.IO event for real-time update
     if (global.io) {
@@ -191,9 +183,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: 'Professional ID is required' }, { status: 400 })
     }
 
-    // Check if professional exists
+    // Direct delete - Prisma handles non-existent records gracefully
+    // First get adminId for cleanup
     const existingProfessional = await db.professional.findUnique({
       where: { id: professionalId },
+      select: { adminId: true }
     })
 
     if (!existingProfessional) {
