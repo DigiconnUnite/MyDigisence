@@ -21,7 +21,7 @@ export default function HomePage() {
 
         {/* Who Is It For? Section */}
         <section className="py-10 md:py-20 bg-white">
-          <div className="max-w-7xl mx-auto ">
+          <div className="container mx-auto ">
             <div className="text-center mb-8">
               <div className="flex items-center w-fit mx-auto rounded-full px-4 py-2 border border-slate-900 shadow-sm mb-2  text-slate-800">
                 <CheckCircle className="h-4 w-4 mr-2 text-slate-900" />
@@ -100,7 +100,7 @@ export default function HomePage() {
 
         {/* Businesses Section */}
         <section className="py-10 md:py-20 bg-[#F3FBFF]">
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div className="text-left flex flex-col h-full    mr-8">
                 <h2 className="text-3xl md:text-6xl font-bold text-gray-600 mb-6">
@@ -183,7 +183,7 @@ export default function HomePage() {
 
         {/* Professionals Section */}
         <section className="py-10 md:py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
+          <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div className="flex flex-col overflow-hidden  h-full ">
                 <div className="aspect-video mt-auto  relative bg-[#E5F6FF] rounded-4xl  p-8 flex flex-col justify-between items-end text-center bg-cover bg-center">
@@ -268,7 +268,7 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <section className="py-10 md:py-20 max-w-7x mx-autol w-full px-4 sm:px-6 bg-transparent flex justify-center items-center">
-          <div className="max-w-7xl w-full mx-auto">
+          <div className="container w-full mx-auto">
             <div className="rounded-3xl border border-cyan/90  bg-linear-30 from-cyan-900  via-55%  via-slate-950 to-cyan-800 shadow-lg p-12 px-6 sm:px-12 text-center backdrop-blur-lg">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 drop-shadow-md text-white">
                 Ready to Transform Your Business?
