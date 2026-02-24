@@ -14,7 +14,22 @@ async function getBusinessAdmin(request: NextRequest) {
     return null
   }
   
-  return payload
+  // Use businessId directly from JWT if available (avoiding DB lookup)
+  if (payload.businessId) {
+    return { ...payload, businessId: payload.businessId }
+  }
+  
+  // Fallback: Get the business for this admin if not in JWT
+  const business = await db.business.findUnique({
+    where: { adminId: payload.userId },
+    select: { id: true }
+  })
+  
+  if (!business) {
+    return null
+  }
+  
+  return { ...payload, businessId: business.id }
 }
 
 async function getBusinessId(adminId: string) {
@@ -28,16 +43,11 @@ async function getBusinessId(adminId: string) {
 export async function GET(request: NextRequest) {
   try {
     const admin = await getBusinessAdmin(request)
-    if (!admin) {
+    if (!admin || !admin.businessId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const businessId = await getBusinessId(admin.userId)
-    if (!businessId) {
-      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
-    }
-
-    // Get business statistics
+    // Get business statistics in parallel
     const [
       totalProducts,
       activeProducts,
@@ -48,25 +58,25 @@ export async function GET(request: NextRequest) {
       closedInquiries,
     ] = await Promise.all([
       db.product.count({
-        where: { businessId, isActive: true }
+        where: { businessId: admin.businessId, isActive: true }
       }),
       db.product.count({
-        where: { businessId }
+        where: { businessId: admin.businessId }
       }),
       db.inquiry.count({
-        where: { businessId }
+        where: { businessId: admin.businessId }
       }),
       db.inquiry.count({
-        where: { businessId, status: 'NEW' }
+        where: { businessId: admin.businessId, status: 'NEW' }
       }),
       db.inquiry.count({
-        where: { businessId, status: 'READ' }
+        where: { businessId: admin.businessId, status: 'READ' }
       }),
       db.inquiry.count({
-        where: { businessId, status: 'REPLIED' }
+        where: { businessId: admin.businessId, status: 'REPLIED' }
       }),
       db.inquiry.count({
-        where: { businessId, status: 'CLOSED' }
+        where: { businessId: admin.businessId, status: 'CLOSED' }
       }),
     ])
 
@@ -76,13 +86,13 @@ export async function GET(request: NextRequest) {
     
     const recentInquiries = await db.inquiry.findMany({
       where: {
-        businessId,
+        businessId: admin.businessId,
         createdAt: {
           gte: thirtyDaysAgo,
         },
       },
       include: {
-        customer: {
+        user: {
           select: {
             name: true,
             email: true,
@@ -111,8 +121,8 @@ export async function GET(request: NextRequest) {
       views: totalViews,
       recentInquiries: recentInquiries.map(inquiry => ({
         id: inquiry.id,
-        customerName: inquiry.customer.name,
-        customerEmail: inquiry.customer.email,
+        customerName: inquiry.user?.name || inquiry.name,
+        customerEmail: inquiry.user?.email || inquiry.email,
         message: inquiry.message,
         status: inquiry.status,
         createdAt: inquiry.createdAt,

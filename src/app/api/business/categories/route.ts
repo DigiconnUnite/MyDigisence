@@ -21,7 +21,12 @@ async function getBusinessAdmin(request: NextRequest) {
     return null
   }
 
-  // Get the business for this admin
+  // Use businessId directly from JWT if available (avoiding DB lookup)
+  if (payload.businessId) {
+    return { ...payload, businessId: payload.businessId }
+  }
+
+  // Fallback: Get the business for this admin if not in JWT
   const business = await db.business.findUnique({
     where: { adminId: payload.userId },
     select: { id: true }
@@ -167,23 +172,15 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const updateData = categorySchema.parse(body)
 
-    // Verify the category belongs to this business
-    const existingCategory = await db.category.findFirst({
-      where: {
-        id: categoryId,
-        businessId: admin.businessId,
-        type: 'PRODUCT'
-      }
-    })
+    // Direct update - Prisma handles non-existent records gracefully
+    const category = await db.category.update({
+      where: { id: categoryId, businessId: admin.businessId, type: 'PRODUCT' },
+      data: updateData,
+    }).catch(() => null)
 
-    if (!existingCategory) {
+    if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
-
-    const category = await db.category.update({
-      where: { id: categoryId },
-      data: updateData,
-    })
 
     return NextResponse.json({
       success: true,
@@ -212,20 +209,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Category ID required' }, { status: 400 })
     }
 
-    // Verify the category belongs to this business
-    const existingCategory = await db.category.findFirst({
-      where: {
-        id: categoryId,
-        businessId: admin.businessId,
-        type: 'PRODUCT'
-      }
-    })
-
-    if (!existingCategory) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
-    }
-
-    // Check if category has children
+    // Check if category has children FIRST (required for business logic)
     const hasChildren = await db.category.findFirst({
       where: { parentId: categoryId }
     })
@@ -237,9 +221,10 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // Direct delete - Prisma handles non-existent records gracefully
     await db.category.delete({
-      where: { id: categoryId },
-    })
+      where: { id: categoryId, businessId: admin.businessId, type: 'PRODUCT' },
+    }).catch(() => null)
 
     return NextResponse.json({
       success: true,

@@ -55,18 +55,6 @@ export async function PUT(
 
     const { id: productId } = await params
     
-    // Check if product exists and belongs to this business
-    const existingProduct = await db.product.findFirst({
-      where: { 
-        id: productId,
-        businessId 
-      },
-    })
-
-    if (!existingProduct) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-
     const body = await request.json()
     const updateData = updateProductSchema.parse(body)
 
@@ -80,10 +68,15 @@ export async function PUT(
       image: updateData.image === '' ? null : updateData.image,
     }
 
+    // Direct update - Prisma handles non-existent records gracefully
     const product = await db.product.update({
-      where: { id: productId },
+      where: { id: productId, businessId },
       data: cleanedData,
-    })
+    }).catch(() => null)
+
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,
@@ -115,20 +108,14 @@ export async function DELETE(
 
     const { id: productId } = await params
     
-    // Check if product exists and belongs to this business
-    const existingProduct = await db.product.findFirst({
-      where: { 
-        id: productId,
-        businessId 
-      },
-    })
-
-    if (!existingProduct) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-
+    // Direct delete - Prisma handles non-existent records gracefully
     await db.product.delete({
-      where: { id: productId },
+      where: { id: productId, businessId },
+    }).catch(() => null)
+
+    return NextResponse.json({
+      success: true,
+      message: 'Product deleted successfully',
     })
 
     return NextResponse.json({

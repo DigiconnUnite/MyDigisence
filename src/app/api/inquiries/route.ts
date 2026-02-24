@@ -34,21 +34,58 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const inquiries = await db.inquiry.findMany({
-      include: {
-        business: {
-          select: {
-            name: true,
-            email: true,
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const status = searchParams.get('status') || ''
+    const search = searchParams.get('search') || ''
+
+    const where: any = {}
+    
+    if (status) {
+      where.status = status
+    }
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { message: { contains: search, mode: 'insensitive' } },
+        { business: { name: { contains: search, mode: 'insensitive' } } }
+      ]
+    }
+
+    const [total, inquiries] = await Promise.all([
+      db.inquiry.count({ where }),
+      db.inquiry.findMany({
+        where,
+        include: {
+          business: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          product: {
+            select: {
+              name: true,
+            },
           },
         },
-        product: {
-          select: {
-            name: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ])
+
+    return NextResponse.json({ 
+      inquiries,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     })
 
     return NextResponse.json({ inquiries })
@@ -112,28 +149,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`Inquiry created with ID: ${inquiry.id}`)
 
-    // Send email notification to business
-    try {
-      console.log('Sending email notification')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'inquiry',
-          inquiryId: inquiry.id,
-        }),
-      })
-
-      if (response.ok) {
-        console.log('Email notification sent successfully')
-      } else {
-        console.error('Failed to send email notification:', response.status)
-      }
-    } catch (error) {
-      console.error('Email notification error:', error)
-    }
+    // Send email notification to business (non-blocking - fire and forget)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'inquiry', inquiryId: inquiry.id }),
+    }).catch((error) => {
+      console.error('Email notification error (non-blocking):', error)
+    })
 
     console.log('Inquiry submission completed successfully')
     return NextResponse.json({

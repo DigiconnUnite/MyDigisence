@@ -39,7 +39,22 @@ async function getBusinessAdmin(request: NextRequest) {
     return null
   }
   
-  return payload
+  // Use businessId directly from JWT if available (avoiding DB lookup)
+  if (payload.businessId) {
+    return { ...payload, businessId: payload.businessId }
+  }
+  
+  // Fallback: Get the business for this admin if not in JWT
+  const business = await db.business.findUnique({
+    where: { adminId: payload.userId },
+    select: { id: true }
+  })
+  
+  if (!business) {
+    return null
+  }
+  
+  return { ...payload, businessId: business.id }
 }
 
 async function getBusinessId(adminId: string) {
@@ -53,17 +68,12 @@ async function getBusinessId(adminId: string) {
 export async function GET(request: NextRequest) {
   try {
     const admin = await getBusinessAdmin(request)
-    if (!admin) {
+    if (!admin || !admin.businessId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const businessId = await getBusinessId(admin.userId)
-    if (!businessId) {
-      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
-    }
-
     const products = await db.product.findMany({
-      where: { businessId },
+      where: { businessId: admin.businessId },
       include: {
         category: true,
       },
@@ -83,13 +93,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const admin = await getBusinessAdmin(request)
-    if (!admin) {
+    if (!admin || !admin.businessId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const businessId = await getBusinessId(admin.userId)
-    if (!businessId) {
-      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
     }
 
     const body = await request.json()
@@ -108,7 +113,7 @@ export async function POST(request: NextRequest) {
     const product = await db.product.create({
       data: {
         ...cleanedData,
-        businessId,
+        businessId: admin.businessId,
       },
     })
 
@@ -132,32 +137,16 @@ export async function DELETE(
 ) {
   try {
     const admin = await getBusinessAdmin(request)
-    if (!admin) {
+    if (!admin || !admin.businessId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const businessId = await getBusinessId(admin.userId)
-    if (!businessId) {
-      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
     }
 
     const { id: productId } = await params
     
-    // Check if product exists and belongs to this business
-    const existingProduct = await db.product.findFirst({
-      where: { 
-        id: productId,
-        businessId 
-      },
-    })
-
-    if (!existingProduct) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-
+    // Direct delete - Prisma handles non-existent records gracefully
     await db.product.delete({
-      where: { id: productId },
-    })
+      where: { id: productId, businessId: admin.businessId },
+    }).catch(() => null)
 
     return NextResponse.json({
       success: true,

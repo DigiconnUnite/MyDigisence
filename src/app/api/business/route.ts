@@ -226,9 +226,11 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const updateData = updateBusinessSchema.parse(body);
 
-    // Check if business exists and belongs to this admin
+    // Direct update - let Prisma handle non-existent records
+    // First get the current business for comparison
     const existingBusiness = await db.business.findUnique({
       where: { adminId: admin.userId },
+      select: { id: true, name: true }
     });
 
     if (!existingBusiness) {

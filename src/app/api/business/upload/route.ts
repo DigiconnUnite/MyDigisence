@@ -20,7 +20,22 @@ async function getBusinessAdmin(request: NextRequest) {
     return null;
   }
 
-  return payload;
+  // Use businessId directly from JWT if available (avoiding DB lookup)
+  if (payload.businessId) {
+    return { ...payload, businessId: payload.businessId };
+  }
+
+  // Fallback: Get the business for this admin if not in JWT
+  const business = await db.business.findUnique({
+    where: { adminId: payload.userId },
+    select: { id: true },
+  });
+
+  if (!business) {
+    return null;
+  }
+
+  return { ...payload, businessId: business.id };
 }
 
 async function getBusinessId(adminId: string) {
@@ -34,16 +49,8 @@ async function getBusinessId(adminId: string) {
 export async function POST(request: NextRequest) {
   try {
     const admin = await getBusinessAdmin(request);
-    if (!admin) {
+    if (!admin || !admin.businessId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const businessId = await getBusinessId(admin.userId);
-    if (!businessId) {
-      return NextResponse.json(
-        { error: "Business not found" },
-        { status: 404 },
-      );
     }
 
     const contentType = request.headers.get("content-type");
@@ -111,7 +118,7 @@ export async function POST(request: NextRequest) {
       // Determine if it's video or image for folder organization
       const isVideo = allowedVideoTypes.includes(file.type);
       const isPdf = allowedPdfTypes.includes(file.type);
-      const folder = `bdpp-business/${businessId}`;
+      const folder = `bdpp-business/${admin.businessId}`;
 
       // Upload to S3
       const uploadResult = await uploadToS3(buffer, file.name, {
