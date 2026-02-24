@@ -73,6 +73,9 @@ model Business {
    @@index([isActive])
    @@index([categoryId])
    @@index([createdAt])
+   // Compound indexes for common query patterns
+   @@index([isActive, createdAt])
+   @@index([categoryId, isActive])
    @@map("businesses")
 }
 

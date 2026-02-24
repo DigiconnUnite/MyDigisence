@@ -54,15 +54,11 @@ export async function POST(
     const businessesToActivate = existingBusinesses.filter(b => !b.isActive && isActive).length
     const businessesToDeactivate = existingBusinesses.filter(b => b.isActive && !isActive).length
 
-    // Update all businesses in a transaction
-    await db.$transaction(
-      ids.map(id =>
-        db.business.update({
-          where: { id },
-          data: { isActive },
-        })
-      )
-    )
+    // Update all businesses in a single query
+    await db.business.updateMany({
+      where: { id: { in: ids } },
+      data: { isActive },
+    })
 
     // Fetch updated businesses for Socket.IO emission
     const updatedBusinesses = await db.business.findMany({
@@ -90,15 +86,15 @@ export async function POST(
       },
     })
 
-    // Emit Socket.IO events for each updated business
+    // Emit single batched Socket.IO event
     if (global.io) {
-      updatedBusinesses.forEach(business => {
-        global.io.emit('business-status-updated', {
-          business,
-          action: 'status-update',
-          timestamp: new Date().toISOString(),
-          adminId: admin.userId
-        })
+      global.io.emit('businesses-bulk-status-updated', {
+        businesses: updatedBusinesses,
+        isActive,
+        action: 'bulk_status_update',
+        timestamp: new Date().toISOString(),
+        adminId: admin.userId,
+        count: ids.length
       })
     }
 

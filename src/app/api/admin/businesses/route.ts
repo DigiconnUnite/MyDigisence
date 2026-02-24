@@ -111,37 +111,37 @@ export async function GET(request: NextRequest) {
       where.categoryId = categoryId
     }
 
-    // Get total count for pagination
-    const total = await db.business.count({ where })
-    
-    // Get businesses with pagination and sorting
-    const businesses = await db.business.findMany({
-      where,
-      include: {
-        admin: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
+    // Get total count and businesses in parallel
+    const [total, businesses] = await Promise.all([
+      db.business.count({ where }),
+      db.business.findMany({
+        where,
+        include: {
+          admin: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
+          },
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          _count: {
+            select: {
+              products: true,
+              inquiries: true,
+            },
           },
         },
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        _count: {
-          select: {
-            products: true,
-            inquiries: true,
-          },
-        },
-      },
-      orderBy: { [sortBy]: sortOrder },
-      skip: (page - 1) * limit,
-      take: limit,
-    })
+        orderBy: { [sortBy]: sortOrder },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ])
 
     console.log('Admin API returning businesses:', businesses.length, 'of', total)
 
@@ -358,22 +358,18 @@ export async function PUT(
 
     const { id: businessId } = await params
     
-    // Check if business exists
-    const existingBusiness = await db.business.findUnique({
-      where: { id: businessId },
-    })
-
-    if (!existingBusiness) {
-      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
-    }
-
     const body = await request.json()
     const { isActive } = body
 
+    // Direct update - Prisma handles non-existent records gracefully
     const business = await db.business.update({
       where: { id: businessId },
       data: { isActive },
-    })
+    }).catch(() => null)
+
+    if (!business) {
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
+    }
 
     return NextResponse.json({
       success: true,

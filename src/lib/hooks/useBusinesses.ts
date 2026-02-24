@@ -458,19 +458,49 @@ export function useBulkUpdateStatus() {
   return useMutation({
     mutationFn: ({ ids, isActive }: { ids: string[]; isActive: boolean }) =>
       bulkUpdateStatus(ids, isActive),
-    onSuccess: (_, { ids, isActive }) => {
-      queryClient.invalidateQueries({ queryKey: businessKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      toast({
-        title: 'Success',
-        description: `${ids.length} businesses ${isActive ? 'activated' : 'suspended'} successfully`,
+    onMutate: async ({ ids, isActive }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: businessKeys.lists() });
+
+      // Snapshot previous value
+      const previousBusinesses = queryClient.getQueriesData<BusinessApiResponse>({
+        queryKey: businessKeys.lists(),
       });
+
+      // Optimistically update
+      queryClient.setQueriesData<BusinessApiResponse>({ queryKey: businessKeys.lists() }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          businesses: old.businesses.map((biz) =>
+            ids.includes(biz.id) ? { ...biz, isActive } : biz
+          ),
+        };
+      });
+
+      return { previousBusinesses };
     },
-    onError: (err) => {
+    onError: (err, { ids, isActive }, context) => {
+      // Rollback on error
+      if (context?.previousBusinesses) {
+        context.previousBusinesses.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast({
         title: 'Error',
         description: err.message || 'Failed to update businesses',
         variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: businessKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+    onSuccess: (_, { ids, isActive }) => {
+      toast({
+        title: 'Success',
+        description: `${ids.length} businesses ${isActive ? 'activated' : 'suspended'} successfully`,
       });
     },
   });
@@ -485,19 +515,51 @@ export function useBulkDelete() {
 
   return useMutation({
     mutationFn: bulkDelete,
-    onSuccess: (_, ids) => {
-      queryClient.invalidateQueries({ queryKey: businessKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      toast({
-        title: 'Success',
-        description: `${ids.length} businesses deleted successfully`,
+    onMutate: async (ids) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: businessKeys.lists() });
+
+      // Snapshot previous value
+      const previousBusinesses = queryClient.getQueriesData<BusinessApiResponse>({
+        queryKey: businessKeys.lists(),
       });
+
+      // Optimistically update - remove deleted businesses
+      queryClient.setQueriesData<BusinessApiResponse>({ queryKey: businessKeys.lists() }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          businesses: old.businesses.filter((biz) => !ids.includes(biz.id)),
+          pagination: {
+            ...old.pagination,
+            totalItems: old.pagination.totalItems - ids.length,
+          },
+        };
+      });
+
+      return { previousBusinesses };
     },
-    onError: (err) => {
+    onError: (err, ids, context) => {
+      // Rollback on error
+      if (context?.previousBusinesses) {
+        context.previousBusinesses.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast({
         title: 'Error',
         description: err.message || 'Failed to delete businesses',
         variant: 'destructive',
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: businessKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+    onSuccess: (_, ids) => {
+      toast({
+        title: 'Success',
+        description: `${ids.length} businesses deleted successfully`,
       });
     },
   });
