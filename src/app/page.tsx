@@ -21,7 +21,7 @@ export default function HomePage() {
 
         {/* Who Is It For? Section */}
         <section className="py-10 md:py-20 bg-white">
-          <div className="container mx-auto ">
+          <div className="container  mx-auto px-4">
             <div className="text-center mb-8">
               <div className="flex items-center w-fit mx-auto rounded-full px-4 py-2 border border-slate-900 shadow-sm mb-2  text-slate-800">
                 <CheckCircle className="h-4 w-4 mr-2 text-slate-900" />

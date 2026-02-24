@@ -9,21 +9,13 @@ interface PageProps {
   }>
 }
 
-// Enable static rendering for better performance
-export const dynamic = 'force-static'
+// Enable dynamic rendering for all professional pages
+// The sitemap will handle discovery of all pages
+export const dynamic = 'force-dynamic'
 export const revalidate = 3600 // Revalidate every hour
 
-export async function generateStaticParams() {
-  // Pre-render the most recent active professionals
-  const professionals = await db.professional.findMany({
-    where: { isActive: true },
-    select: { slug: true },
-    orderBy: { createdAt: 'desc' },
-    take: 100, // Pre-render top 100 most recent
-  })
-  
-  return professionals.map((p) => ({ professional: p.slug }))
-}
+// Remove generateStaticParams to allow dynamic rendering for all professionals
+// This ensures all professional pages can be indexed via sitemap
 
 export default async function ProfessionalPage({ params }: PageProps) {
   const { professional: professionalSlug } = await params

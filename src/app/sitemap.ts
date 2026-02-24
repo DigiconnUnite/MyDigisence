@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
+import { db } from '@/lib/db';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mydigisence.com';
 
   // Static pages that are always available
@@ -79,23 +80,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  return staticPages;
-}
-
-// Optional: Add function to fetch dynamic pages from database
-// Uncomment and modify if you want to include dynamic business/professional pages
-/*
-import { db } from '@/lib/db';
-
-export async function getDynamicPages(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mydigisence.com';
+  // Fetch dynamic pages from database
+  let dynamicPages: MetadataRoute.Sitemap = [];
 
   try {
     // Fetch active businesses
     const businesses = await db.business.findMany({
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
-      take: 1000,
+      take: 5000,
     });
 
     const businessPages = businesses.map((business) => ({
@@ -109,7 +102,7 @@ export async function getDynamicPages(): Promise<MetadataRoute.Sitemap> {
     const professionals = await db.professional.findMany({
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
-      take: 1000,
+      take: 5000,
     });
 
     const professionalPages = professionals.map((professional) => ({
@@ -119,10 +112,10 @@ export async function getDynamicPages(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    return [...businessPages, ...professionalPages];
+    dynamicPages = [...businessPages, ...professionalPages];
   } catch (error) {
     console.error('Error fetching dynamic pages for sitemap:', error);
-    return [];
   }
+
+  return [...staticPages, ...dynamicPages];
 }
-*/
