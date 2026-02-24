@@ -36,8 +36,8 @@ export function UnifiedModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={cn(
-          " h-[90vh] p-0 overflow-hidden flex flex-col bg-white rounded-xl border-2 border-[#A89CFE] shadow-xl",
-          "top-4 bottom-4 left-1/2 translate-x-[-50%] translate-y-0",
+          " max-h-[90vh] max-w-[90vw] w-full p-0 overflow-hidden flex flex-col bg-white rounded-xl border-2 border-slate-600 shadow-xl",
+          "top-[50%] translate-y-[-50%]  left-1/2 translate-x-[-50%] ",
           className,
         )}
         showCloseButton={showCloseButton}

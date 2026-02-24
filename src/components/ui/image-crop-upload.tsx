@@ -186,7 +186,7 @@ export default function ImageCropUpload({
   variant = 'card',
   aspectPresets,
   showAspectPresets = true,
-  showCropPreview = true,
+  showCropPreview = false,
   maxOutputWidth,
   maxOutputHeight,
   outputQuality = 0.92,

@@ -100,6 +100,7 @@ import {
   Lock,
   UserPlus,
   Filter,
+  SlidersHorizontal,
   CheckCircle,
   Power,
   RefreshCw,
@@ -370,6 +371,8 @@ export default function SuperAdminDashboard() {
 
   // Registration management state
   const [selectedRegistrations, setSelectedRegistrations] = useState<Set<string>>(new Set());
+  const [selectedRegistrationInquiry, setSelectedRegistrationInquiry] = useState<any>(null);
+  const [showRegistrationInquiryDialog, setShowRegistrationInquiryDialog] = useState(false);
   const [registrationQuery, setRegistrationQuery] = useState<BusinessQueryParams>({
     page: 1,
     limit: 10,
@@ -2803,8 +2806,8 @@ function useDebounce<T>(value: T, delay: number): T {
                   </CardContent>
                 </Card>
               ))}
-              {/* New Businesses Card - spans 3 columns */}
-              <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl xl:col-span-3 min-h-[300px]">
+              {/* New Businesses Card - spans 4 columns */}
+              <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl xl:col-span-4 min-h-[300px]">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <Skeleton className="h-4 w-32 bg-white/50" />
                   <Skeleton className="h-4 w-4 rounded bg-white/50" />
@@ -2821,8 +2824,8 @@ function useDebounce<T>(value: T, delay: number): T {
                   </div>
                 </CardContent>
               </Card>
-              {/* New Professionals Card - spans 3 columns */}
-              <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl xl:col-span-3 min-h-[300px]">
+              {/* New Professionals Card - spans 4 columns */}
+              <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl xl:col-span-4 min-h-[300px]">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <Skeleton className="h-4 w-32 bg-white/50" />
                   <Skeleton className="h-4 w-4 rounded bg-white/50" />
@@ -2834,23 +2837,6 @@ function useDebounce<T>(value: T, delay: number): T {
                         <Skeleton className="h-8 w-8 rounded-full" />
                         <Skeleton className="h-4 w-32 flex-1" />
                         <Skeleton className="h-4 w-20" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              {/* Latest Contact Card - spans 2 columns */}
-              <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl xl:col-span-2 min-h-[300px]">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton className="h-4 w-28 bg-white/50" />
-                  <Skeleton className="h-4 w-4 rounded bg-white/50" />
-                </CardHeader>
-                <CardContent className="flex-1 px-0 bg-white">
-                  <div className="space-y-3 p-4">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="space-y-1">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-3 w-24" />
                       </div>
                     ))}
                   </div>
@@ -3425,7 +3411,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 
               {/* Card 1: New Businesses */}
-              <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-3 min-h-full">
+              <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-4 min-h-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-white">
                     New Businesses
@@ -3521,7 +3507,7 @@ function useDebounce<T>(value: T, delay: number): T {
               </Card>
 
               {/* Card 2: New Professionals (Updated Style) */}
-              <Card className="flex flex-col bg-linear-90 overflow-hidden text-black bg-[#080322] px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-3 min-h-full">
+              <Card className="flex flex-col bg-linear-90 overflow-hidden text-black bg-[#080322] px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-4 min-h-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-white">
                     New Professionals
@@ -3618,60 +3604,6 @@ function useDebounce<T>(value: T, delay: number): T {
                 </CardContent>
               </Card>
 
-              {/* Card 3: Latest Contact (Updated Style) */}
-              <Card className="flex flex-col bg-linear-90 overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-2 min-h-full">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-white">
-                    Latest Contact
-                  </CardTitle>
-                  <Mail className="h-4 w-4 text-white" />
-                </CardHeader>
-                <CardContent className="flex-1 px-0 bg-white flex flex-col">
-                  <div className="overflow-x-auto flex-1">
-                    {inquiries.length > 0 ? (
-                      <Table>
-                        <TableHeader className="">
-                          <TableRow>
-                            <TableHead className="text-xs">Name</TableHead>
-                            <TableHead className="text-xs">Email</TableHead>
-                            <TableHead className="text-xs">Date</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {inquiries
-                            .sort(
-                              (a, b) =>
-                                new Date(b.createdAt).getTime() -
-                                new Date(a.createdAt).getTime(),
-                            )
-                            .slice(0, 4)
-                            .map((inquiry) => (
-                              <TableRow key={inquiry.id}>
-                                <TableCell className="text-xs font-medium">
-                                  {inquiry.name}
-                                </TableCell>
-                                <TableCell className="text-xs">
-                                  {inquiry.email}
-                                </TableCell>
-                                <TableCell className="text-xs">
-                                  {new Date(
-                                    inquiry.createdAt,
-                                  ).toLocaleDateString()}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-gray-500 py-10">
-                        <Mail className="h-8 w-8 mb-2 opacity-20" />
-                        <p className="text-xs font-medium">No Data</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
           
               <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-6 min-h-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -3721,7 +3653,7 @@ function useDebounce<T>(value: T, delay: number): T {
                                           : "bg-purple-500"
                                       }`}
                                     ></span>
-                                    {inquiry.type}
+                                    {inquiry.type === "BUSINESS" ? "B" : "P"}
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-xs font-medium truncate">
@@ -3924,15 +3856,22 @@ function useDebounce<T>(value: T, delay: number): T {
                 </Button>
               </div>
 
-              {/* Row 2: Search bar - Full width */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Row 2: Search bar - Full width with inline filter */}
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                 <Input
                   placeholder="Search businesses..."
-                  className="pl-10 w-full rounded-xl border-gray-200 bg-white focus-visible:ring-gray-300 "
+                  className="pl-10 pr-12 w-full rounded-xl rounded-r-none border-gray-200 bg-white focus-visible:ring-gray-300"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-none rounded-r-xl border-l-0 border-gray-200 bg-transparent hover:bg-gray-100 h-[42px] px-3"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+                </Button>
               </div>
             </div>
 
@@ -4346,15 +4285,22 @@ function useDebounce<T>(value: T, delay: number): T {
                 </Button>
               </div>
 
-              {/* Row 2: Search bar - Full width */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Row 2: Search bar - Full width with inline filter */}
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                 <Input
                   placeholder="Search professionals..."
-                  className="pl-10 w-full rounded-xl border-gray-200 bg-white focus-visible:ring-gray-300 "
+                  className="pl-10 pr-12 w-full rounded-xl rounded-r-none border-gray-200 bg-white focus-visible:ring-gray-300"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-none rounded-r-xl border-l-0 border-gray-200 bg-transparent hover:bg-gray-100 h-[42px] px-3"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+                </Button>
               </div>
             </div>
 
@@ -4688,15 +4634,22 @@ function useDebounce<T>(value: T, delay: number): T {
 
               </div>
 
-              {/* Row 2: Search bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Row 2: Search bar with inline filter */}
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                 <Input
                   placeholder="Search categories..."
-                  className="pl-10 w-full rounded-xl border-gray-200 bg-white focus-visible:ring-gray-300"
+                  className="pl-10 pr-12 w-full rounded-xl rounded-r-none border-gray-200 bg-white focus-visible:ring-gray-300"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-none rounded-r-xl border-l-0 border-gray-200 bg-transparent hover:bg-gray-100 h-[42px] px-3"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+                </Button>
               </div>
             </div>
 
@@ -4731,7 +4684,7 @@ function useDebounce<T>(value: T, delay: number): T {
             {/* Data Table */}
             <div className="bg-white rounded-md  overflow-hidden">
               <div className="overflow-x-auto">
-                <AdminTable title="Categories">
+                <Table>
                   <Table>
                     <TableHeader className="bg-[#080322]">
                       <TableRow>
@@ -4839,7 +4792,7 @@ function useDebounce<T>(value: T, delay: number): T {
                       )}
                     </TableBody>
                   </Table>
-                </AdminTable>
+                </Table>
               </div>
             </div>
           </div>
@@ -4884,15 +4837,22 @@ function useDebounce<T>(value: T, delay: number): T {
 
               </div>
 
-              {/* Row 2: Search bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Row 2: Search bar with inline filter */}
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                 <Input
                   placeholder="Search inquiries..."
-                  className="pl-10 w-full rounded-xl border-gray-200 bg-white focus-visible:ring-gray-300"
+                  className="pl-10 pr-12 w-full rounded-xl rounded-r-none border-gray-200 bg-white focus-visible:ring-gray-300"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-none rounded-r-xl border-l-0 border-gray-200 bg-transparent hover:bg-gray-100 h-[42px] px-3"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+                </Button>
               </div>
             </div>
 
@@ -5064,15 +5024,22 @@ function useDebounce<T>(value: T, delay: number): T {
             <div className="space-y-3">
             
 
-              {/* Row 2: Search bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Row 2: Search bar with inline filter */}
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                 <Input
                   placeholder="Search registration requests..."
-                  className="pl-10 w-full rounded-xl border-gray-200 bg-white focus-visible:ring-gray-300"
+                  className="pl-10 pr-12 w-full rounded-xl rounded-r-none border-gray-200 bg-white focus-visible:ring-gray-300"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-none rounded-r-xl border-l-0 border-gray-200 bg-transparent hover:bg-gray-100 h-[42px] px-3"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+                </Button>
               </div>
             </div>
 
@@ -5152,7 +5119,7 @@ function useDebounce<T>(value: T, delay: number): T {
                             variant={inquiry.type === "BUSINESS" ? "default" : "secondary"}
                             className="rounded-full"
                           >
-                            {inquiry.type}
+                            {inquiry.type === "BUSINESS" ? "B" : "P"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-gray-900 font-medium">
@@ -5228,10 +5195,8 @@ function useDebounce<T>(value: T, delay: number): T {
                               variant="ghost"
                               className="h-8 w-8 p-0 rounded-md hover:bg-gray-100"
                               onClick={() => {
-                                toast({
-                                  title: 'Request Details',
-                                  description: `${inquiry.type} request from ${inquiry.name}`,
-                                });
+                                setSelectedRegistrationInquiry(inquiry);
+                                setShowRegistrationInquiryDialog(true);
                               }}
                               title="View Details"
                             >
@@ -5272,15 +5237,22 @@ function useDebounce<T>(value: T, delay: number): T {
                 </Button>
               </div>
 
-              {/* Row 2: Search bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              {/* Row 2: Search bar with inline filter */}
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                 <Input
                   placeholder="Search business listings..."
-                  className="pl-10 w-full rounded-xl border-gray-200 bg-white focus-visible:ring-gray-300"
+                  className="pl-10 pr-12 w-full rounded-xl rounded-r-none border-gray-200 bg-white focus-visible:ring-gray-300"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-none rounded-r-xl border-l-0 border-gray-200 bg-transparent hover:bg-gray-100 h-[42px] px-3"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+                </Button>
               </div>
             </div>
 
@@ -5579,7 +5551,7 @@ const renderRightPanel = () => {
         <Separator />
         <div>
           <h4 className="font-medium text-sm mb-4">Admin Account Details</h4>
-          <div className="space-y-4">
+          <div className="space-y-4 ">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Admin Name</Label>
@@ -5596,26 +5568,29 @@ const renderRightPanel = () => {
                 </div>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={(e) => {
-                e.preventDefault();
-                const form = document.getElementById("add-business-form") as HTMLFormElement;
-                const businessName = (form?.querySelector('input[name="name"]') as HTMLInputElement)?.value || "";
-                const adminName = (form?.querySelector('input[name="adminName"]') as HTMLInputElement)?.value || "";
-                handleGenerateCredentials(businessName, adminName);
-              }}
-              className="w-full rounded-md"
-            >
-              <Key className="h-4 w-4 mr-2" /> Generate Credentials
-            </Button>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Username</Label>
                 <div className="relative">
-                  <Input name="username" value={generatedUsername} onChange={(e) => setGeneratedUsername(e.target.value)} className="pl-10 rounded-md" placeholder="Auto-generated" />
+                  <Input name="username" value={generatedUsername} onChange={(e) => setGeneratedUsername(e.target.value)} className="pl-10 pr-20 rounded-md" placeholder="Auto-generated" />
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2 rounded-none hover:bg-transparent border-l"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const form = document.getElementById("add-business-form") as HTMLFormElement;
+                      const businessName = (form?.querySelector('input[name="name"]') as HTMLInputElement)?.value || "";
+                      const adminName = (form?.querySelector('input[name="adminName"]') as HTMLInputElement)?.value || "";
+                      const baseUsername = adminName.toLowerCase().replace(/[^a-z0-9]/g, "") || businessName.toLowerCase().replace(/[^a-z0-9]/g, "");
+                      setGeneratedUsername(`${baseUsername}_${Date.now().toString().slice(-4)}`);
+                    }}
+                  >
+                    <Key className="h-3 w-3" />
+                  </Button>
                 </div>
               </div>
               <div className="space-y-2">
@@ -5626,19 +5601,33 @@ const renderRightPanel = () => {
                     type={showPassword ? "text" : "password"}
                     value={generatedPassword}
                     onChange={(e) => setGeneratedPassword(e.target.value)}
-                    className="pl-10 pr-10 rounded-md"
+                    className="pl-10 pr-20 rounded-md"
                     placeholder="Generated or manual password"
                   />
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent rounded-md"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                  <div className="absolute  right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 hover:bg-transparent border-l rounded-none"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 hover:bg-transparent border-l rounded-none"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setGeneratedPassword(generatePassword());
+                      }}
+                    >
+                      <Key className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -5763,26 +5752,29 @@ const renderRightPanel = () => {
               </div>
             </div>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={(e) => {
-              e.preventDefault();
-              const form = e.currentTarget.closest("form") as HTMLFormElement;
-              const professionalName = (form?.querySelector('input[name="name"]') as HTMLInputElement)?.value || "";
-              const adminName = (form?.querySelector('input[name="adminName"]') as HTMLInputElement)?.value || "";
-              handleGenerateCredentials(professionalName, adminName);
-            }}
-            className="w-full rounded-md"
-          >
-            <Key className="h-4 w-4 mr-2" /> Generate Credentials
-          </Button>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Username</Label>
               <div className="relative">
-                <Input name="username" value={generatedUsername} onChange={(e) => setGeneratedUsername(e.target.value)} className="pl-10 rounded-md" placeholder="Auto-generated" />
+                <Input name="username" value={generatedUsername} onChange={(e) => setGeneratedUsername(e.target.value)} className="pl-10 pr-20 rounded-md" placeholder="Auto-generated" />
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2 border-l rounded-none bg-none"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget.closest("form") as HTMLFormElement;
+                    const professionalName = (form?.querySelector('input[name="name"]') as HTMLInputElement)?.value || "";
+                    const adminName = (form?.querySelector('input[name="adminName"]') as HTMLInputElement)?.value || "";
+                    const baseUsername = adminName.toLowerCase().replace(/[^a-z0-9]/g, "") || professionalName.toLowerCase().replace(/[^a-z0-9]/g, "");
+                    setGeneratedUsername(`${baseUsername}_${Date.now().toString().slice(-4)}`);
+                  }}
+                >
+                  <Key className="h-3 w-3" />
+                </Button>
               </div>
             </div>
             <div className="space-y-2">
@@ -5793,13 +5785,18 @@ const renderRightPanel = () => {
                   type={showPassword ? "text" : "password"}
                   value={generatedPassword}
                   onChange={(e) => setGeneratedPassword(e.target.value)}
-                  className="pl-10 pr-10 rounded-md"
+                  className="pl-10 pr-20 rounded-md"
                   placeholder="Generated or manual password"
                 />
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                  <Button type="button" variant="ghost" size="sm" className="h-8 px-2 hover:bg-transparent border-l rounded-none" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" className="h-8 px-2 hover:bg-transparent border-l rounded-none" onClick={(e) => { e.preventDefault(); setGeneratedPassword(generatePassword()); }}>
+                    <Key className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -6039,19 +6036,66 @@ const renderRightPanel = () => {
 
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Login Credentials</h4>
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <div className="flex gap-2">
-                <div className="relative flex-1">
-                    <Input name="password" type={showPassword ? "text" : "password"} value={generatedPassword} onChange={(e) => setGeneratedPassword(e.target.value)} className="pl-10 pr-10 rounded-md" placeholder="Generated or manual password" />
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                </div>
-                <Button type="button" variant="outline" onClick={(e) => { e.preventDefault(); setGeneratedPassword(generatePassword()); }} className="rounded-md">
-                  <Key className="h-4 w-4 mr-2" />Generate
+          <Button
+            type="button"
+            variant="outline"
+            onClick={(e) => {
+              e.preventDefault();
+              const form = e.currentTarget.closest("form") as HTMLFormElement;
+              const adminNameInput = form?.querySelector('input[name="adminName"]') as HTMLInputElement;
+              const name = adminNameInput?.value || "";
+              const baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+              setGeneratedUsername(`${baseUsername}_${Date.now().toString().slice(-4)}`);
+            }}
+            className="w-full rounded-md"
+          >
+            <User className="h-4 w-4 mr-2" /> Generate Username
+          </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Username</Label>
+              <div className="relative">
+                <Input name="username" value={generatedUsername} onChange={(e) => setGeneratedUsername(e.target.value)} className="pl-10 pr-20 rounded-md" placeholder="Auto-generated" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 px-2 rounded-md"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget.closest("form") as HTMLFormElement;
+                    const adminNameInput = form?.querySelector('input[name="adminName"]') as HTMLInputElement;
+                    const name = adminNameInput?.value || "";
+                    const baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+                    setGeneratedUsername(`${baseUsername}_${Date.now().toString().slice(-4)}`);
+                  }}
+                >
+                  <Key className="h-3 w-3" />
                 </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <div className="relative">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={generatedPassword}
+                  onChange={(e) => setGeneratedPassword(e.target.value)}
+                  className="pl-10 pr-20 rounded-md"
+                  placeholder="Generated or manual password"
+                />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                  <Button type="button" variant="ghost" size="sm" className="h-8 px-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" className="h-8 px-2 rounded-md" onClick={(e) => { e.preventDefault(); setGeneratedPassword(generatePassword()); }}>
+                    <Key className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -6691,6 +6735,119 @@ const renderRightPanel = () => {
                   Reject
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Registration Inquiry Details Dialog */}
+      <Dialog open={showRegistrationInquiryDialog} onOpenChange={setShowRegistrationInquiryDialog}>
+        <DialogContent className="rounded-2xl max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Eye className="h-4 w-4" />
+              Registration Request Details
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Full details of the registration request
+            </DialogDescription>
+          </DialogHeader>
+          {selectedRegistrationInquiry && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 text-xs">Type</span>
+                    <p className="font-medium text-gray-900">
+                      {selectedRegistrationInquiry.type === 'BUSINESS' ? 'Business' : 'Professional'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-xs">Status</span>
+                    <p className="font-medium text-gray-900">
+                      <StatusBadge
+                        status={selectedRegistrationInquiry.status}
+                        variant={selectedRegistrationInquiry.status === 'PENDING' ? 'warning' : selectedRegistrationInquiry.status === 'COMPLETED' ? 'success' : selectedRegistrationInquiry.status === 'REJECTED' ? 'error' : 'info'}
+                      />
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-xs">Name</span>
+                    <p className="font-medium text-gray-900">{selectedRegistrationInquiry.name || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-xs">Email</span>
+                    <p className="font-medium text-gray-900">{selectedRegistrationInquiry.email || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-xs">Phone</span>
+                    <p className="font-medium text-gray-900">{selectedRegistrationInquiry.phone || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-xs">Location</span>
+                    <p className="font-medium text-gray-900">{selectedRegistrationInquiry.location || 'Not provided'}</p>
+                  </div>
+                  {selectedRegistrationInquiry.type === 'BUSINESS' && (
+                    <>
+                      <div className="col-span-2">
+                        <span className="text-gray-500 text-xs">Business Name</span>
+                        <p className="font-medium text-gray-900">{selectedRegistrationInquiry.businessName || 'Not provided'}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-gray-500 text-xs">Business Description</span>
+                        <p className="font-medium text-gray-900">{selectedRegistrationInquiry.businessDescription || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-xs">Website</span>
+                        <p className="font-medium text-gray-900">{selectedRegistrationInquiry.website || 'Not provided'}</p>
+                      </div>
+                    </>
+                  )}
+                  {selectedRegistrationInquiry.type === 'PROFESSIONAL' && (
+                    <>
+                      <div>
+                        <span className="text-gray-500 text-xs">Profession</span>
+                        <p className="font-medium text-gray-900">{selectedRegistrationInquiry.profession || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-xs">About Me</span>
+                        <p className="font-medium text-gray-900">{selectedRegistrationInquiry.aboutMe || 'Not provided'}</p>
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <span className="text-gray-500 text-xs">Submitted On</span>
+                    <p className="font-medium text-gray-900">
+                      {selectedRegistrationInquiry.createdAt ? new Date(selectedRegistrationInquiry.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'Not provided'}
+                    </p>
+                  </div>
+                  {selectedRegistrationInquiry.status === 'REJECTED' && selectedRegistrationInquiry.rejectReason && (
+                    <div className="col-span-2">
+                      <span className="text-gray-500 text-xs">Reject Reason</span>
+                      <p className="font-medium text-red-600">{selectedRegistrationInquiry.rejectReason}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="pt-2 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                setShowRegistrationInquiryDialog(false);
+                setSelectedRegistrationInquiry(null);
+              }}
+              className="rounded-xl"
+            >
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
