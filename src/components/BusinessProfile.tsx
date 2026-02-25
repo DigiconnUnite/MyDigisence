@@ -1092,7 +1092,7 @@ export default function BusinessProfile({
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-4 overflow-hidden">
         {/* Sidebar Skeleton */}
-        <aside className="hidden md:block md:col-span-1 h-full overflow-y-auto z-20">
+        <aside className="hidden hide-scrollbar md:block md:col-span-1 h-full overflow-y-auto z-20">
           <div className="flex flex-col p-4 lg:gap-4 w-full space-y-4">
             {/* Business Info Card */}
             <Skeleton className="h-64 w-full rounded-2xl" />
@@ -1107,7 +1107,7 @@ export default function BusinessProfile({
 
         {/* Main Content Skeleton */}
         <main className="md:col-span-3 h-full overflow-y-auto mb-5 relative  min-w-0">
-          <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8 pt-4 space-y-6 lg:space-y-8">
+          <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-4 pt-4 space-y-6 lg:space-y-8">
             {/* Hero Section */}
             <section className="relative w-full mx-auto">
               <Skeleton className="h-48 md:h-80 w-full rounded-xl md:rounded-3xl" />
@@ -1419,7 +1419,7 @@ export default function BusinessProfile({
       </header>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-4 overflow-hidden">
-        <aside className="hidden md:block md:col-span-1 h-full overflow-y-auto z-20  ">
+        <aside className="hidden hide-scrollbar md:block md:col-span-1 h-full overflow-y-auto z-20  ">
           <div className="flex flex-col p-4 lg:gap-4 w-full">
             <BusinessInfoCard />
           </div>
@@ -1428,7 +1428,7 @@ export default function BusinessProfile({
           ref={mainContentRef}
           className="md:col-span-3 h-full overflow-y-auto mb-5 relative scroll-smooth min-w-0"
         >
-          <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8 pt-4 space-y-6 lg:space-y-8">
+          <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-4 pt-4 space-y-6 lg:space-y-8">
             <section className="relative w-full mx-auto">
               <div className=" aspect-4/2 bg-center md:aspect-3/1 w-full rounded-xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl bg-gray-900 relative">
                 {heroContent.slides && safeSlides.length > 0 ? (

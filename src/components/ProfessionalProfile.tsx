@@ -1145,7 +1145,7 @@ export default function ProfessionalProfile({
         {/* Main Content Layout */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-4 overflow-hidden">
           {/* ASIDE - Sticky Sidebar (Desktop Only) */}
-          <aside className="hidden md:block md:col-span-1 h-full overflow-y-auto z-20">
+          <aside className="hidden hide-scrollbar md:block md:col-span-1 h-full overflow-y-auto z-20">
             <div className="flex flex-col p-4 lg:gap-4 w-full">
               <div className="sticky top-24 space-y-4">
                 <ProfessionalInfoCard />
@@ -1155,7 +1155,7 @@ export default function ProfessionalProfile({
 
           {/* MAIN CONTENT AREA */}
           <main className="md:col-span-3 h-full overflow-y-auto mb-5 relative scroll-smooth min-w-0">
-            <div className="mx-auto max-w-[1400px] pb-20 px-4 sm:px-6 lg:px-8 pt-4 space-y-6 lg:space-y-8">
+            <div className="mx-auto max-w-[1400px] pb-20 px-4 sm:px-4 lg:px-4 pt-4 space-y-6 lg:space-y-8">
               
               <div className="md:hidden">
                 <ProfessionalInfoCard />
