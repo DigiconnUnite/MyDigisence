@@ -1160,6 +1160,104 @@ export default function ProfessionalProfile({
               <div className="md:hidden">
                 <ProfessionalInfoCard />
               </div>
+              {/* 3. About Section (Full Width) */}
+              <Card
+                className={`${getCardClass()} rounded-2xl p-6 shadow-none border`}
+              >
+                <CardContent className="p-0">
+                  <div className="space-y-6">
+                    {/* About Me */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
+                        <User className="w-5 h-5 mr-2 text-orange-600" />
+                        About Me
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">
+                        {professional.aboutMe ||
+                          "No about information available."}
+                      </p>
+                    </div>
+
+                    {/* Education */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
+                        <Award className="w-5 h-5 mr-2 text-orange-600" />
+                        Education
+                      </h3>
+                      {education.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {education.map((edu: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+                            >
+                              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                                <Award className="w-5 h-5 text-orange-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-900">
+                                  {edu.degree || edu.title}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {edu.institution || edu.school}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {edu.year || edu.duration}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          No education information available.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Certifications */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
+                        <Award className="w-5 h-5 mr-2 text-orange-600" />
+                        Certifications
+                      </h3>
+                      {certifications.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {certifications.map((cert: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+                            >
+                              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                                <Award className="w-5 h-5 text-orange-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-900">
+                                  {cert.name || cert.title}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {cert.issuer || cert.organization}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {cert.year || cert.date}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          No certifications available.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Skills */}
+                    
+                  </div>
+                </CardContent>
+              </Card>
+
 
               <div
                 ref={aboutRef}
@@ -1259,127 +1357,7 @@ export default function ProfessionalProfile({
                 </Card>
               </div>
 
-              {/* 3. About Section (Full Width) */}
-              <Card
-                className={`${getCardClass()} rounded-2xl p-6 shadow-none border`}
-              >
-                <CardContent className="p-0">
-                  <div className="space-y-6">
-                    {/* About Me */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
-                        <User className="w-5 h-5 mr-2 text-orange-600" />
-                        About Me
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed">
-                        {professional.aboutMe ||
-                          "No about information available."}
-                      </p>
-                    </div>
-
-                    {/* Education */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-orange-600" />
-                        Education
-                      </h3>
-                      {education.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {education.map((edu: any, index: number) => (
-                            <div
-                              key={index}
-                              className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
-                            >
-                              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
-                                <Award className="w-5 h-5 text-orange-600" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-semibold text-gray-900">
-                                  {edu.degree || edu.title}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {edu.institution || edu.school}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  {edu.year || edu.duration}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No education information available.
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Certifications */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-orange-600" />
-                        Certifications
-                      </h3>
-                      {certifications.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {certifications.map((cert: any, index: number) => (
-                            <div
-                              key={index}
-                              className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
-                            >
-                              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
-                                <Award className="w-5 h-5 text-orange-600" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-semibold text-gray-900">
-                                  {cert.name || cert.title}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {cert.issuer || cert.organization}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  {cert.year || cert.date}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No certifications available.
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Skills */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                        <Award className="w-5 h-5 mr-2 text-orange-600" />
-                        Skills
-                      </h3>
-                      <div className="flex flex-wrap gap-3">
-                        {skills.map((skill: any, index: number) => (
-                          <div
-                            key={index}
-                            className={`flex items-center bg-white ${getBorderRadius()} px-4 py-2 border border-gray-200 shadow-none`}
-                          >
-                            <Award className="w-4 h-4 text-orange-600 mr-2" />
-                            <span className="text-sm text-gray-700">
-                              {skill.name?.name || skill.name}
-                            </span>
-                          </div>
-                        ))}
-                        {skills.length === 0 && (
-                          <p className="text-gray-500 italic">
-                            No skills information available.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
+              
               {/* 4. Portfolio Section (Full Card) */}
               <Card
                 className={`${getCardClass()} rounded-2xl p-6 shadow-none border`}
@@ -1403,7 +1381,7 @@ export default function ProfessionalProfile({
                       return (
                         <div
                           key={index}
-                          className="flex flex-col h-full bg-white shadow-md w-full rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-shadow"
+                          className="flex flex-col h-full  bg-gray-600 shadow-none w-full rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-shadow"
                         >
                           <div className="relative w-full aspect-video bg-gray-100">
                             {isVideo ? (
