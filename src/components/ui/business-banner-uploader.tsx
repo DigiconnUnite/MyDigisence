@@ -430,8 +430,8 @@ export default function BusinessBannerUploader({
     }
   };
 
-  // If trigger is provided, render in trigger-only mode
-  if (trigger) {
+  // If trigger is provided AND dialog is not controlled, render in trigger-only mode
+  if (trigger && !isControlled) {
     return (
       <>
         <div onClick={() => setIsDialogOpen(true)}>
@@ -442,22 +442,29 @@ export default function BusinessBannerUploader({
     );
   }
 
-  // Default trigger button
-  const defaultTrigger = (
-    <Button variant="outline" className="gap-2">
-      <Upload className="w-4 h-4" />
-      {currentBanner ? "Change Banner" : "Upload Banner"}
-    </Button>
-  );
+  // If no trigger and not controlled, show default button
+  if (!isControlled && !trigger) {
+    // Default trigger button
+    const defaultTrigger = (
+      <Button variant="outline" className="gap-2">
+        <Upload className="w-4 h-4" />
+        {currentBanner ? "Change Banner" : "Upload Banner"}
+      </Button>
+    );
 
-  return (
-    <>
-      <div onClick={() => setIsDialogOpen(true)}>
-        {trigger || defaultTrigger}
-      </div>
-      {renderDialog()}
-    </>
-  );
+    return (
+      <>
+        <div onClick={() => setIsDialogOpen(true)}>
+          {defaultTrigger}
+        </div>
+        {renderDialog()}
+      </>
+    );
+  }
+
+  // If controlled mode (open/onOpenChange provided), don't render any trigger
+  // Just render the dialog based on open state
+  return renderDialog();
 
   function renderDialog() {
     return (

@@ -378,7 +378,7 @@ export default function BannerCropper({
       }}>
         <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="p-4 sm:p-6 pb-0">
-            <DialogTitle className="text-xl sm:text-2xl">{getTitle()}</DialogTitle>
+            <DialogTitle className="text-md sm:text-lg">{getTitle()}</DialogTitle>
             <DialogDescription className="text-sm sm:text-base mt-1">
               {getSubtitle()}. Output size: {BANNER_WIDTH}×{BANNER_HEIGHT}px
             </DialogDescription>

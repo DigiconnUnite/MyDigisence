@@ -278,6 +278,13 @@ export default function HeroBannerManager({ heroContent, onChange }: HeroBannerM
         </Button>
       </div>
 
+      {/* BusinessBannerUploader Dialog - Opens directly when clicking Add Banner */}
+      <BusinessBannerUploader
+        open={showBannerUploader}
+        onOpenChange={setShowBannerUploader}
+        onUpload={handleBannerUploadComplete}
+      />
+
       {/* Banner Preview Section */}
       <Card className="bg-transparent border-none shadow-none  p-0 relative z-0">
         <CardContent className="p-0">
@@ -665,3 +672,4 @@ export default function HeroBannerManager({ heroContent, onChange }: HeroBannerM
     </div>
   );
 }
+
