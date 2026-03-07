@@ -97,7 +97,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${archivo.variable} antialiased bg-background text-foreground`}
+        className={`${archivo.variable} antialiased hide-scrollbar bg-background text-foreground`}
       >
         <ThemeProvider>
           <QueryProvider>

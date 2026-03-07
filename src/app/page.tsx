@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,10 +12,33 @@ import Footer from "@/components/Footer";
 import { Android } from "@/components/ui/android";
 import PricingSection from "@/components/sections/pricing/PricingSection";
 import UnifiedPublicLayout from "@/components/UnifiedPublicLayout";
+import HomePreloader from "@/components/ui/HomePreloader";
 
 export default function HomePage() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Add hide-scrollbar class to body when loading
+    document.body.classList.add("hide-scrollbar");
+
+    // Minimum loading time for smooth UX
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      // Remove hide-scrollbar class after loading
+      document.body.classList.remove("hide-scrollbar");
+    }, 1200);
+
+    return () => {
+      clearTimeout(timer);
+      // Ensure cleanup on unmount
+      document.body.classList.remove("hide-scrollbar");
+    };
+  }, []);
+
   return (
-    <UnifiedPublicLayout variant="transparent" sidebarVariant="home">
+    <>
+      {isLoading && <HomePreloader />}
+      <UnifiedPublicLayout variant="transparent" sidebarVariant="home">
       {/* Main Content Container with gradient background */}
       <div className="secondary-light-gradient pt-0  md:pb-0">
         <HeroSectionOne />
@@ -318,5 +342,6 @@ export default function HomePage() {
         </section>
       </div>
     </UnifiedPublicLayout>
+    </>
   );
 }
