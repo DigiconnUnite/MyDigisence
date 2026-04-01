@@ -91,7 +91,7 @@ export default function ProfessionalLoginPage() {
       const result = await login(email, password, true);
 
       if (result.success) {
-        // Fetch professional data using server-side filter and redirect directly to professional dashboard
+      
         try {
           const response = await fetch(`/api/professionals?adminId=${result.user?.id}`);
           if (response.ok) {
