@@ -200,3 +200,32 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
   
   return verifyToken(token);
 }
+
+/**
+ * Require super admin authentication — alias for getSuperAdmin.
+ * Returns the AuthUser if the token is valid and the user is SUPER_ADMIN, null otherwise.
+ */
+export async function requireSuperAdmin(request: NextRequest): Promise<AuthUser | null> {
+  return getSuperAdmin(request);
+}
+
+/**
+ * Return a 401 Unauthorized JSON response.
+ */
+export function unauthorized(message = 'Unauthorized'): NextResponse {
+  return NextResponse.json({ error: message }, { status: 401 });
+}
+
+/**
+ * Return a 404 Not Found JSON response.
+ */
+export function notFound(message = 'Not found'): NextResponse {
+  return NextResponse.json({ error: message }, { status: 404 });
+}
+
+/**
+ * Return a 400 Bad Request JSON response.
+ */
+export function badRequest(message = 'Bad request'): NextResponse {
+  return NextResponse.json({ error: message }, { status: 400 });
+}

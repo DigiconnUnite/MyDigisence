@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
 
 // Simple slugify function
 function slugify(text: string): string {
@@ -28,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await db.user.findUnique({
       where: { email },
     });
 
@@ -43,7 +41,7 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    const newUser = await prisma.user.create({
+    const newUser = await db.user.create({
       data: {
         email,
         password: hashedPassword,
@@ -52,7 +50,7 @@ export async function POST(request: Request) {
     });
 
     // Create new business
-    const newBusiness = await prisma.business.create({
+    const newBusiness = await db.business.create({
       data: {
         name: businessName,
         slug: slugify(businessName),
