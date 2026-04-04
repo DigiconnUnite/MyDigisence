@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Menu, Home, Building2, Users, Calculator, Mail, Filter, Code, Stethoscope, Scale, Hammer, Book, Palette, Megaphone, Briefcase, Camera, ChefHat, Pill, GraduationCap, TrendingUp, Laptop } from "lucide-react";
+import { X, Menu, Home, Building2, Users, Calculator, Mail, Filter, Code, Stethoscope, Scale, Hammer, Book, Palette, Megaphone, Briefcase, Camera, ChefHat, Pill, GraduationCap, TrendingUp, Laptop, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ const defaultNavItems = [
   { name: "Home", link: "/", icon: Home },
   { name: "Businesses", link: "/businesses", icon: Building2 },
   { name: "Professionals", link: "/professionals", icon: Users },
+  { name: "Blog", link: "/blog", icon: BookOpen },
   { name: "Pricing", link: "/pricing", icon: Calculator },
   { name: "Contact Us", link: "/contact", icon: Mail },
 ];

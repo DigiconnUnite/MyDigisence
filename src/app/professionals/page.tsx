@@ -233,7 +233,7 @@ function ProfessionalsContent() {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Card
                     key={i}
-                    className="overflow-hidden py-0 rounded-3xl pt-0 bg-white backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300"
+                    className="overflow-hidden py-0 rounded-3xl bg-white backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300"
                   >
                     <div className="relative h-24 md:h-32 m-1.5 mb-0 pb-0 rounded-lg overflow-hidden">
                       <Skeleton className="w-full h-full" />
@@ -283,18 +283,18 @@ function ProfessionalsContent() {
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                   {filteredProfessionals.map((professional) => (
                     <Link
                       key={professional.id}
                       href={`/pcard/${professional.slug}`}
-                      className="block"
+                      className="group block h-full"
                       onClick={() => setLoadingCardId(professional.id)}
                     >
-                      <Card className="overflow-hidden py-0 rounded-4xl pt-0 bg-white backdrop-blur-sm shadow-none border border-slate-500/50 hover:border-slate-800 hover:shadow-lg transition-all duration-300 relative h-full">
+                      <Card className="relative h-full overflow-hidden  py-0 rounded-2xl border border-slate-400/90 bg-white/95 shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-400/80 hover:shadow-none">
                         {/* Loading Overlay */}
                         {loadingCardId === professional.id && (
-                          <div className="absolute inset-0 z-30 bg-white/80 backdrop-blur-sm rounded-4xl flex items-center justify-center">
+                          <div className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
                             <div className="flex flex-col items-center gap-2">
                               <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
                               <span className="text-sm text-slate-600 font-medium">
@@ -303,155 +303,172 @@ function ProfessionalsContent() {
                             </div>
                           </div>
                         )}
-                        <div
-                          className="relative h-24 md:h-32 m-1 mb-0 pb-0 rounded-3xl overflow-hidden"
-                          style={{ minHeight: "96px" }}
-                        >
-                          {/* Banner image background */}
-                          {professional.banner ? (
-                            <img
-                              src={professional.banner}
-                              alt="Banner"
-                              className="w-full h-full object-cover"
-                              style={{ zIndex: 0 }}
-                              onError={(e) => {
-                                console.error(
-                                  "Banner image failed to load:",
-                                  professional.banner,
-                                );
-                                handleImageError(e);
-                              }}
-                            />
-                          ) : (
-                            <div
-                              className="w-full h-full bg-linear-to-r from-gray-100 to-gray-200 flex items-center justify-center"
-                              style={{ zIndex: 0 }}
-                            >
-                              <div className="text-center text-gray-400">
-                                <ImageIcon className="h-10 mx-auto w-10 text-gray-400" />
-                                <div className="text-sm">No banner</div>
+
+                        <div className="p-1.5 pb-0">
+                          <div className="relative z-0 h-24 overflow-hidden rounded-xl sm:h-28 md:h-32">
+                            {professional.banner ? (
+                              <img
+                                src={professional.banner}
+                                alt="Banner"
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  console.error(
+                                    "Banner image failed to load:",
+                                    professional.banner,
+                                  );
+                                  handleImageError(e);
+                                }}
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-linear-to-r from-slate-100 to-slate-200">
+                                <div className="text-center text-gray-400">
+                                  <ImageIcon className="h-10 mx-auto w-10 text-gray-400" />
+                                  <div className="text-sm">No banner</div>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                        {professional.profilePicture ? (
-                          <img
-                            src={professional.profilePicture}
-                            alt={professional.name}
-                            className="absolute top-26 md:top-30 left-4 h-18 w-18 md:h-22 md:w-22 rounded-full object-cover border-3 border-white shadow-md"
-                            loading="lazy"
-                            onError={(e) => {
-                              console.error(
-                                "Profile picture failed to load:",
-                                professional.profilePicture,
-                              );
-                              handleImageError(e);
-                            }}
-                            style={{ zIndex: 20 }}
-                          />
-                        ) : (
-                          <div
-                            className="absolute top-26 md:top-30 left-4 h-18 w-18 md:h-22 md:w-22 rounded-full bg-linear-to-br from-gray-200 to-gray-300 flex items-center justify-center border-2 border-white shadow-md"
-                            style={{ zIndex: 20 }}
-                          >
-                            <User className="h-9 w-9 md:h-11 md:w-11 text-gray-600" />
+                            )}
+                            <div className="absolute inset-0 bg-linear-to-t from-slate-950/35 via-slate-900/10 to-transparent" />
                           </div>
-                        )}
-                        <CardHeader className="pt-0 pb-2 md:pb-4">
-                          <div className="flex items-center space-x-2 md:space-x-4">
-                            <div className="w-18 md:w-22"></div>
-                            <div className="flex-1 min-w-0">
-                              <CardTitle className="text-lg md:text-lg hover:text-slate-600 font-semibold text-slate-700 truncate">
+                        </div>
+
+                        <div className="relative z-10 p-3 sm:p-4">
+                          <div className="-mt-10 mb-3 flex items-end justify-between sm:-mt-12">
+                            {professional.profilePicture ? (
+                              <img
+                                src={professional.profilePicture}
+                                alt={professional.name}
+                                className="relative z-20 h-20 w-20 rounded-full border-4 border-white object-cover shadow-md sm:h-24 sm:w-24"
+                                loading="lazy"
+                                onError={(e) => {
+                                  console.error(
+                                    "Profile picture failed to load:",
+                                    professional.profilePicture,
+                                  );
+                                  handleImageError(e);
+                                }}
+                              />
+                            ) : (
+                              <div className="relative z-20 flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-linear-to-br from-slate-200 to-slate-300 shadow-md sm:h-24 sm:w-24">
+                                <User className="h-9 w-9 text-slate-600 sm:h-10 sm:w-10" />
+                              </div>
+                            )}
+
+                            {professional.location && (
+                              <div className="mb-1 inline-flex max-w-[58%] items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 sm:max-w-[60%] sm:text-xs">
+                                <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                <span
+                                  className="truncate"
+                                  title={professional.location}
+                                >
+                                  {professional.location}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <CardHeader className="p-0 pb-3">
+                            <div className="min-w-0">
+                              <CardTitle className="truncate text-base font-bold text-slate-800 transition-colors group-hover:text-slate-950 sm:text-lg">
                                 {professional.name}
                               </CardTitle>
                               {professional.professionalHeadline && (
                                 <Badge
                                   variant="secondary"
-                                  className="mt-1 text-xs truncate"
+                                  className="mt-2 inline-flex max-w-full truncate border-transparent bg-slate-100 px-2.5 py-0 text-[11px] font-medium text-slate-600 sm:text-xs"
                                 >
                                   {professional.professionalHeadline}
                                 </Badge>
                               )}
                             </div>
-                          </div>
-                        </CardHeader>
-                        <div className="flex-1"></div>
-                        <CardContent className="space-y-1 md:space-y-2 py-0 px-2 md:px-3">
-                          {professional.aboutme && (
-                            <CardDescription className="text-muted-foreground line-clamp-2 text-xs sm:text-sm mb-2 sm:mb-4">
-                              {professional.aboutme}
-                            </CardDescription>
-                          )}
-                          {professional.location && (
-                            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                              <span className="" title={professional.location}>
-                                {professional.location}
-                              </span>
+
+                            {professional.aboutme ? (
+                              <CardDescription className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500 sm:text-sm">
+                                {professional.aboutme}
+                              </CardDescription>
+                            ) : (
+                              <CardDescription className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
+                                Explore this professional&apos;s profile,
+                                services, and contact details.
+                              </CardDescription>
+                            )}
+                          </CardHeader>
+
+                          <CardContent className="space-y-3 p-0">
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 sm:text-xs">
+                              {professional.phone && (
+                                <span className="rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
+                                  Phone available
+                                </span>
+                              )}
+                              {professional.email && (
+                                <span className="rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
+                                  Email available
+                                </span>
+                              )}
+                              {professional.website && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
+                                  <Globe className="h-3 w-3" />
+                                  Website
+                                </span>
+                              )}
                             </div>
-                          )}
 
-                          {/* Spacer to push the bottom section to the bottom */}
-                          <div className="flex-1"></div>
-
-                          {/* Contact CTA Buttons */}
-                          <div className="flex gap-2 mb-2 sm:mb-4">
-                            {professional.phone && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 rounded-full text-xs h-8 transition-all duration-200 hover:bg-gray-100"
-                                asChild
-                              >
-                                <a
-                                  href={`tel:${professional.phone}`}
-                                  onClick={(e) => e.stopPropagation()}
+                            <div className="flex gap-2 pt-1">
+                              {professional.phone && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 flex-1 rounded-full border-slate-200 bg-white text-[11px] text-slate-700 shadow-none transition-colors hover:bg-slate-50 hover:text-slate-900 sm:text-xs"
+                                  asChild
                                 >
-                                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                                  <span className="hidden sm:inline">Call</span>
-                                </a>
-                              </Button>
-                            )}
-                            {professional.phone && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 rounded-full text-white text-xs h-8 bg-green-500 hover:bg-green-600 border-green-500 transition-all duration-200"
-                                asChild
-                              >
-                                <a
-                                  href={`https://wa.me/${professional.phone.replace(
-                                    /[^0-9]/g,
-                                    "",
-                                  )}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
+                                  <a
+                                    href={`tel:${professional.phone}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Phone className="mr-1 h-3.5 w-3.5" />
+                                    <span className="truncate">Call</span>
+                                  </a>
+                                </Button>
+                              )}
+                              {professional.phone && (
+                                <Button
+                                  size="sm"
+                                  className="h-9 flex-1 rounded-full border-green-600 bg-green-600 text-[11px] text-white shadow-none transition-colors hover:bg-green-700 sm:text-xs"
+                                  asChild
                                 >
-                                  <FaWhatsapp className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-white" />
-                                  <span className="hidden sm:inline">
-                                    WhatsApp
-                                  </span>
-                                </a>
-                              </Button>
-                            )}
-                            {professional.email && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 rounded-full text-xs h-8 transition-all duration-200 hover:bg-blue-500"
-                                asChild
-                              >
-                                <a href={`mailto:${professional.email}`}>
-                                  <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                                  <span className="hidden sm:inline">
-                                    Email
-                                  </span>
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                        </CardContent>
+                                  <a
+                                    href={`https://wa.me/${professional.phone.replace(
+                                      /[^0-9]/g,
+                                      "",
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <FaWhatsapp className="mr-1 h-3.5 w-3.5" />
+                                    <span className="truncate">WhatsApp</span>
+                                  </a>
+                                </Button>
+                              )}
+                              {professional.email && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 flex-1 rounded-full border-slate-200 bg-white text-[11px] text-slate-700 shadow-none transition-colors hover:bg-slate-50 hover:text-slate-900 sm:text-xs"
+                                  asChild
+                                >
+                                  <a
+                                    href={`mailto:${professional.email}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Mail className="mr-1 h-3.5 w-3.5" />
+                                    <span className="truncate">Email</span>
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </CardContent>
+                        </div>
                       </Card>
                     </Link>
                   ))}

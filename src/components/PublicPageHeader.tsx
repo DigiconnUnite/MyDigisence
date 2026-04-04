@@ -12,6 +12,7 @@ import {
   Users,
   Calculator,
   Mail,
+  BookOpen,
   Menu,
   ChevronLeft,
   ChevronRight,
@@ -53,6 +54,7 @@ const defaultNavItems = [
   { name: "Home", link: "/", icon: Home },
   { name: "Businesses", link: "/businesses", icon: Building2 },
   { name: "Professionals", link: "/professionals", icon: Users },
+  { name: "Blog", link: "/blog", icon: BookOpen },
   { name: "Pricing", link: "/pricing", icon: Calculator },
   { name: "Contact Us", link: "/contact", icon: Mail },
 ];
@@ -127,9 +129,7 @@ export default function PublicPageHeader({
   // Handle category selection
   const handleCategoryClick = (categoryName: string) => {
     if (onCategorySelect) {
-      onCategorySelect(
-        selectedCategory === categoryName ? null : categoryName
-      );
+      onCategorySelect(selectedCategory === categoryName ? null : categoryName);
     }
   };
 
@@ -188,49 +188,47 @@ export default function PublicPageHeader({
               })}
             </div>
 
-            {/* CTA Buttons - Desktop */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="hidden md:flex space-x-2 sm:space-x-4">
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "text-white border-gray-800 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4",
-                    isTransparent
-                      ? "bg-slate-900/20 border-white/50 hover:bg-white/30"
-                      : "bg-slate-800 hover:bg-slate-700",
-                  )}
-                  asChild
-                >
-                  <Link href="/register">Make Your Profile</Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "bg-white text-gray-900 hover:bg-slate-800 hover:text-white border-gray-800 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4",
-                    isTransparent &&
-                      "border-white/50 hover:bg-white hover:text-slate-800",
-                  )}
-                  asChild
-                >
-                  <Link href="/login">Login</Link>
-                </Button>
-              </div>
-
-              {/* Mobile Sidebar Toggle */}
-              {showSidebarToggle && (
-                <button
-                  onClick={onSidebarOpen}
-                  className={cn(
-                    "p-2 rounded-md hover:bg-gray-100 md:hidden",
-                    isTransparent
-                      ? "text-white hover:bg-white/10"
-                      : "text-gray-700",
-                  )}
-                >
-                  <Menu className="h-5 w-5" />
-                </button>
-              )}
+            {/* CTA Buttons - Desktop Only */}
+            <div className="hidden md:flex flex-row items-center justify-end gap-2 sm:gap-4">
+              <Button
+                variant="outline"
+                className={cn(
+                  "text-white border-gray-800 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4",
+                  isTransparent
+                    ? "bg-slate-900/20 border-white/50 hover:bg-white/30"
+                    : "bg-slate-800 hover:bg-slate-700",
+                )}
+                asChild
+              >
+                <Link href="/register">Make Your Profile</Link>
+              </Button>
+              <Button
+                variant="outline"
+                className={cn(
+                  "bg-white text-gray-900 hover:bg-slate-800 hover:text-white border-gray-800 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4",
+                  isTransparent &&
+                    "border-white/50 p-0 hover:bg-white hover:text-slate-800",
+                )}
+                asChild
+              >
+                <Link href="/login">Login</Link>
+              </Button>
             </div>
+
+            {/* Mobile Sidebar Toggle */}
+            {showSidebarToggle && (
+              <button
+                onClick={onSidebarOpen}
+                className={cn(
+                  "p-2 rounded-md hover:bg-gray-100 md:hidden",
+                  isTransparent
+                    ? "text-white hover:bg-white/10"
+                    : "text-gray-700",
+                )}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </div>
 

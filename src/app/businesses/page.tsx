@@ -235,7 +235,7 @@ function BusinessesContent() {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Card
                     key={i}
-                    className="overflow-hidden border rounded-2xl bg-white flex flex-col h-full relative"
+                    className="overflow-hidden border pt-0 rounded-2xl bg-white flex flex-col h-full relative"
                   >
                     {/* Skeleton Layout Matching New Design */}
                     <div className="p-3 sm:p-4 flex flex-col h-full relative z-10 pointer-events-none">
@@ -281,138 +281,163 @@ function BusinessesContent() {
                   </h2>
                 </div>
 
-                <div className="grid  grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredBusinesses.map((business) => (
-                    <Card
+                    <Link
                       key={business.id}
-                      className="group overflow-hidden  p-0 border border-slate-500/50  hover:border-slate-800 rounded-3xl bg-white backdrop-blur-sm flex flex-col h-full relative transition-colors"
+                      href={`/catalog/${business.slug}`}
+                      className="group block h-full"
+                      aria-label={`View details for ${business.name}`}
+                      onClick={() => setLoadingCardId(business.id)}
                     >
-                      {/* Invisible Link Overlay - Makes the whole card clickable */}
-                      <Link
-                        href={`/catalog/${business.slug}`}
-                        className="absolute inset-0 z-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
-                        aria-label={`View details for ${business.name}`}
-                        onClick={() => setLoadingCardId(business.id)}
-                      />
-
-                      {/* Loading Overlay */}
-                      {loadingCardId === business.id && (
-                        <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-3xl flex items-center justify-center">
-                          <div className="flex flex-col items-center gap-2">
-                            <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-                            <span className="text-sm text-slate-600 font-medium">
-                              Loading...
-                            </span>
+                      <Card className="relative h-full overflow-hidden py-0 rounded-2xl border border-slate-400/90 bg-white/95 shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-400/80 hover:shadow-none">
+                        {loadingCardId === business.id && (
+                          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+                            <div className="flex flex-col items-center gap-2">
+                              <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
+                              <span className="text-sm font-medium text-slate-600">
+                                Loading...
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      <div className="relative z-10 flex flex-col h-full p-3 sm:p-4 pointer-events-none">
-                        {/* Header Section */}
-                        <div className="flex items-center space-x-3 sm:space-x-4 mb-3">
-                          <div className="shrink-0">
+                        <div className="p-1.5 pb-0">
+                          <div className="h-24 rounded-xl bg-linear-to-r from-slate-900 via-slate-800 to-cyan-800 sm:h-28 md:h-32" />
+                        </div>
+
+                        <div className="p-3 sm:p-4">
+                          <div className="-mt-10 mb-3 flex items-end justify-between sm:-mt-12">
                             {business.logo ? (
                               <img
                                 src={getOptimizedImageUrl(business.logo, {
-                                  width: 80,
-                                  height: 80,
+                                  width: 88,
+                                  height: 88,
                                   quality: 90,
                                   format: "auto",
                                   crop: "fill",
                                   gravity: "center",
                                 })}
                                 alt={business.name}
-                                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border border-slate-100 shadow-sm"
+                                className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-md sm:h-24 sm:w-24"
                                 loading="lazy"
                               />
                             ) : (
-                              <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-slate-200 flex items-center justify-center border border-slate-100">
-                                <Building2 className="h-7 w-7 text-slate-400" />
+                              <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-linear-to-br from-slate-200 to-slate-300 shadow-md sm:h-24 sm:w-24">
+                                <Building2 className="h-9 w-9 text-slate-500 sm:h-10 sm:w-10" />
+                              </div>
+                            )}
+
+                            {business.address && (
+                              <div className="mb-1 inline-flex max-w-[58%] items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 sm:max-w-[60%] sm:text-xs">
+                                <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                <span className="truncate" title={business.address}>
+                                  {business.address}
+                                </span>
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0 pr-2">
-                            <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate leading-tight  transition-colors">
-                              {business.name}
-                            </h3>
-                            {business.category && (
-                              <Badge
-                                variant="secondary"
-                                className="mt-1.5 text-[10px] sm:text-xs bg-slate-100 text-slate-600 border-transparent px-2 py-0 h-5 inline-flex"
-                              >
-                                {business.category.name}
-                              </Badge>
+
+                          <div className="space-y-3">
+                            <div className="min-w-0">
+                              <h3 className="truncate text-base font-bold text-slate-800 transition-colors group-hover:text-slate-950 sm:text-lg">
+                                {business.name}
+                              </h3>
+                              {business.category && (
+                                <Badge
+                                  variant="secondary"
+                                  className="mt-2 inline-flex max-w-full truncate border-transparent bg-slate-100 px-2.5 py-0 text-[11px] font-medium text-slate-600 sm:text-xs"
+                                >
+                                  {business.category.name}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {business.description ? (
+                              <p className="line-clamp-2 text-xs leading-relaxed text-slate-500 sm:text-sm">
+                                {business.description}
+                              </p>
+                            ) : (
+                              <p className="line-clamp-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
+                                View profile, offerings, and contact details for this business.
+                              </p>
                             )}
+
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 sm:text-xs">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
+                                <ShoppingBag className="h-3 w-3" />
+                                {business.products?.length ?? 0} products
+                              </span>
+                              {business.phone && (
+                                <span className="rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
+                                  Phone available
+                                </span>
+                              )}
+                              {business.email && (
+                                <span className="rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
+                                  Email available
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex gap-2 pt-1">
+                              {business.phone && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 flex-1 rounded-full border-slate-200 bg-white text-[11px] text-slate-700 shadow-none transition-colors hover:bg-slate-50 hover:text-slate-900 sm:text-xs"
+                                  asChild
+                                >
+                                  <a
+                                    href={`tel:${business.phone}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Phone className="mr-1 h-3.5 w-3.5" />
+                                    <span className="truncate">Call</span>
+                                  </a>
+                                </Button>
+                              )}
+                              {business.phone && (
+                                <Button
+                                  size="sm"
+                                  className="h-9 flex-1 rounded-full border-green-600 bg-green-600 text-[11px] text-white shadow-none transition-colors hover:bg-green-700 sm:text-xs"
+                                  asChild
+                                >
+                                  <a
+                                    href={`https://wa.me/${business.phone.replace(
+                                      /[^0-9]/g,
+                                      "",
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <FaWhatsapp className="mr-1 h-3.5 w-3.5" />
+                                    <span className="truncate">WhatsApp</span>
+                                  </a>
+                                </Button>
+                              )}
+                              {business.email && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-9 flex-1 rounded-full border-slate-200 bg-white text-[11px] text-slate-700 shadow-none transition-colors hover:bg-slate-50 hover:text-slate-900 sm:text-xs"
+                                  asChild
+                                >
+                                  <a
+                                    href={`mailto:${business.email}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Mail className="mr-1 h-3.5 w-3.5" />
+                                    <span className="truncate">Email</span>
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
-
-                        {/* Description & Address Section */}
-                        <div className="flex-1 space-y-2 mb-3">
-                          {business.description && (
-                            <p className="text-slate-500 text-xs sm:text-sm line-clamp-2 leading-snug">
-                              {business.description}
-                            </p>
-                          )}
-                          <div className="flex"></div>
-                          {business.address && (
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                              <span className="" title={business.address}>
-                                {business.address}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex gap-1.5 sm:gap-2 mt-auto pt-2 pointer-events-auto">
-                          {business.phone && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 rounded-full text-[10px] sm:text-xs h-9 bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-none"
-                              asChild
-                            >
-                              <a href={`tel:${business.phone}`}>
-                                <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
-                                <span className="truncate">Call</span>
-                              </a>
-                            </Button>
-                          )}
-                          {business.phone && (
-                            <Button
-                              size="sm"
-                              className="flex-1 rounded-full shadow-none text-[10px] sm:text-xs h-9 bg-green-600 hover:bg-green-700 text-white border-green-600  transition-colors"
-                              asChild
-                            >
-                              <a
-                                href={`https://wa.me/${business.phone.replace(
-                                  /[^0-9]/g,
-                                  "",
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <FaWhatsapp className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
-                                <span className="truncate">WhatsApp</span>
-                              </a>
-                            </Button>
-                          )}
-                          {business.email && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 rounded-full shadow-none text-[10px] sm:text-xs h-9 bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors "
-                              asChild
-                            >
-                              <a href={`mailto:${business.email}`}>
-                                <Mail className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
-                                <span className="truncate">Email</span>
-                              </a>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               </>
