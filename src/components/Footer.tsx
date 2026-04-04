@@ -18,7 +18,7 @@ export default function Footer() {
       style={{ backgroundImage: "url('/footer-bg.jpg')" }}
     >
       {/* Main Footer Content */}
-      <div className="relative mx-auto container ">
+      <div className="relative mx-auto container px-3 sm:px-4 lg:px-6 py-12 lg:py-16">
         {/* Main Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 lg:mb-16">
           {/* Brand Section */}
@@ -28,7 +28,7 @@ export default function Footer() {
                 <img
                   src="/logo-header.png"
                   alt="DigiSence Logo"
-                  className="h-auto w-auto filter invert hue-rotate-180 transition-transform duration-300 group-hover:scale-110"
+                  className="h-auto w-50 filter invert hue-rotate-180 transition-transform duration-300 group-hover:scale-110"
                 />
               </div>
             </Link>
@@ -123,10 +123,10 @@ export default function Footer() {
                   <Mail className="h-5 w-5 text-white" />
                 </div>
                 <a
-                  href="mailto:info@digisence.com"
+                  href="mailto:mydigisence@gmail.com"
                   className="hover:text-white transition-colors text-sm"
                 >
-                  info@digisence.com
+                  mydigisence@gmail.com
                 </a>
               </div>
               <div className="flex items-center gap-3 text-gray-300 group">
@@ -205,7 +205,11 @@ export default function Footer() {
             <div className="order-1 md:order-2 flex items-center justify-center gap-2">
               <p className="text-gray-400 text-sm text-center">
                 Powered by{" "}
-                <Link href="https://digiconnunite.com" target="_blank" rel="noopener noreferrer">
+                <Link
+                  href="https://digiconnunite.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <span className="text-white font-semibold hover:text-primary transition-colors cursor-pointer">
                     Digiconn Unite Pvt. Ltd.
                   </span>

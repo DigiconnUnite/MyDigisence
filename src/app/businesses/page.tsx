@@ -182,22 +182,25 @@ function BusinessesContent() {
     >
       <div className="bg-slate-200">
         {/* Hero Banner */}
-        <section className="">
-          <div className=" mx-auto">
-            <div
-              className=" relative py-20 md:py-30 h-fit overflow-hidden bg-cover bg-center bg-no-repeat aspect-4/2 md:aspect-4/1  flex items-center justify-start pl-4 sm:pl-6 md:pl-12 lg:pl-16"
-              style={{ backgroundImage: "url('/footer-bg.jpg')" }}
-            >
-              <div className="relative z-10 text-white max-w-xs sm:max-w-md">
-                <h1 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-4">
+        <section className="relative overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/footer-bg.jpg')" }}
+          />
+          <div className="absolute inset-0 bg-linear-to-r from-slate-950/85 via-slate-900/70 to-slate-900/35" />
+
+          <div className="container relative z-10 mx-auto px-3 sm:px-4 md:px-6 lg:px-8 ">
+            <div className="relative overflow-hidden   min-h-[300px] sm:min-h-[360px] md:min-h-[420px] flex items-center justify-start px-4 sm:px-8 md:px-12 lg:px-16">
+              <div className="relative z-10 text-white max-w-xs sm:max-w-md md:max-w-lg">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4 leading-tight">
                   Find Top <br /> Businesses
                 </h1>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 text-slate-100/95">
                   Discover amazing businesses and explore their products.
                 </p>
-                {/* Search Bar Inside Banner */}
-                <div className="w-full  relative max-w-md">
-                  <Search className="absolute left-3  top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+
+                <div className="w-full relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 sm:h-5 sm:w-5" />
                   <Input
                     type="text"
                     placeholder="Search businesses..."
@@ -207,25 +210,26 @@ function BusinessesContent() {
                   />
                   <Button
                     size="sm"
-                    className="absolute right-1 top-1/2 transform  -translate-y-1/2  rounded-full bg-slate-800 hover:bg-slate-700 text-white px-4"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-slate-800 hover:bg-slate-700 text-white px-4"
                     onClick={() => debouncedSearch(searchTerm)}
                   >
                     Search
                   </Button>
                 </div>
               </div>
+
               <img
                 src="/pr-banner-shape.png"
                 alt=""
-                className="absolute -bottom-5 right-0 w-auto h-3/4 sm:h-4/5 md:h-full opacity-80"
+                className="absolute -bottom-6 right-0 w-auto h-3/4 sm:h-4/5 md:h-full opacity-75 pointer-events-none"
               />
             </div>
           </div>
         </section>
 
         {/* Business Cards Section */}
-        <section className="pb-16 sm:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 mt-8 md:mt-12">
-          <div className="  mx-auto">
+        <section className="container mx-auto pb-16 sm:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 mt-8 md:mt-12">
+          <div className="">
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-2 sm:gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -296,7 +300,9 @@ function BusinessesContent() {
                         <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-3xl flex items-center justify-center">
                           <div className="flex flex-col items-center gap-2">
                             <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-                            <span className="text-sm text-slate-600 font-medium">Loading...</span>
+                            <span className="text-sm text-slate-600 font-medium">
+                              Loading...
+                            </span>
                           </div>
                         </div>
                       )}

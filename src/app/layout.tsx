@@ -89,7 +89,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="text-[90%]" suppressHydrationWarning>
+    <html lang="en" className="text-[93%]" suppressHydrationWarning>
       <head>
         <meta
           name="google-site-verification"

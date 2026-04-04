@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -147,12 +148,15 @@ export default function PublicPageHeader({
           <div className="flex justify-between items-center relative h-14 md:h-16">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <img
+                <Image
                   src="/logo-header.png"
                   alt="DigiSence Logo"
+                  width={200}
+                  height={32}
+                  priority
                   className={cn(
                     "h-8 w-auto transition-transform duration-300 group-hover:scale-110",
-                    isTransparent ? "filter invert hue-rotate-180    " : ""
+                    isTransparent ? "filter invert hue-rotate-180    " : "",
                   )}
                 />
               </div>
@@ -233,7 +237,7 @@ export default function PublicPageHeader({
         {/* Category Slider - Only visible when showCategorySlider is true */}
         {showCategorySlider && (
           <div className="hidden md:block bg-slate-50 border-t border-gray-200">
-            <div className="mx-auto">
+            <div className="mx-auto container px-3 sm:px-4 lg:px-6">
               <div className="relative">
                 {/* Scroll Left Button */}
                 <button
