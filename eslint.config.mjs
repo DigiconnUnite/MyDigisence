@@ -1,16 +1,7 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import nextConfig from "eslint-config-next";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+export default [
+  ...nextConfig,
   {
     rules: {
       // TypeScript
@@ -29,7 +20,6 @@ const eslintConfig = [
       // Next.js
       "@next/next/no-img-element": "off",
       "@next/next/no-html-link-for-pages": "off",
-      // Next.js
       "prefer-const": "off",
       "no-unused-vars": "off",
       "no-console": "off",
@@ -46,5 +36,3 @@ const eslintConfig = [
     },
   },
 ];
-
-export default eslintConfig;

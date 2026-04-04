@@ -18,7 +18,7 @@ export default function Footer() {
       style={{ backgroundImage: "url('/footer-bg.jpg')" }}
     >
       {/* Main Footer Content */}
-      <div className="relative mx-auto container px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div className="relative mx-auto container ">
         {/* Main Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 lg:mb-16">
           {/* Brand Section */}

@@ -143,7 +143,7 @@ export default function PublicPageHeader({
             : "bg-white border-b border-gray-200 shadow-sm",
         )}
       >
-        <div className="mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="mx-auto container px-3 sm:px-4 lg:px-6">
           <div className="flex justify-between items-center relative h-14 md:h-16">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">

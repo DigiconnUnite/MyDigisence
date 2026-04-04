@@ -20,7 +20,7 @@ async function getSuperAdmin(request: NextRequest) {
 }
 
 const bulkDeleteSchema = z.object({
-  businessIds: z.array(z.string()).min(1),
+  ids: z.array(z.string()).min(1),
 })
 
 // POST /api/admin/businesses/bulk/delete - Bulk delete businesses
@@ -33,20 +33,26 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
-    if (!body.businessIds || !Array.isArray(body.businessIds)) {
-      return NextResponse.json({ error: 'Business IDs array is required' }, { status: 400 })
+    const normalizedIds = Array.isArray(body?.ids)
+      ? body.ids
+      : Array.isArray(body?.businessIds)
+        ? body.businessIds
+        : null
+
+    if (!normalizedIds) {
+      return NextResponse.json({ error: 'IDs array is required' }, { status: 400 })
     }
 
-    const parseResult = bulkDeleteSchema.safeParse(body)
+    const parseResult = bulkDeleteSchema.safeParse({ ids: normalizedIds })
     if (!parseResult.success) {
       return NextResponse.json({ error: 'Invalid request data' }, { status: 400 })
     }
 
-    const { businessIds } = parseResult.data
+    const { ids } = parseResult.data
 
     // Get businesses to delete (for response and to collect admin IDs)
     const businessesToDelete = await db.business.findMany({
-      where: { id: { in: businessIds } },
+      where: { id: { in: ids } },
       select: { id: true, adminId: true, name: true },
     })
 
@@ -62,10 +68,10 @@ export async function POST(request: NextRequest) {
     // Use batch deletes instead of for-loop (much more efficient)
     await db.$transaction(async (tx) => {
       // Delete all related records in batch
-      await tx.product.deleteMany({ where: { businessId: { in: businessIds } } })
-      await tx.inquiry.deleteMany({ where: { businessId: { in: businessIds } } })
+      await tx.product.deleteMany({ where: { businessId: { in: ids } } })
+      await tx.inquiry.deleteMany({ where: { businessId: { in: ids } } })
       // Delete businesses in batch
-      await tx.business.deleteMany({ where: { id: { in: businessIds } } })
+      await tx.business.deleteMany({ where: { id: { in: ids } } })
       // Delete associated admin users in batch
       if (adminIds.length > 0) {
         await tx.user.deleteMany({ where: { id: { in: adminIds } } })
@@ -74,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Emit Socket.IO event
     broadcast('business-bulk-deleted', {
-      businessIds,
+      businessIds: ids,
       deletedCount: businessesToDelete.length,
       action: 'bulk-delete',
       timestamp: new Date().toISOString(),

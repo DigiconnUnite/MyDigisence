@@ -57,9 +57,10 @@ export async function POST(request: NextRequest) {
     })
 
     // Emit Socket.IO events for real-time updates
-    for (const id of ids) {
+    for (const professional of professionalsToDelete) {
       broadcast('professional-deleted', {
-        professionalId: id,
+        professionalId: professional.id,
+        isActive: professional.isActive,
         action: 'delete',
         timestamp: new Date().toISOString(),
         adminId: admin.userId

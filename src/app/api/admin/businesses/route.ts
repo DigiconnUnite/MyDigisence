@@ -61,6 +61,9 @@ async function getSuperAdmin(request: NextRequest) {
   return payload
 }
 
+const businessSortFieldSchema = z.enum(['createdAt', 'name', 'email', 'isActive'])
+const sortOrderSchema = z.enum(['asc', 'desc'])
+
 export async function GET(request: NextRequest) {
   try {
     const admin = await getSuperAdmin(request)
@@ -78,8 +81,12 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     
     // Sort params
-    const sortBy = searchParams.get('sortBy') || 'createdAt'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const sortBy = businessSortFieldSchema.safeParse(searchParams.get('sortBy') || 'createdAt').success
+      ? (searchParams.get('sortBy') || 'createdAt') as z.infer<typeof businessSortFieldSchema>
+      : 'createdAt'
+    const sortOrder = sortOrderSchema.safeParse(searchParams.get('sortOrder') || 'desc').success
+      ? (searchParams.get('sortOrder') || 'desc') as z.infer<typeof sortOrderSchema>
+      : 'desc'
     
     // Filter params
     const status = searchParams.get('status') || 'all'
@@ -306,7 +313,7 @@ export async function DELETE(request: NextRequest) {
     // Check if business exists and get adminId
     const existingBusiness = await db.business.findUnique({
       where: { id },
-      select: { id: true, adminId: true },
+      select: { id: true, adminId: true, isActive: true },
     })
 
     if (!existingBusiness) {
@@ -340,6 +347,7 @@ export async function DELETE(request: NextRequest) {
     // Emit Socket.IO event for real-time update
     broadcast('business-deleted', {
       businessId: id,
+      isActive: existingBusiness.isActive,
       action: 'delete',
       timestamp: new Date().toISOString(),
       adminId: admin.userId

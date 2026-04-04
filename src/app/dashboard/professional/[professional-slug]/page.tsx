@@ -77,6 +77,7 @@ import {
 import Link from "next/link";
 import { getOptimizedImageUrl, handleImageError, isValidImageUrl } from '@/lib/image-utils';
 import SharedSidebar from '../../components/SharedSidebar';
+import SharedDashboardHeader from "../../components/SharedDashboardHeader";
 
 
 import ImageUpload from "@/components/ui/image-upload";
@@ -138,6 +139,7 @@ export default function ProfessionalDashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
   const [activeProfileTab, setActiveProfileTab] = useState("basic");
   const [profileCompletion, setProfileCompletion] = useState(0);
   // Removed sidebarExpanded state as dropdown is removed
@@ -160,6 +162,21 @@ export default function ProfessionalDashboard() {
         return "Skills & Expertise";
       default:
         return "Basic Information";
+    }
+  };
+
+  const getProfessionalSearchPlaceholder = () => {
+    switch (currentView) {
+      case "inquiries":
+        return "Search client inquiries...";
+      case "profile":
+        return "Search profile details...";
+      case "analytics":
+        return "Search analytics insights...";
+      case "theme":
+        return "Search theme settings...";
+      default:
+        return "Search professional dashboard...";
     }
   };
 
@@ -2410,6 +2427,20 @@ export default function ProfessionalDashboard() {
         );
 
       case "inquiries":
+        const filteredInquiries = inquiries.filter((inquiry: any) => {
+          if (!searchTerm.trim()) {
+            return true;
+          }
+
+          const normalizedSearch = searchTerm.toLowerCase();
+          return (
+            inquiry.name?.toLowerCase().includes(normalizedSearch) ||
+            inquiry.email?.toLowerCase().includes(normalizedSearch) ||
+            inquiry.message?.toLowerCase().includes(normalizedSearch) ||
+            inquiry.phone?.toLowerCase().includes(normalizedSearch)
+          );
+        });
+
         return (
           <div
             className={`space-y-6 pb-20 md:pb-0 animate-fadeIn ${themeSettings.gap}`}
@@ -2467,7 +2498,7 @@ export default function ProfessionalDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {inquiries.map((inquiry: any) => (
+                      {filteredInquiries.map((inquiry: any) => (
                         <TableRow key={inquiry.id}>
                           <TableCell className="text-gray-900">
                             <div>
@@ -2528,14 +2559,16 @@ export default function ProfessionalDashboard() {
                     </TableBody>
                   </Table>
                 </div>
-                {inquiries.length === 0 && (
+                {filteredInquiries.length === 0 && (
                   <div className="text-center py-8">
                     <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No inquiries yet
+                      {searchTerm ? "No matching inquiries" : "No inquiries yet"}
                     </h3>
                     <p className="text-gray-600">
-                      Inquiries from potential clients will appear here.
+                      {searchTerm
+                        ? "Try a different search term."
+                        : "Inquiries from potential clients will appear here."}
                     </p>
                   </div>
                 )}
@@ -4955,36 +4988,29 @@ export default function ProfessionalDashboard() {
 
           {/* Middle Content with Header */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Top Header Bar - Now inside content area */}
-            <div className="bg-white border-b border-gray-200 shadow-sm shrink-0 h-13 ">
-              <div className="flex justify-between items-center px-4 sm:px-6 py-2">
-                <div className="hidden md:flex"></div>
-                <div className="flex items-center md:hidden">
-                  <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
-                  <span className="h-8 border-l border-gray-300 mx-2"></span>
-                  <div>
-                    <span className="font-semibold">Professional</span>
-                  </div>
-                </div>
-                {/* Mobile View Profile Button */}
-                {professional && (
-                  <div className="flex md:hidden">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        window.open(`/pcard/${professional.slug}`, "_blank")
-                      }
-                      className="rounded-full px-3 py-0 bg-[#080322]  text-white border-0 hover:opacity-90 transition-opacity"
-                    >
-                      <Eye className="h-3.5 w-3.5 mr-1.5" />
-                      <span className="text-xs">View</span>
-                    </Button>
-                  </div>
-                )}
-                <div className="flex items-center leading-tight space-x-2 sm:space-x-4">
-                  {/* Desktop View Public Profile Pill Button - Now on the right */}
-                  {professional && (
+            <SharedDashboardHeader
+              title="Professional"
+              userName={user?.name || "Professional"}
+              userEmail={user?.email}
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder={getProfessionalSearchPlaceholder()}
+              rightActions={
+                professional ? (
+                  <>
+                    <div className="flex md:hidden">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          window.open(`/pcard/${professional.slug}`, "_blank")
+                        }
+                        className="rounded-full px-3 py-0 bg-[#080322] text-white border-0 hover:opacity-90 transition-opacity"
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1.5" />
+                        <span className="text-xs">View</span>
+                      </Button>
+                    </div>
                     <div className="hidden md:block">
                       <Button
                         variant="outline"
@@ -4992,48 +5018,40 @@ export default function ProfessionalDashboard() {
                         onClick={() =>
                           window.open(`/pcard/${professional.slug}`, "_blank")
                         }
-                        className="rounded-full px-4 py-0 bg-[#080322]  text-white border-0 hover:opacity-90 transition-opacity"
+                        className="rounded-full px-4 py-0 bg-[#080322] text-white border-0 hover:opacity-90 transition-opacity"
                       >
                         <Eye className="h-4 w-4 mr-2" />
-                        View 
+                        View
                         <ExternalLink className="h-3 w-3 ml-2 opacity-80" />
                       </Button>
                     </div>
-                  )}
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user?.name || "Professional"}
-                    </p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                  </div>
-                  <span className="h-8 border-l border-gray-300 mx-2"></span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
-                      {profilePictureUrl &&
-                      isValidImageUrl(profilePictureUrl) ? (
-                        <img
-                          src={getOptimizedImageUrl(profilePictureUrl, {
-                            width: 32,
-                            height: 32,
-                            quality: 85,
-                            format: "auto",
-                            crop: "fill",
-                            gravity: "center",
-                          })}
-                          alt={professional?.name || "Profile"}
-                          className="w-full h-full object-cover"
-                          onError={handleImageError}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                          <User className="h-4 w-4 text-gray-400" />
-                        </div>
-                      )}
+                  </>
+                ) : null
+              }
+              avatar={
+                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200">
+                  {profilePictureUrl && isValidImageUrl(profilePictureUrl) ? (
+                    <img
+                      src={getOptimizedImageUrl(profilePictureUrl, {
+                        width: 32,
+                        height: 32,
+                        quality: 85,
+                        format: "auto",
+                        crop: "fill",
+                        gravity: "center",
+                      })}
+                      alt={professional?.name || "Profile"}
+                      className="w-full h-full object-cover"
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <User className="h-4 w-4 text-gray-400" />
                     </div>
-                  </div>
+                  )}
                 </div>
-              </div>
-            </div>
+              }
+            />
 
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0">

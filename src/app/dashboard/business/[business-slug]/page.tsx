@@ -86,6 +86,7 @@ import HeroBannerManager from "@/components/ui/hero-banner-manager";
 import BusinessBannerUploader from "@/components/ui/business-banner-uploader";
 import { BusinessInfoCard } from "../components/BusinessInfoCard";
 import SharedSidebar from "../../components/SharedSidebar";
+import SharedDashboardHeader from "../../components/SharedDashboardHeader";
 
 interface Product {
   id: string;
@@ -1403,6 +1404,23 @@ export default function BusinessAdminDashboard() {
     },
   ];
 
+  const getBusinessSearchPlaceholder = () => {
+    switch (activeSection) {
+      case "products":
+        return "Search products and services...";
+      case "inquiries":
+        return "Search customer inquiries...";
+      case "categories":
+        return "Search categories...";
+      case "brands":
+        return "Search brands...";
+      case "portfolio":
+        return "Search portfolio items...";
+      default:
+        return "Search business dashboard...";
+    }
+  };
+
   return (
     <div className="min-h-screen flex h-screen  relative">
       <div className="fixed inset-0  bg-slate-200  bg-center blur-lg  -z-10"></div>
@@ -1427,25 +1445,24 @@ export default function BusinessAdminDashboard() {
 
         {/* Middle Content with Header */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top Header Bar - Now inside content area */}
-          <div className="bg-white border-b border-gray-200 shadow-sm shrink-0 h-13 ">
-            <div className="flex justify-between items-center px-4 sm:px-6 py-2">
-              <div className="hidden md:flex"></div>
-              <div className="flex items-center md:hidden">
-                <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
-                <span className="h-8 border-l border-gray-300 mx-2"></span>
-                <div>
-                  <span className="font-semibold">{business.name}</span>
-                </div>
-              </div>
-              <div className="flex items-center leading-tight space-x-2 sm:space-x-4">
-                {/* View Public Profile Pill Button - Desktop */}
+          <SharedDashboardHeader
+            title={business?.name || "Business Admin"}
+            userName={user?.name || "Business Admin"}
+            userEmail={user?.email}
+            searchValue={searchTerm}
+            onSearchChange={(value) => {
+              setSearchTerm(value);
+              setProductCurrentPage(1);
+            }}
+            searchPlaceholder={getBusinessSearchPlaceholder()}
+            rightActions={
+              <>
                 <div className="hidden md:flex">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      window.open(`/catalog/${business.slug}`, "_blank")
+                      business?.slug && window.open(`/catalog/${business.slug}`, "_blank")
                     }
                     className="rounded-full px-4 py-0.2  bg-slate-900 hover:bg-slate-800  text-white hover:text-white  border-0 hover:opacity-90 transition-opacity"
                   >
@@ -1453,13 +1470,12 @@ export default function BusinessAdminDashboard() {
                     View
                   </Button>
                 </div>
-                {/* Mobile View Profile Button */}
                 <div className="flex md:hidden">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      window.open(`/catalog/${business.slug}`, "_blank")
+                      business?.slug && window.open(`/catalog/${business.slug}`, "_blank")
                     }
                     className="rounded-full px-3 py-0  bg-slate-800  text-white border-0 hover:text-white hover:opacity-90 transition-opacity"
                   >
@@ -1467,36 +1483,29 @@ export default function BusinessAdminDashboard() {
                     <span className="text-xs">View</span>
                   </Button>
                 </div>
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.name || "Business Admin"}
-                  </p>
-                  <p className="text-xs text-gray-500">{user?.email}</p>
+              </>
+            }
+            avatar={
+              business?.logo ? (
+                <img
+                  src={getOptimizedImageUrl(business.logo, {
+                    width: 24,
+                    height: 24,
+                    quality: 85,
+                    format: "auto",
+                  })}
+                  alt={`${business.name} logo`}
+                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-200"
+                  onError={handleImageError}
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <User className="h-4 w-4 text-gray-400" />
                 </div>
-                <span className="h-8 border-l border-gray-300 mx-2"></span>
-                <div className="flex items-center space-x-2">
-                  {business?.logo ? (
-                    <img
-                      src={getOptimizedImageUrl(business.logo, {
-                        width: 24,
-                        height: 24,
-                        quality: 85,
-                        format: "auto",
-                      })}
-                      alt={`${business.name} logo`}
-                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-200"
-                      onError={handleImageError}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+              )
+            }
+          />
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0">
@@ -2708,18 +2717,7 @@ export default function BusinessAdminDashboard() {
                     </Button>
                   </div>
 
-                  <div className="mb-6 flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Search products..."
-                        className="w-full bg-white rounded-2xl"
-                        value={searchTerm}
-                        onChange={(e) => {
-                          setSearchTerm(e.target.value);
-                          setProductCurrentPage(1); // Reset to first page on search
-                        }}
-                      />
-                    </div>
+                  <div className="mb-6 flex justify-end">
                     <Select
                       value={selectedCategory}
                       onValueChange={(value) => {

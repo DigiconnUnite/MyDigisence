@@ -31,6 +31,9 @@ async function getSuperAdmin(request: NextRequest) {
   return payload
 }
 
+const professionalSortFieldSchema = z.enum(['createdAt', 'name', 'email', 'professionalHeadline', 'location', 'isActive'])
+const sortOrderSchema = z.enum(['asc', 'desc'])
+
 export async function GET(request: NextRequest) {
   try {
     const admin = await getSuperAdmin(request)
@@ -43,8 +46,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || 'all'
-    const sortBy = searchParams.get('sortBy') || 'createdAt'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const sortBy = professionalSortFieldSchema.safeParse(searchParams.get('sortBy') || 'createdAt').success
+      ? (searchParams.get('sortBy') || 'createdAt') as z.infer<typeof professionalSortFieldSchema>
+      : 'createdAt'
+    const sortOrder = sortOrderSchema.safeParse(searchParams.get('sortOrder') || 'desc').success
+      ? (searchParams.get('sortOrder') || 'desc') as z.infer<typeof sortOrderSchema>
+      : 'desc'
 
     const skip = (page - 1) * limit
 

@@ -184,7 +184,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // First get adminId for cleanup
     const existingProfessional = await db.professional.findUnique({
       where: { id: professionalId },
-      select: { adminId: true }
+      select: { adminId: true, isActive: true }
     })
 
     if (!existingProfessional) {
@@ -212,6 +212,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     // Emit Socket.IO event for real-time update
     broadcast('professional-deleted', {
       professionalId: professionalId,
+      isActive: existingProfessional.isActive,
       action: 'delete',
       timestamp: new Date().toISOString(),
       adminId: admin.userId

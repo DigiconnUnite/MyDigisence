@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getTokenFromRequest, verifyToken } from '@/lib/jwt'
 import { z } from 'zod'
-import bcrypt from 'bcrypt'
-import { sendInquiryNotification, sendAccountCreationNotification, sendRegistrationConfirmation } from '@/lib/email'
+import { sendRegistrationConfirmation } from '@/lib/email'
 
 const registrationInquirySchema = z.object({
   type: z.enum(['BUSINESS', 'PROFESSIONAL']),
@@ -49,30 +48,24 @@ async function getSuperAdmin(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('[DEBUG] Registration inquiries GET - Starting')
     const admin = await getSuperAdmin(request)
-    console.log('[DEBUG] Registration inquiries GET - Admin check:', admin ? 'Authorized' : 'Unauthorized')
     if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('[DEBUG] Registration inquiries GET - Fetching from DB')
     let inquiries: Awaited<ReturnType<typeof db.registrationInquiry.findMany>> = []
     try {
       inquiries = await db.registrationInquiry.findMany({
         orderBy: { createdAt: 'desc' },
       })
-      console.log('[DEBUG] Registration inquiries GET - Fetched', inquiries.length, 'inquiries')
     } catch (dbError) {
-      console.error('[DEBUG] Registration inquiries GET - DB Error:', dbError)
       // If collection doesn't exist, return empty array
       inquiries = []
-      console.log('[DEBUG] Registration inquiries GET - Returning empty array due to DB error')
     }
 
     return NextResponse.json({ inquiries })
   } catch (error) {
-    console.error('[DEBUG] Registration inquiries fetch error:', error)
+    console.error('Registration inquiries fetch error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -179,77 +172,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await getSuperAdmin(request)
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { id: inquiryId } = await params
-    const body = await request.json()
-    const { status } = body
-
-    // Validate status
-    if (!['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'COMPLETED'].includes(status)) {
-      return NextResponse.json(
-        { error: 'Invalid status' },
-        { status: 400 }
-      )
-    }
-
-    // Update inquiry status
-    const inquiry = await db.registrationInquiry.update({
-      where: { id: inquiryId },
-      data: { status },
-    })
-
-    return NextResponse.json({
-      success: true,
-      inquiry,
-    })
-  } catch (error) {
-    console.error('Registration inquiry update error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await getSuperAdmin(request)
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { id: inquiryId } = await params
-
-    // Delete inquiry
-    await db.registrationInquiry.delete({
-      where: { id: inquiryId },
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: 'Registration inquiry deleted successfully',
-    })
-  } catch (error) {
-    console.error('Registration inquiry deletion error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

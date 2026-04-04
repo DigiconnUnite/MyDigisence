@@ -39,9 +39,35 @@ export async function POST(
       return badRequest('This inquiry has been rejected and cannot be approved')
     }
 
-    // Check if email already has an account
+    // Idempotency/recovery: if an account already exists for this email,
+    // complete the inquiry status instead of failing permanently.
     const existingUser = await db.user.findUnique({ where: { email: inquiry.email } })
     if (existingUser) {
+      const existingBusiness = inquiry.type === 'BUSINESS'
+        ? await db.business.findUnique({ where: { adminId: existingUser.id } })
+        : null
+      const existingProfessional = inquiry.type === 'PROFESSIONAL'
+        ? await db.professional.findUnique({ where: { adminId: existingUser.id } })
+        : null
+
+      if ((inquiry.type === 'BUSINESS' && existingBusiness) || (inquiry.type === 'PROFESSIONAL' && existingProfessional)) {
+        const updatedInquiry = await db.registrationInquiry.update({
+          where: { id: inquiryId },
+          data: { status: 'COMPLETED', reviewedBy: admin.userId, reviewedAt: new Date() },
+        })
+
+        return NextResponse.json({
+          success: true,
+          recovered: true,
+          message: `Account already existed for ${inquiry.email}; inquiry status repaired to COMPLETED`,
+          account: {
+            id: existingBusiness?.id || existingProfessional?.id,
+            type: inquiry.type.toLowerCase(),
+          },
+          inquiry: updatedInquiry,
+        })
+      }
+
       return badRequest('An account with this email already exists')
     }
 
@@ -77,13 +103,12 @@ export async function POST(
           },
         })
 
-        return { user, business }
-      })
+        await tx.registrationInquiry.update({
+          where: { id: inquiryId },
+          data: { status: 'COMPLETED', reviewedBy: admin.userId, reviewedAt: new Date() },
+        })
 
-      // Update inquiry status
-      await db.registrationInquiry.update({
-        where: { id: inquiryId },
-        data: { status: 'COMPLETED', reviewedBy: admin.userId, reviewedAt: new Date() },
+        return { user, business }
       })
 
       createdAccount = { id: result.business.id, type: 'business' }
@@ -114,12 +139,12 @@ export async function POST(
           },
         })
 
-        return { user, professional }
-      })
+        await tx.registrationInquiry.update({
+          where: { id: inquiryId },
+          data: { status: 'COMPLETED', reviewedBy: admin.userId, reviewedAt: new Date() },
+        })
 
-      await db.registrationInquiry.update({
-        where: { id: inquiryId },
-        data: { status: 'COMPLETED', reviewedBy: admin.userId, reviewedAt: new Date() },
+        return { user, professional }
       })
 
       createdAccount = { id: result.professional.id, type: 'professional' }
