@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   getOptimizedImageUrl,
   generateSrcSet,
-  generateSizes,
 } from "@/lib/image-utils";
 import {
   Card,
@@ -22,7 +21,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -90,93 +88,26 @@ import {
 } from "@/components/ui/tooltip";
 import Footer from "@/components/Footer";
 import BusinessInfoCard from "@/components/business-profile/BusinessInfoCard";
-
-// Define Business type since Prisma doesn't export it for MongoDB
-interface Business {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  about: string | null;
-  logo: string | null;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  website: string | null;
-  facebook: string | null;
-  twitter: string | null;
-  instagram: string | null;
-  linkedin: string | null;
-  catalogPdf: string | null;
-  openingHours: any;
-  gstNumber: string | null;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  adminId: string;
-  categoryId: string | null;
-  heroContent: any;
-  brandContent: any;
-  portfolioContent: any;
-}
-
-// Define custom Product type to match the updated schema
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price: string | null;
-  image: string | null;
-  inStock: boolean;
-  isActive: boolean;
-  additionalInfo: Record<string, string>;
-  createdAt: Date;
-  updatedAt: Date;
-  businessId: string;
-  categoryId: string | null;
-  brandName: string | null;
-  category?: {
-    id: string;
-    name: string;
-  } | null;
-}
-
-interface BusinessProfileProps {
-  business: Business & {
-    admin: { name?: string | null; email: string };
-    category?: { name: string } | null;
-    portfolioContent?: any;
-    facebook?: string | null;
-    twitter?: string | null;
-    instagram?: string | null;
-    linkedin?: string | null;
-    about?: string | null;
-    catalogPdf?: string | null;
-    openingHours?: any[];
-    gstNumber?: string | null;
-    products: (Product & {
-      category?: { id: string; name: string } | null;
-    })[];
-  };
-  categories?: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    parentId?: string;
-    _count?: {
-      products: number;
-    };
-  }>;
-}
-
-interface InquiryFormData {
-  name: string;
-  email: string;
-  phone: string;
-  message: string;
-  productId?: string;
-}
+import BusinessProfileSkeleton from "@/components/business-profile/BusinessProfileSkeleton";
+import ProductCard from "@/components/business-profile/ProductCard";
+import BusinessHeroSection from "@/components/business-profile/BusinessHeroSection";
+import BusinessBrandsSection from "@/components/business-profile/BusinessBrandsSection";
+import BusinessPortfolioSection from "@/components/business-profile/BusinessPortfolioSection";
+import BusinessInquiryModal from "@/components/business-profile/BusinessInquiryModal";
+import BusinessProductModal from "@/components/business-profile/BusinessProductModal";
+import {
+  BusinessProfileProps,
+  InquiryFormData,
+  Product,
+} from "@/components/business-profile/BusinessProfile.types";
+import {
+  getFilteredProducts,
+  getProductShareUrl,
+  getRelatedProducts,
+  getSelectCategories,
+  toWhatsappNumber,
+  validateInquiryData,
+} from "@/components/business-profile/businessProfile.utils";
 
 export default function BusinessProfile({
   business: initialBusiness,
@@ -210,8 +141,6 @@ export default function BusinessProfile({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const { toast } = useToast();
 
@@ -387,22 +316,14 @@ export default function BusinessProfile({
 
   // Categories and filtered products for search/filter - memoized for performance
   const { categories, filteredProducts } = useMemo(() => {
-    console.log("DEBUG: initialCategories received:", initialCategories);
-    const categories = initialCategories.map((cat) => ({
-      id: cat.id,
-      name: cat.name,
-    }));
-    console.log("DEBUG: categories for dropdown:", categories);
-    const filteredProducts = business.products.filter((product) => {
-      const matchesSearch = product.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || product.category?.id === selectedCategory;
-      const matchesBrand =
-        selectedBrand === null || product.brandName === selectedBrand;
-      return matchesSearch && matchesCategory && matchesBrand;
+    const categories = getSelectCategories(initialCategories);
+    const filteredProducts = getFilteredProducts({
+      products: business.products,
+      searchTerm,
+      selectedCategory,
+      selectedBrand,
     });
+
     return { categories, filteredProducts };
   }, [
     initialCategories,
@@ -414,82 +335,7 @@ export default function BusinessProfile({
 
   // Related products for modal - memoized for performance
   const relatedProducts = useMemo(() => {
-    if (!selectedProductModal) return [];
-
-    const mainProduct = selectedProductModal;
-    const allProducts = business.products.filter(
-      (p) => p.id !== mainProduct.id && p.isActive,
-    );
-
-    // Keywords that indicate a product is a component/spare part
-    const componentKeywords = [
-      "spare",
-      "part",
-      "component",
-      "accessory",
-      "kit",
-      "module",
-      "unit",
-      "assembly",
-      "replacement",
-    ];
-
-    // Score products based on relevance
-    const scoredProducts = allProducts.map((product) => {
-      let score = 0;
-
-      // Higher score for products in same category
-      if (product.category?.id === mainProduct.category?.id) {
-        score += 3;
-      }
-
-      // Higher score for products with same brand
-      if (product.brandName === mainProduct.brandName) {
-        score += 2;
-      }
-
-      // Very high score if product name contains main product name (suggests it's a component)
-      const mainProductWords = mainProduct.name.toLowerCase().split(" ");
-      const productWords = product.name.toLowerCase().split(" ");
-
-      for (const mainWord of mainProductWords) {
-        if (
-          mainWord.length > 3 &&
-          product.name.toLowerCase().includes(mainWord)
-        ) {
-          score += 5;
-          break;
-        }
-      }
-
-      // High score for component keywords in product name or description
-      const productText = (
-        product.name +
-        " " +
-        (product.description || "")
-      ).toLowerCase();
-      for (const keyword of componentKeywords) {
-        if (productText.includes(keyword)) {
-          score += 4;
-          break;
-        }
-      }
-
-      // Medium score for products that share significant words with main product
-      const commonWords = mainProductWords.filter(
-        (word) => word.length > 3 && productWords.includes(word),
-      );
-      score += commonWords.length * 2;
-
-      return { product, score };
-    });
-
-    // Sort by score (highest first) and return top 4
-    return scoredProducts
-      .sort((a, b) => b.score - a.score)
-      .filter((item) => item.score > 0)
-      .slice(0, 3)
-      .map((item) => item.product);
+    return getRelatedProducts(business.products, selectedProductModal);
   }, [business.products, selectedProductModal]);
 
   const handleInquiry = useCallback(
@@ -498,44 +344,7 @@ export default function BusinessProfile({
       setIsSubmitting(true);
 
       try {
-        // Comprehensive validation
-        const errors: string[] = [];
-
-        // Name validation
-        if (!inquiryData.name.trim()) {
-          errors.push("Name is required");
-        } else if (inquiryData.name.trim().length < 2) {
-          errors.push("Name must be at least 2 characters long");
-        } else if (inquiryData.name.trim().length > 100) {
-          errors.push("Name must be less than 100 characters");
-        }
-
-        // Email validation
-        if (!inquiryData.email.trim()) {
-          errors.push("Email is required");
-        } else {
-          const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-          if (!emailRegex.test(inquiryData.email.trim())) {
-            errors.push("Please enter a valid email address");
-          }
-        }
-
-        // Phone validation (optional but if provided, validate format)
-        if (inquiryData.phone.trim()) {
-          const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-          if (!phoneRegex.test(inquiryData.phone.replace(/[\s\-\(\)]/g, ""))) {
-            errors.push("Please enter a valid phone number");
-          }
-        }
-
-        // Message validation
-        if (!inquiryData.message.trim()) {
-          errors.push("Message is required");
-        } else if (inquiryData.message.trim().length < 10) {
-          errors.push("Message must be at least 10 characters long");
-        } else if (inquiryData.message.trim().length > 2000) {
-          errors.push("Message must be less than 2000 characters");
-        }
+        const errors = validateInquiryData(inquiryData);
 
         if (errors.length > 0) {
           toast({
@@ -595,7 +404,10 @@ export default function BusinessProfile({
 
   const handleShare = useCallback(
     (product: Product) => {
-      const shareUrl = `${window.location.origin}/catalog/${business.slug}?product=${product.id}&modal=open`;
+      const shareUrl = getProductShareUrl({
+        businessSlug: business.slug,
+        productId: product.id,
+      });
       const shareData = {
         title: product.name,
         text: `Check out this product: ${product.name}`,
@@ -637,6 +449,67 @@ export default function BusinessProfile({
     setSelectedProductModal(product);
     setProductModal(true);
   };
+
+  const handleProductWhatsappInquiry = useCallback(
+    (product: Product) => {
+      if (!business.phone) {
+        toast({
+          title: "Contact Unavailable",
+          description: "Phone number not available",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const productLink = getProductShareUrl({
+        businessSlug: business.slug,
+        productId: product.id,
+      });
+      const message = `Hi, I'm interested in ${product.name}\n\n${productLink}`;
+      const whatsappUrl = `https://wa.me/${toWhatsappNumber(
+        business.phone,
+      )}?text=${encodeURIComponent(message)}`;
+
+      window.open(whatsappUrl, "_blank");
+    },
+    [business.phone, business.slug, toast],
+  );
+
+  const handleRelatedProductWhatsappInquiry = useCallback(
+    (product: Product, e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+
+      if (!business.phone) {
+        toast({
+          title: "Contact Unavailable",
+          description: "Phone number not available",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const productLink = getProductShareUrl({
+        businessSlug: business.slug,
+        productId: product.id,
+      });
+      const message = `${product.name}\n\nDescription: ${product.description}\n\nLink: ${productLink}`;
+      const whatsappUrl = `https://wa.me/${toWhatsappNumber(
+        business.phone,
+      )}?text=${encodeURIComponent(message)}`;
+
+      try {
+        window.open(whatsappUrl, "_blank");
+      } catch (error) {
+        toast({
+          title: "Unable to Open WhatsApp",
+          description:
+            "Please ensure WhatsApp is installed or try on a mobile device.",
+          variant: "destructive",
+        });
+      }
+    },
+    [business.phone, business.slug, toast],
+  );
 
   // Smooth scroll function - memoized for performance
   const scrollToSection = useCallback(
@@ -772,140 +645,8 @@ export default function BusinessProfile({
     setMobileMenuOpen(false);
   };
 
-  const SkeletonLayout = () => (
-    <div className="min-h-screen bg-slate-200 flex flex-col">
-      {/* Header Skeleton */}
-      <header className="shrink-0 bg-white shadow-sm border-b z-50">
-        <div className="w-full mx-auto px-4 sm:px-4 lg:px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3 shrink-0">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="h-6 w-px bg-gray-300 hidden md:block"></div>
-              <Skeleton className="h-6 w-32 hidden md:block" />
-            </div>
-            <nav className="hidden md:flex items-center justify-center flex-1 px-8">
-              <div className="flex space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-10 w-20 rounded-lg" />
-                ))}
-              </div>
-            </nav>
-            <Skeleton className="h-10 w-10 rounded-lg md:hidden" />
-          </div>
-        </div>
-      </header>
-
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 overflow-hidden">
-        {/* Sidebar Skeleton */}
-        <aside className="hidden hide-scrollbar md:block md:col-span-1 h-full overflow-y-auto z-20">
-          <div className="flex flex-col p-4 lg:gap-4 w-full space-y-4">
-            {/* Business Info Card */}
-            <Skeleton className="h-64 w-full rounded-2xl" />
-            {/* Action Buttons */}
-            <Skeleton className="h-12 w-full rounded-full" />
-            <Skeleton className="h-12 w-full rounded-full" />
-            <Skeleton className="h-12 w-full rounded-full" />
-            {/* Contact Card */}
-            <Skeleton className="h-48 w-full rounded-2xl" />
-          </div>
-        </aside>
-
-        {/* Main Content Skeleton */}
-        <main className="md:col-span-3 h-full hide-scrollbar overflow-y-auto mb-5 relative  min-w-0">
-          <div className="max-w-auto mx-auto px-2 sm:px-4 lg:px-4 pt-4 space-y-6 lg:space-y-8">
-            {/* Hero Section */}
-            <section className="relative w-full mx-auto">
-              <Skeleton className="h-48 md:h-80 w-full rounded-xl md:rounded-3xl" />
-            </section>
-
-            {/* Mobile Business Info Card */}
-            <div className="md:hidden">
-              <Skeleton className="h-64 w-full rounded-2xl" />
-            </div>
-
-            {/* Brands Section */}
-            <section className="py-6 md:py-12 px-0">
-              <div className="w-full">
-                <div className="flex justify-between items-center mb-4 md:mb-8">
-                  <Skeleton className="h-8 w-32" />
-                  <Skeleton className="h-8 w-20" />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-40 w-full rounded-2xl" />
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Products Section */}
-            <section className="">
-              <div className="w-full mx-auto space-y-6">
-                {/* Header */}
-                <div className="flex justify-between items-start sm:items-center gap-4 mb-6">
-                  <Skeleton className="h-8 w-48" />
-                  <Skeleton className="h-8 w-24" />
-                </div>
-
-                {/* Search Bar */}
-                <div className="sticky top-0 z-30 mb-6">
-                  <div className="flex flex-row gap-3 py-2">
-                    <Skeleton className="h-10 flex-1 rounded-lg" />
-                    <Skeleton className="h-10 w-28 rounded-lg" />
-                  </div>
-                </div>
-
-                {/* Product Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <Skeleton key={i} className="h-72 w-full rounded-2xl" />
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Portfolio Section */}
-            <section className="w-full my-8 md:my-12 px-0">
-              <div className="flex justify-between items-center mb-4 md:mb-8">
-                <Skeleton className="h-8 w-32" />
-              </div>
-              <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-4 md:grid-rows-2">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-32 w-full rounded-xl" />
-                ))}
-              </div>
-            </section>
-
-            {/* About Section */}
-            <section className="w-full py-8 md:py-12 bg-white rounded-3xl shadow-sm px-6 md:px-8">
-              <div className="flex flex-col md:flex-row gap-8 md:gap-12">
-                <div className="flex-1 space-y-4">
-                  <Skeleton className="h-6 w-32" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-                <div className="flex-1 space-y-4">
-                  <Skeleton className="h-6 w-32" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-              </div>
-            </section>
-          </div>
-
-          {/* Mobile Navigation Skeleton */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 pb-safe">
-            <div className="flex justify-around items-center gap-2 px-3 py-3">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-10 w-16 rounded-none" />
-              ))}
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-
   if (isLoading) {
-    return <SkeletonLayout />;
+    return <BusinessProfileSkeleton />;
   }
 
   return (
@@ -1134,410 +875,26 @@ export default function BusinessProfile({
           className="md:col-span-3 h-full hide-scrollbar overflow-y-auto mb-5 relative scroll-smooth min-w-0"
         >
           <div className="max-w-auto mx-auto px-2 sm:px-4 lg:px-4 pt-4 space-y-6 lg:space-y-8">
-            <section className="relative w-full mx-auto">
-              <div className=" aspect-4/2 bg-center md:aspect-3/1 w-full rounded-xl md:rounded-3xl overflow-hidden shadow-xl md:shadow-2xl bg-gray-900 relative">
-                {heroContent.slides && safeSlides.length > 0 ? (
-                  <>
-                    {/* Check if first slide is a video */}
-                    {(() => {
-                      const firstSlide = heroContent.slides[0];
-                      const isVideo =
-                        firstSlide.mediaType === "video" ||
-                        (firstSlide.media &&
-                          (firstSlide.media.includes(".mp4") ||
-                            firstSlide.media.includes(".webm") ||
-                            firstSlide.media.includes(".ogg")));
-                      const videoUrl = isVideo
-                        ? firstSlide.media || firstSlide.image
-                        : null;
-
-                      // If first slide is video, show video player
-                      if (isVideo && videoUrl) {
-                        return (
-                          <video
-                            src={videoUrl}
-                            className="w-full h-full object-cover"
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            poster={
-                              firstSlide.image && firstSlide.image !== videoUrl
-                                ? firstSlide.image
-                                : undefined
-                            }
-                            onError={(e) => {
-                              console.error("Video failed to load:", videoUrl);
-                              const target = e.target as HTMLVideoElement;
-                              target.style.display = "none";
-                            }}
-                          />
-                        );
-                      }
-
-                      // Otherwise, show image slider
-                      return (
-                        <>
-                          {/* Carousel Track - Added Touch Events for Swipe */}
-                          <div
-                            className="flex transition-transform duration-700 ease-in-out w-full h-full"
-                            style={{
-                              transform: `translateX(-${currentSlideIndex * 100}%)`,
-                            }}
-                            onTouchStart={(e) => {
-                              setTouchEnd(null);
-                              setTouchStart(e.targetTouches[0].clientX);
-                            }}
-                            onTouchMove={(e) => {
-                              setTouchEnd(e.targetTouches[0].clientX);
-                            }}
-                            onTouchEnd={() => {
-                              if (!touchStart || !touchEnd) return;
-                              const distance = touchStart - touchEnd;
-                              const isLeftSwipe = distance > 50;
-                              const isRightSwipe = distance < -50;
-                              if (isLeftSwipe) {
-                                setCurrentSlideIndex((prev) =>
-                                  prev < heroContent.slides.length - 1
-                                    ? prev + 1
-                                    : 0,
-                                );
-                              }
-                              if (isRightSwipe) {
-                                setCurrentSlideIndex((prev) =>
-                                  prev > 0
-                                    ? prev - 1
-                                    : heroContent.slides.length - 1,
-                                );
-                              }
-                            }}
-                            // Mouse events for desktop swipe
-                            onMouseDown={(e) => {
-                              setTouchEnd(null);
-                              setTouchStart(e.clientX);
-                            }}
-                            onMouseMove={(e) => {
-                              setTouchEnd(e.clientX);
-                            }}
-                            onMouseUp={() => {
-                              if (!touchStart || !touchEnd) return;
-                              const distance = touchStart - touchEnd;
-                              const isLeftSwipe = distance > 50;
-                              const isRightSwipe = distance < -50;
-                              if (isLeftSwipe) {
-                                setCurrentSlideIndex((prev) =>
-                                  prev < heroContent.slides.length - 1
-                                    ? prev + 1
-                                    : 0,
-                                );
-                              }
-                              if (isRightSwipe) {
-                                setCurrentSlideIndex((prev) =>
-                                  prev > 0
-                                    ? prev - 1
-                                    : heroContent.slides.length - 1,
-                                );
-                              }
-                            }}
-                            onMouseLeave={() => {
-                              // Reset touch state when mouse leaves
-                              setTouchStart(null);
-                              setTouchEnd(null);
-                            }}
-                          >
-                            {safeSlides
-                              .filter((slide: any) => slide !== null && slide !== undefined)
-                              .map(
-                                (slide: any, index: number) => {
-                                  const mediaUrl = slide.media || slide.image;
-                                  return (
-                                  <div
-                                    key={index}
-                                    className="w-full shrink-0 h-full relative"
-                                  >
-                                    {mediaUrl && mediaUrl.trim() !== "" ? (
-                                      <img
-                                        src={getOptimizedImageUrl(mediaUrl, {
-                                          width: 1600,
-                                          quality: 90,
-                                          format: "auto",
-                                          crop: "fill",
-                                          gravity: "auto",
-                                        })}
-                                        alt={`Slide ${index + 1}`}
-                                        className={`w-full h-full object-cover transition-transform duration-[10s] ease-linear ${
-                                          index === currentSlideIndex
-                                            ? "scale-105"
-                                            : "scale-100"
-                                        }`}
-                                        loading={index === 0 ? "eager" : "lazy"}
-                                        decoding="async"
-                                        onError={(e) => {
-                                          const target =
-                                            e.target as HTMLImageElement;
-                                          target.style.display = "none";
-                                        }}
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                                        <ImageOff className="h-12 w-12 md:h-24 md:w-24 text-gray-300" />
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              },
-                            )}
-                          </div>
-
-                          {/* Navigation Arrows - Size decreased on mobile */}
-                          {heroContent.showArrows !== false &&
-                            safeSlides.length > 1 && (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    setCurrentSlideIndex((prev) =>
-                                      prev > 0
-                                        ? prev - 1
-                                        : heroContent.slides.length - 1,
-                                    )
-                                  }
-                                  className="absolute left-2 md:left-8 top-1/2 -translate-y-1/2 
-                               bg-white/10 hover:bg-white/20 backdrop-blur-md 
-                               border border-white/20 text-white 
-                               rounded-full p-1 md:p-3 
-                               transition-all duration-300 hover:scale-110 z-20 group/btn"
-                                  aria-label="Previous Slide"
-                                >
-                                  <ChevronLeft className="h-3 w-3 md:h-5 md:w-5 group-hover/btn:translate-x-1 transition-transform" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    setCurrentSlideIndex((prev) =>
-                                      prev < heroContent.slides.length - 1
-                                        ? prev + 1
-                                        : 0,
-                                    )
-                                  }
-                                  className="absolute right-2 md:right-8 top-1/2 -translate-y-1/2 
-                               bg-white/10 hover:bg-white/20 backdrop-blur-md 
-                               border border-white/20 text-white 
-                               rounded-full p-1 md:p-3 
-                               transition-all duration-300 hover:scale-110 z-20 group/btn"
-                                  aria-label="Next Slide"
-                                >
-                                  <ChevronRight className="h-3 w-3 md:h-5 md:w-5 group-hover/btn:translate-x-1 transition-transform" />
-                                </button>
-                              </>
-                            )}
-
-                          {/* Pagination Dots - Size decreased on mobile */}
-                          {heroContent.showDots !== false &&
-                            safeSlides.length > 1 && (
-                              <div className="absolute bottom-2  left-0 right-0 flex justify-center items-center space-x-2 md:space-x-3 z-20">
-                                {safeSlides
-                                  .filter((slide: any) => slide !== null && slide !== undefined)
-                                  .map(
-                                    (_: any, index: number) => (
-                                    <button
-                                      key={index}
-                                      onClick={() =>
-                                        setCurrentSlideIndex(index)
-                                      }
-                                      className={`
-                            h-1.5 md:h-2 rounded-full transition-all duration-300
-                            ${
-                              index === currentSlideIndex
-                                ? "w-4 md:w-8 bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                                : "w-1.5 md:w-2 bg-white/50 hover:bg-white/80"
-                            }
-                          `}
-                                      aria-label={`Go to slide ${index + 1}`}
-                                    />
-                                  ),
-                                )}
-                              </div>
-                            )}
-                        </>
-                      );
-                    })()}
-                  </>
-                ) : (
-                  // Fallback: ImageOff Icon when no media is present
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
-                    <ImageOff className="h-12 w-12 md:h-24 md:w-24 text-gray-300 mb-2" />
-                    <p className="text-sm md:text-lg text-gray-500 font-medium">
-                      No banner configured
-                    </p>
-                  </div>
-                )}
-              </div>
-            </section>
+            <BusinessHeroSection
+              heroContent={heroContent}
+              safeSlides={safeSlides}
+              currentSlideIndex={currentSlideIndex}
+              setCurrentSlideIndex={setCurrentSlideIndex}
+            />
 
             {/* Mobile View: Business Profile Card - Show after banner */}
             <div className="md:hidden mt-6 mb-8">
               <BusinessInfoCard business={business} />
             </div>
 
-            {safeBrands.length > 0 && (
-              <section
-                id="brands"
-                ref={brandsRef}
-                className="py-6 md:py-12 px-0"
-              >
-                <div className="w-full">
-                  <div className="flex  justify-between items-center mb-4 md:mb-8">
-                    <h2 className="text-lg md:text-2xl font-bold">
-                      Trusted By
-                    </h2>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setViewAllBrands(!viewAllBrands);
-                      }}
-                    >
-                      {viewAllBrands ? "Show Less" : "View All"}
-                    </Button>
-                  </div>
-                  {viewAllBrands ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                      {safeBrands
-                        .filter((brand: any) => brand !== null && brand !== undefined)
-                        .map((brand: any, index: number) => (
-                          <div
-                            key={index}
-                          className="flex flex-col h-full cursor-pointer transition-all duration-300"
-                          onClick={() =>
-                            setSelectedBrand(
-                              selectedBrand === brand.name ? null : brand.name,
-                            )
-                          }
-                        >
-                          <Card
-                            className={`overflow-hidden rounded-2xl   p-0 md:rounded-3xl cursor-pointer transition-all duration-300 h-full flex items-center justify-center flex-col ${
-                              selectedBrand === brand.name
-                                ? "bg-orange-50 border-2 border-orange-400 shadow-2xl"
-                                : "bg-white/70 hover:bg-white/90 hover:shadow-md"
-                            }`}
-                          >
-                            {/* Container with Fixed Height and Full Width */}
-                            <div className="relative w-full h-[180px] flex items-center justify-center bg-gray-50/50">
-                              {brand.logo && brand.logo.trim() !== "" ? (
-                                <img
-                                  src={getOptimizedImageUrl(brand.logo, {
-                                    width: 400,
-                                    height: 300,
-                                    quality: 85,
-                                    format: "auto",
-                                  })}
-                                  srcSet={generateSrcSet(brand.logo)}
-                                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                                  alt={brand.name}
-                                  // w-full fills the width, h-auto maintains aspect ratio, object-contain ensures the whole image is visible
-                                  className="w-full my-auto mx-auto h-auto object-contain max-h-[180px]"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <Image className="h-10 w-10 text-gray-400" />
-                              )}
-                            </div>
-                          </Card>
-                          <p
-                            className={`text-center text-xs md:text-base mt-2 font-semibold transition-colors wrap-break-word ${
-                              selectedBrand === brand.name
-                                ? "text-orange-400 font-700"
-                                : "text-gray-700 font-semibold"
-                            }`}
-                          >
-                            {brand.name}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Carousel
-                      opts={{
-                        loop: true,
-                        dragFree: false,
-                        align: "start",
-                        watchDrag: true,
-                        watchResize: true,
-                        watchSlides: true,
-                      }}
-                      className="w-full"
-                      suppressHydrationWarning
-                    >
-                      <CarouselContent>
-                        {safeBrands
-                          .filter((brand: any) => brand !== null && brand !== undefined)
-                          .map(
-                            (brand: any, index: number) => (
-                            <CarouselItem
-                              key={index}
-                              className="basis-1/2 md:basis-1/4 lg:basis-1/5"
-                            >
-                              <div
-                                className="flex flex-col h-full cursor-pointer transition-all duration-300"
-                                onClick={() =>
-                                  setSelectedBrand(
-                                    selectedBrand === brand.name
-                                      ? null
-                                      : brand.name,
-                                  )
-                                }
-                              >
-                                <Card
-                                  className={`overflow-hidden rounded-2xl p-0 md:rounded-3xl cursor-pointer items-center justify-center transition-all duration-300 h-full flex flex-col ${
-                                    selectedBrand === brand.name
-                                      ? "bg-orange-50 border-2 border-orange-400 shadow-2xl"
-                                      : "bg-white/70 hover:bg-white/90 hover:shadow-md"
-                                  }`}
-                                >
-                                  {/* Container with Fixed Height and Full Width */}
-                                  <div className="relative w-full h-[180px] flex items-center justify-center bg-gray-50/50">
-                                    {brand.logo && brand.logo.trim() !== "" ? (
-                                      <img
-                                        src={getOptimizedImageUrl(brand.logo, {
-                                          width: 400,
-                                          height: 300,
-                                          quality: 85,
-                                          format: "auto",
-                                        })}
-                                        srcSet={generateSrcSet(brand.logo)}
-                                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                                        alt={brand.name}
-                                        // w-full fills the width, h-auto maintains aspect ratio, object-contain ensures the whole image is visible
-                                        className="w-full my-auto mx-auto h-auto object-contain max-h-[180px]"
-                                        loading="lazy"
-                                      />
-                                    ) : (
-                                      <Image className="h-10 w-10 text-gray-400" />
-                                    )}
-                                  </div>
-                                </Card>
-                                <p
-                                  className={`text-center text-xs md:text-base mt-2 font-semibold transition-colors wrap-break-word ${
-                                    selectedBrand === brand.name
-                                      ? "text-orange-400 font-700"
-                                      : "text-gray-700 font-semibold"
-                                  }`}
-                                >
-                                  {brand.name}
-                                </p>
-                              </div>
-                            </CarouselItem>
-                          ),
-                        )}
-                      </CarouselContent>
-                      <div className="hidden md:block">
-                        <CarouselPrevious className="left-2 md:left-4 bg-white/80 hover:bg-white text-gray-800 border-0 shadow-lg" />
-                        <CarouselNext className="right-2 md:right-4 bg-white/80 hover:bg-white text-gray-800 border-0 shadow-lg" />
-                      </div>
-                    </Carousel>
-                  )}
-                </div>
-              </section>
-            )}
+            <BusinessBrandsSection
+              brands={safeBrands}
+              viewAllBrands={viewAllBrands}
+              setViewAllBrands={setViewAllBrands}
+              selectedBrand={selectedBrand}
+              onSelectBrand={setSelectedBrand}
+              sectionRef={brandsRef}
+            />
 
             {business.products.length > 0 && (
               <section id="products" ref={productsRef} className="">
@@ -1614,285 +971,56 @@ export default function BusinessProfile({
                     )}
                   </div>
 
-                  {/* Reusable Product Card Component */}
-                  {(() => {
-                    const ProductCard = ({ product }: { product: Product }) => (
-                      <Card
-                        id={`product-${product.id}`}
-                        className="group overflow-hidden p-0 rounded-2xl border-gray-100 hover:shadow-xl hover:border-gray-200 transition-all duration-300 flex flex-col h-full bg-white"
-                      >
-                        {/* Image Section - Reduced Height on Mobile */}
-                        <div
-                          className="relative w-full h-48 md:h-64 overflow-hidden cursor-pointer bg-gray-100"
-                          onClick={() => openProductModal(product)}
-                        >
-                          {product.image && product.image.trim() !== "" ? (
-                            <img
-                              src={getOptimizedImageUrl(product.image, {
-                                width: 500,
-                                height: 500,
-                                quality: 85,
-                                format: "auto",
-                              })}
-                              alt={product.name}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              loading="lazy"
-                              decoding="async"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full bg-gray-50">
-                              <ImageOff className="h-10 w-10 text-gray-300" />
-                            </div>
-                          )}
-
-                          {/* Stock Badge */}
-                          <div className="absolute top-0 right-0">
-                            <Badge
-                              className={`absolute top-3 text-white right-3 ${
-                                product.inStock
-                                  ? "bg-linear-to-l from-gray-900 to-lime-900"
-                                  : "bg-linear-to-l from-gray-900 to-red-900"
-                              } text-white border-0`}
-                            >
-                              {product.inStock ? (
-                                <span className="flex items-center gap-1">
-                                  <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
-                                  </span>{" "}
-                                  In Stock
-                                </span>
-                              ) : (
-                                <span className="flex items-center gap-1">
-                                  <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
-                                  </span>{" "}
-                                  Out of Stock
-                                </span>
-                              )}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* Content Section - Adjusted Padding & Text Size */}
-                        <div className="p-3   flex flex-col flex-1">
-                          <div className="flex justify-between items-start gap-2 mb-1 sm:mb-2">
-                            <h3
-                              className="font-semibold text-slate-800 line-clamp-2 cursor-pointer hover:text-orange-600 transition-colors text-xs md:text-sm sm:text-base"
-                              onClick={() => openProductModal(product)}
-                            >
-                              {product.name}
-                            </h3>
-                          </div>
-
-                          {/* Tags */}
-                          <div className="flex flex-wrap gap-1.5 mb-2 sm:mb-3">
-                            {product.brandName && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs px-1.5 py-0.5 rounded-full border-gray-200 text-gray-500 "
-                              >
-                                <Grid2X2Check className="h-4 w-4 mr-1" />
-                                {product.brandName}
-                              </Badge>
-                            )}
-                            {product.category && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs px-1.5 py-0.5 rounded-full border-gray-200 text-gray-500 "
-                              >
-                                <Tag className="h-4 w-4 mr-1" />
-                                {product.category.name}
-                              </Badge>
-                            )}
-                          </div>
-
-                          <p className="text-[10px] sm:text-xs text-gray-500 line-clamp-2 mb-3 sm:mb-4 leading-relaxed flex-1">
-                            {product.description || "No description available."}
-                          </p>
-
-                          {/* Actions */}
-                          <div className="flex gap-2 mt-auto">
-                            <Button
-                              className="flex-1 bg-green-500 hover:bg-black text-white h-8 sm:h-9 text-[10px] sm:text-xs font-medium rounded-lg"
-                              onClick={() => {
-                                if (business.phone) {
-                                  const productLink = `${window.location.origin}/catalog/${business.slug}?product=${product.id}&modal=open`;
-                                  const message = `Hi, I'm interested in ${product.name}\n\n${productLink}`;
-                                  const whatsappUrl = `https://wa.me/${business.phone.replace(
-                                    /[^\d]/g,
-                                    "",
-                                  )}?text=${encodeURIComponent(message)}`;
-                                  window.open(whatsappUrl, "_blank");
-                                } else {
-                                  toast({
-                                    title: "Contact Unavailable",
-                                    description: "Phone number not available",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }}
-                            >
-                              Inquire
-                              <SiWhatsapp className="h-3 w-3 ml-1" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border-gray-200 hover:bg-gray-50 hover:text-gray-900"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleShare(product);
-                              }}
-                            >
-                              <Share2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    );
-
-                    return viewAllProducts ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+                  {viewAllProducts ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+                      {filteredProducts.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          onOpenProduct={openProductModal}
+                          onShare={handleShare}
+                          onInquire={handleProductWhatsappInquiry}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Carousel
+                      opts={{
+                        align: "start",
+                        loop: true,
+                      }}
+                      className="w-full -mx-4 px-4 md:mx-0 md:px-0"
+                    >
+                      <CarouselContent>
                         {filteredProducts.map((product) => (
-                          <ProductCard key={product.id} product={product} />
+                          <CarouselItem
+                            key={product.id}
+                            className="basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4 md:pl-4"
+                          >
+                            <ProductCard
+                              product={product}
+                              onOpenProduct={openProductModal}
+                              onShare={handleShare}
+                              onInquire={handleProductWhatsappInquiry}
+                            />
+                          </CarouselItem>
                         ))}
+                      </CarouselContent>
+                      {/* Carousel Navigation */}
+                      <div className="hidden md:flex justify-end gap-2 mt-4">
+                        <CarouselPrevious className="static w-10 h-10 rounded-full border-gray-200 hover:bg-gray-100" />
+                        <CarouselNext className="static w-10 h-10 rounded-full border-gray-200 hover:bg-gray-100" />
                       </div>
-                    ) : (
-                      <Carousel
-                        opts={{
-                          align: "start",
-                          loop: true,
-                        }}
-                        className="w-full -mx-4 px-4 md:mx-0 md:px-0"
-                      >
-                        <CarouselContent>
-                          {filteredProducts.map((product) => (
-                            <CarouselItem
-                              key={product.id}
-                              className="basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4 md:pl-4"
-                            >
-                              <ProductCard product={product} />
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        {/* Carousel Navigation */}
-                        <div className="hidden md:flex justify-end gap-2 mt-4">
-                          <CarouselPrevious className="static w-10 h-10 rounded-full border-gray-200 hover:bg-gray-100" />
-                          <CarouselNext className="static w-10 h-10 rounded-full border-gray-200 hover:bg-gray-100" />
-                        </div>
-                      </Carousel>
-                    );
-                  })()}
+                    </Carousel>
+                  )}
                 </div>
               </section>
             )}
 
-            {/* Portfolio Section - Enhanced for Mobile */}
-            {safePortfolioImages.length > 0 && (
-              <section
-                className="w-full my-8 md:my-12 px-0"
-                id="portfolio"
-                ref={portfolioRef}
-              >
-                <div className="flex justify-between items-center mb-4 md:mb-8">
-                  <h2 className="text-lg md:text-2xl font-bold">Portfolio</h2>
-                </div>
-
-                <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-4 md:grid-rows-2">
-                  {safePortfolioImages
-                    .filter((image: any) => image !== null && image !== undefined)
-                    .slice(0, 6)
-                    .map((image: any, index: number) => {
-                      // Define grid positions for bento layout - matching dashboard layout
-                      const gridClasses = [
-                        "md:row-span-1 md:col-span-2 col-span-2 row-span-2", // Index 0: Rectangle (16:9) - row 1, cols 1-2
-                        "md:row-span-1 md:col-span-2 col-span-2 row-span-2", // Index 1: Rectangle (16:9) - row 1, cols 3-4
-                        "md:row-span-1 md:col-span-1 col-span-1", // Index 2: Square
-                        "md:row-span-1 md:col-span-1 col-span-1", // Index 3: Square
-                        "md:row-span-1 md:col-span-1 col-span-1", // Index 4: Square
-                        "md:row-span-1 md:col-span-1 col-span-1", // Index 5: Square
-                      ];
-
-                      const isVideo =
-                        image.url &&
-                        (image.url.includes(".mp4") ||
-                          image.url.includes(".webm") ||
-                          image.url.includes(".ogg"));
-
-                      return (
-                        <div
-                          key={index}
-                          className={`bg-gray-100 border rounded-xl shadow-sm flex items-center justify-center hover:shadow transition-shadow bg-center bg-cover relative overflow-hidden ${gridClasses[index] || "md:row-span-1 md:col-span-1"} ${index === 0 || index === 1 ? "min-h-[140px] md:min-h-[180px]" : "min-h-[100px] md:min-h-[120px]"}`}
-                          style={{
-                            aspectRatio:
-                              index === 0 || index === 1 ? "2/1" : "1/1",
-                          }}
-                        >
-                          {isVideo ? (
-                            <video
-                              src={image.url}
-                              className="w-full h-full object-cover"
-                              muted
-                              loop
-                              playsInline
-                              style={{ pointerEvents: "none" }}
-                            />
-                          ) : image.url ? (
-                            <img
-                              src={getOptimizedImageUrl(image.url, {
-                                width: index === 0 || index === 1 ? 600 : 300,
-                                height: index === 0 || index === 1 ? 300 : 300,
-                                quality: 85,
-                                format: "auto",
-                                crop: "fill",
-                                gravity: "auto",
-                              })}
-                              srcSet={generateSrcSet(image.url)}
-                              sizes={
-                                index === 0 || index === 1
-                                  ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                  : "(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                              }
-                              alt={image.alt || "Portfolio image"}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              decoding="async"
-                            />
-                          ) : (
-                            <span
-                              className={`flex items-center justify-center rounded-full bg-gray-200 ${index === 0 || index === 1 ? "w-[60px] h-[60px] md:w-20 md:h-20" : "w-10 h-10 md:w-14 md:h-14"}`}
-                            >
-                              <Image
-                                className={`text-gray-400 ${index === 0 || index === 1 ? "w-8 h-8 md:w-10 md:h-10" : "w-6 h-6 md:w-8 md:h-8"}`}
-                              />
-                            </span>
-                          )}
-
-                          {isVideo && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="bg-black bg-opacity-50 rounded-full p-2">
-                                <svg
-                                  className="w-4 h-4 md:w-6 md:h-6 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                </div>
-              </section>
-            )}
+            <BusinessPortfolioSection
+              images={safePortfolioImages}
+              sectionRef={portfolioRef}
+            />
 
             {/* About Us Text & Opening Hours (Moved to Main Content) */}
             <section className="w-full py-8 mb-20   md:py-12 bg-white rounded-3xl shadow-sm px-6 md:px-8">
@@ -1975,357 +1103,24 @@ export default function BusinessProfile({
         </main>
       </div>
 
-      {/* Inquiry Modal */}
-      <Dialog open={inquiryModal} onOpenChange={setInquiryModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedProduct
-                ? `Inquire about ${selectedProduct.name}`
-                : "Get in Touch"}
-            </DialogTitle>
-            <DialogDescription>
-              Send us a message and we'll get back to you soon.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleInquiry} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={inquiryData.name}
-                onChange={(e) =>
-                  setInquiryData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={inquiryData.email}
-                onChange={(e) =>
-                  setInquiryData((prev) => ({ ...prev, email: e.target.value }))
-                }
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={inquiryData.phone}
-                onChange={(e) =>
-                  setInquiryData((prev) => ({ ...prev, phone: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Message *</Label>
-              <Textarea
-                id="message"
-                value={inquiryData.message}
-                onChange={(e) =>
-                  setInquiryData((prev) => ({
-                    ...prev,
-                    message: e.target.value,
-                  }))
-                }
-                rows={4}
-                required
-              />
-            </div>
-            <div className="flex space-x-3">
-              <Button type="submit" disabled={isSubmitting} className="flex-1">
-                {isSubmitting ? (
-                  <>Sending...</>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Inquiry
-                  </>
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setInquiryModal(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <BusinessInquiryModal
+        open={inquiryModal}
+        onOpenChange={setInquiryModal}
+        selectedProduct={selectedProduct}
+        inquiryData={inquiryData}
+        setInquiryData={setInquiryData}
+        isSubmitting={isSubmitting}
+        onSubmit={handleInquiry}
+      />
 
-      {/* Product Modal */}
-      <Dialog open={productModal} onOpenChange={setProductModal}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar">
-          <DialogHeader>
-            <DialogTitle className="text-xl md:text-2xl">
-              {selectedProductModal?.name}
-            </DialogTitle>
-            <DialogDescription>
-              Product details and related items
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedProductModal && (
-            <div className="space-y-6">
-              {/* Product Image */}
-              <div className="flex justify-center">
-                <div className="relative w-full max-w-md h-64 md:h-80 rounded-lg overflow-hidden border border-gray-200 shadow-sm ">
-                  {selectedProductModal.image &&
-                  selectedProductModal.image.trim() !== "" ? (
-                    <img
-                      src={getOptimizedImageUrl(selectedProductModal.image, {
-                        width: 600,
-                        height: 400,
-                        quality: 90,
-                        format: "auto",
-                        crop: "fill",
-                        gravity: "center",
-                      })}
-                      srcSet={generateSrcSet(selectedProductModal.image)}
-                      sizes="(max-width: 768px) 100vw, 600px"
-                      alt={selectedProductModal.name}
-                      className="w-full h-full object-contain"
-                      loading="eager"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full bg-gray-100">
-                      <Image className="h-16 w-16 md:h-24 md:w-24 text-gray-400" />
-                    </div>
-                  )}
-                  <Badge
-                    className={`absolute top-3 text-white right-3 ${
-                      selectedProductModal.inStock
-                        ? "bg-linear-to-l from-gray-900 to-lime-900"
-                        : "bg-linear-to-l from-gray-900 to-red-900"
-                    } text-white border-0`}
-                  >
-                    {selectedProductModal.inStock ? (
-                      <span className="flex items-center gap-1">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
-                        </span>{" "}
-                        In Stock
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
-                        </span>{" "}
-                        Out of Stock
-                      </span>
-                    )}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Product Details */}
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {selectedProductModal.brandName && (
-                    <Badge variant="outline" className="text-sm">
-                      {selectedProductModal.brandName}
-                    </Badge>
-                  )}
-                  {selectedProductModal.category && (
-                    <Badge variant="outline" className="text-sm">
-                      {selectedProductModal.category.name}
-                    </Badge>
-                  )}
-                </div>
-
-                {selectedProductModal.price && (
-                  <div className="text-2xl font-bold text-green-600">
-                    {selectedProductModal.price}
-                  </div>
-                )}
-
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-gray-700 leading-relaxed">
-                    {selectedProductModal.description ||
-                      "No description available"}
-                  </p>
-                </div>
-
-                {/* Additional Information Section */}
-                {selectedProductModal.additionalInfo &&
-                  Object.keys(selectedProductModal.additionalInfo).length >
-                    0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-semibold text-gray-900">
-                        Additional Information
-                      </h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full border border-gray-200 rounded-lg">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">
-                                Property
-                              </th>
-                              <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 border-b">
-                                Value
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {Object.entries(
-                              selectedProductModal.additionalInfo,
-                            ).map(([key, value], index) => (
-                              <tr key={index} className="hover:bg-gray-50">
-                                <td className="px-4 py-2 text-sm font-medium text-gray-900 capitalize">
-                                  {key.replace(/([A-Z])/g, " $1").trim()}
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-700">
-                                  {value}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-              </div>
-
-              {/* Related Products */}
-              {relatedProducts.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Products Components</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {relatedProducts.map((product) => (
-                      <Card
-                        key={product.id}
-                        className="overflow-hidden pt-0 py-0 bg-white hover:shadow-lg transition-shadow duration-300 pb-2 cursor-pointer"
-                        onClick={() => setSelectedProductModal(product)}
-                      >
-                        <div className="relative h-32 md:h-48">
-                          {product.image && product.image.trim() !== "" ? (
-                            <img
-                              src={getOptimizedImageUrl(product.image, {
-                                width: 400,
-                                height: 300,
-                                quality: 85,
-                                format: "auto",
-                                crop: "fill",
-                                gravity: "center",
-                              })}
-                              srcSet={generateSrcSet(product.image)}
-                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw"
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              decoding="async"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full">
-                              <Image className="h-10 w-10 md:h-16 md:w-16 text-gray-400" />
-                            </div>
-                          )}
-                          <Badge
-                            className={`absolute top-3 text-white right-3 ${
-                              selectedProductModal.inStock
-                                ? "bg-linear-to-l from-gray-900 to-lime-900"
-                                : "bg-linear-to-l from-gray-900 to-red-900"
-                            } text-white border-0`}
-                          >
-                            {product.inStock ? (
-                              <span className="flex items-center gap-1">
-                                {product.inStock && (
-                                  <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                  </span>
-                                )}{" "}
-                                In Stock
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1">
-                                <span className="relative flex h-2 w-2">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                                </span>{" "}
-                                Out of Stock
-                              </span>
-                            )}
-                          </Badge>
-                        </div>
-                        <CardHeader className="pb-0 px-2 md:px-3 ">
-                          <CardTitle className="text-xs  md:text-lg line-clamp-1">
-                            {product.name}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-0 px-2 md:px-3 ">
-                          <div className="flex flex-row flex-nowrap gap-1 mb-2 md:mb-3 overflow-x-auto hide-scrollbar">
-                            {product.brandName && (
-                              <Badge
-                                variant="outline"
-                                className="text-[8px] md:text-xs px-1 md:px-2 py-0.5 h-4 md:h-5 min-w-max"
-                              >
-                                {product.brandName}
-                              </Badge>
-                            )}
-                            {product.category && (
-                              <Badge
-                                variant="outline"
-                                className="text-[8px] md:text-xs px-1 md:px-2 py-0.5 h-4 md:h-5 min-w-max"
-                              >
-                                {product.category.name}
-                              </Badge>
-                            )}
-                          </div>
-                          <CardDescription className="mb-2 md:mb-4 text-[10px]  md:text-sm leading-relaxed line-clamp-2">
-                            {product.description || "No description available"}
-                          </CardDescription>
-                          <div className="flex-1 "></div>
-                          <Button
-                            className="w-full mt-auto bg-green-500 hover:bg-slate-900 text-white cursor-pointer text-xs md:text-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (business.phone) {
-                                const productLink = `${window.location.origin}/catalog/${business.slug}?product=${product.id}&modal=open`;
-                                const message = `${product.name}\n\nDescription: ${product.description}\n\nLink: ${productLink}`;
-                                const whatsappUrl = `https://wa.me/${business.phone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(message)}`;
-                                try {
-                                  window.open(whatsappUrl, "_blank");
-                                } catch (error) {
-                                  toast({
-                                    title: "Unable to Open WhatsApp",
-                                    description: "Please ensure WhatsApp is installed or try on a mobile device.",
-                                    variant: "destructive",
-                                  });
-                                }
-                              } else {
-                                toast({
-                                  title: "Contact Unavailable",
-                                  description: "Phone number not available",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                          >
-                            Inquire Now
-                            <SiWhatsapp className=" h-3 w-3 md:h-4 md:w-4 ml-1 md:ml-2" />
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <BusinessProductModal
+        open={productModal}
+        onOpenChange={setProductModal}
+        selectedProduct={selectedProductModal}
+        relatedProducts={relatedProducts}
+        onSelectRelatedProduct={setSelectedProductModal}
+        onInquireRelatedProduct={handleRelatedProductWhatsappInquiry}
+      />
     </div>
   );
 }

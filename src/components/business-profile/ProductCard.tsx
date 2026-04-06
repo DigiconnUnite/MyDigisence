@@ -1,0 +1,137 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { getOptimizedImageUrl } from "@/lib/image-utils";
+import { Grid2X2Check, ImageOff, Share2, Tag } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
+import { Product } from "@/components/business-profile/BusinessProfile.types";
+
+interface ProductCardProps {
+  product: Product;
+  onOpenProduct: (product: Product) => void;
+  onShare: (product: Product) => void;
+  onInquire: (product: Product) => void;
+}
+
+export default function ProductCard({
+  product,
+  onOpenProduct,
+  onShare,
+  onInquire,
+}: ProductCardProps) {
+  return (
+    <Card
+      id={`product-${product.id}`}
+      className="group overflow-hidden p-0 rounded-2xl border-gray-100 hover:shadow-xl hover:border-gray-200 transition-all duration-300 flex flex-col h-full bg-white"
+    >
+      <div
+        className="relative w-full h-48 md:h-64 overflow-hidden cursor-pointer bg-gray-100"
+        onClick={() => onOpenProduct(product)}
+      >
+        {product.image && product.image.trim() !== "" ? (
+          <img
+            src={getOptimizedImageUrl(product.image, {
+              width: 500,
+              height: 500,
+              quality: 85,
+              format: "auto",
+            })}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-gray-50">
+            <ImageOff className="h-10 w-10 text-gray-300" />
+          </div>
+        )}
+
+        <div className="absolute top-0 right-0">
+          <Badge
+            className={`absolute top-3 text-white right-3 ${
+              product.inStock
+                ? "bg-linear-to-l from-gray-900 to-lime-900"
+                : "bg-linear-to-l from-gray-900 to-red-900"
+            } text-white border-0`}
+          >
+            {product.inStock ? (
+              <span className="flex items-center gap-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
+                </span>{" "}
+                In Stock
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
+                </span>{" "}
+                Out of Stock
+              </span>
+            )}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="p-3 flex flex-col flex-1">
+        <div className="flex justify-between items-start gap-2 mb-1 sm:mb-2">
+          <h3
+            className="font-semibold text-slate-800 line-clamp-2 cursor-pointer hover:text-orange-600 transition-colors text-xs md:text-sm sm:text-base"
+            onClick={() => onOpenProduct(product)}
+          >
+            {product.name}
+          </h3>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5 mb-2 sm:mb-3">
+          {product.brandName && (
+            <Badge
+              variant="outline"
+              className="text-xs px-1.5 py-0.5 rounded-full border-gray-200 text-gray-500"
+            >
+              <Grid2X2Check className="h-4 w-4 mr-1" />
+              {product.brandName}
+            </Badge>
+          )}
+          {product.category && (
+            <Badge
+              variant="outline"
+              className="text-xs px-1.5 py-0.5 rounded-full border-gray-200 text-gray-500"
+            >
+              <Tag className="h-4 w-4 mr-1" />
+              {product.category.name}
+            </Badge>
+          )}
+        </div>
+
+        <p className="text-[10px] sm:text-xs text-gray-500 line-clamp-2 mb-3 sm:mb-4 leading-relaxed flex-1">
+          {product.description || "No description available."}
+        </p>
+
+        <div className="flex gap-2 mt-auto">
+          <Button
+            className="flex-1 bg-green-500 hover:bg-black text-white h-8 sm:h-9 text-[10px] sm:text-xs font-medium rounded-lg"
+            onClick={() => onInquire(product)}
+          >
+            Inquire
+            <SiWhatsapp className="h-3 w-3 ml-1" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare(product);
+            }}
+          >
+            <Share2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
