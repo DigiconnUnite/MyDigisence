@@ -17,7 +17,6 @@ const coverImages = [
   "/footer-bg.jpg",
   "/footer-bg.jpg",
   "/footer-bg.jpg",
-  
 ];
 
 export default function BlogPage() {
