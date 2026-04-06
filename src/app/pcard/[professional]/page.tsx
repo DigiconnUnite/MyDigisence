@@ -65,7 +65,11 @@ export default async function ProfessionalPage({ params }: PageProps) {
     notFound()
   }
 
-  return <ProfessionalProfile professional={professional} />
+  return (
+    <div className="">
+      <ProfessionalProfile professional={professional} />
+    </div>
+  )
 }
 
 export async function generateMetadata({ params }: PageProps) {

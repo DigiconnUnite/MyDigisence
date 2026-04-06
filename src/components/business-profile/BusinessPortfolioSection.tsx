@@ -1,4 +1,8 @@
-import { Image } from "lucide-react";
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Image, Minus, Plus, X } from "lucide-react";
 import { generateSrcSet, getOptimizedImageUrl } from "@/lib/image-utils";
 
 interface BusinessPortfolioSectionProps {
@@ -10,7 +14,148 @@ export default function BusinessPortfolioSection({
   images,
   sectionRef,
 }: BusinessPortfolioSectionProps) {
+  const validImages = useMemo(
+    () => images.filter((image: any) => image !== null && image !== undefined),
+    [images],
+  );
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pinchStartDistanceRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1);
+  const touchPanStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const selectedPreview =
+    previewIndex !== null ? validImages[previewIndex] : null;
+  const isPreviewVideo =
+    Boolean(selectedPreview?.url) &&
+    (selectedPreview.url.includes(".mp4") ||
+      selectedPreview.url.includes(".webm") ||
+      selectedPreview.url.includes(".ogg"));
+
+  useEffect(() => {
+    if (!selectedPreview) {
+      setZoomScale(1);
+      setPan({ x: 0, y: 0 });
+      setIsDragging(false);
+    }
+  }, [selectedPreview]);
+
+  useEffect(() => {
+    if (zoomScale <= 1) {
+      setPan({ x: 0, y: 0 });
+    }
+  }, [zoomScale]);
+
   if (!images.length) return null;
+
+  const closePreview = () => {
+    setPreviewIndex(null);
+    setZoomScale(1);
+    setPan({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const zoomIn = () => setZoomScale((prev) => Math.min(prev + 0.5, 3));
+  const zoomOut = () => setZoomScale((prev) => Math.max(prev - 0.5, 1));
+
+  const goToPrevious = () => {
+    if (previewIndex === null || validImages.length <= 1) return;
+    setPreviewIndex((previewIndex - 1 + validImages.length) % validImages.length);
+  };
+
+  const goToNext = () => {
+    if (previewIndex === null || validImages.length <= 1) return;
+    setPreviewIndex((previewIndex + 1) % validImages.length);
+  };
+
+  const getTouchDistance = (touches: React.TouchList): number => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (zoomScale <= 1 || isPreviewVideo) return;
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: e.clientX - pan.x,
+      y: e.clientY - pan.y,
+    };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isDragging || !dragStartRef.current || zoomScale <= 1 || isPreviewVideo) {
+      return;
+    }
+    setPan({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (isPreviewVideo) return;
+
+    if (e.touches.length === 2) {
+      pinchStartDistanceRef.current = getTouchDistance(e.touches);
+      pinchStartScaleRef.current = zoomScale;
+      touchPanStartRef.current = null;
+      return;
+    }
+
+    if (e.touches.length === 1 && zoomScale > 1) {
+      touchPanStartRef.current = {
+        x: e.touches[0].clientX - pan.x,
+        y: e.touches[0].clientY - pan.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (isPreviewVideo) return;
+
+    if (e.touches.length === 2 && pinchStartDistanceRef.current) {
+      const currentDistance = getTouchDistance(e.touches);
+      const nextScale = Math.min(
+        Math.max(
+          pinchStartScaleRef.current *
+            (currentDistance / pinchStartDistanceRef.current),
+          1,
+        ),
+        3,
+      );
+      setZoomScale(nextScale);
+      e.preventDefault();
+      return;
+    }
+
+    if (e.touches.length === 1 && zoomScale > 1 && touchPanStartRef.current) {
+      setPan({
+        x: e.touches[0].clientX - touchPanStartRef.current.x,
+        y: e.touches[0].clientY - touchPanStartRef.current.y,
+      });
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length < 2) {
+      pinchStartDistanceRef.current = null;
+    }
+
+    if (e.touches.length === 0) {
+      touchPanStartRef.current = null;
+    }
+  };
 
   return (
     <section className="w-full my-8 md:my-12 px-0" id="portfolio" ref={sectionRef}>
@@ -18,20 +163,8 @@ export default function BusinessPortfolioSection({
         <h2 className="text-lg md:text-2xl font-bold">Portfolio</h2>
       </div>
 
-      <div className="grid gap-2 md:gap-4 grid-cols-2 md:grid-cols-4 md:grid-rows-2">
-        {images
-          .filter((image: any) => image !== null && image !== undefined)
-          .slice(0, 6)
-          .map((image: any, index: number) => {
-            const gridClasses = [
-              "md:row-span-1 md:col-span-2 col-span-2 row-span-2",
-              "md:row-span-1 md:col-span-2 col-span-2 row-span-2",
-              "md:row-span-1 md:col-span-1 col-span-1",
-              "md:row-span-1 md:col-span-1 col-span-1",
-              "md:row-span-1 md:col-span-1 col-span-1",
-              "md:row-span-1 md:col-span-1 col-span-1",
-            ];
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        {validImages.map((image: any, index: number) => {
             const isVideo =
               image.url &&
               (image.url.includes(".mp4") ||
@@ -41,9 +174,10 @@ export default function BusinessPortfolioSection({
             return (
               <div
                 key={index}
-                className={`bg-gray-100 border rounded-xl shadow-sm flex items-center justify-center hover:shadow transition-shadow bg-center bg-cover relative overflow-hidden ${gridClasses[index] || "md:row-span-1 md:col-span-1"} ${index === 0 || index === 1 ? "min-h-[140px] md:min-h-[180px]" : "min-h-[100px] md:min-h-[120px]"}`}
-                style={{
-                  aspectRatio: index === 0 || index === 1 ? "2/1" : "1/1",
+                className="bg-gray-100 border rounded-xl shadow-sm flex items-center justify-center hover:shadow transition-shadow bg-center bg-cover relative overflow-hidden aspect-3/2 cursor-pointer"
+                onClick={() => {
+                  if (!image?.url) return;
+                  setPreviewIndex(index);
                 }}
               >
                 {isVideo ? (
@@ -58,31 +192,23 @@ export default function BusinessPortfolioSection({
                 ) : image.url ? (
                   <img
                     src={getOptimizedImageUrl(image.url, {
-                      width: index === 0 || index === 1 ? 600 : 300,
-                      height: index === 0 || index === 1 ? 300 : 300,
+                      width: 1200,
+                      height: 800,
                       quality: 85,
                       format: "auto",
                       crop: "fill",
                       gravity: "auto",
                     })}
                     srcSet={generateSrcSet(image.url)}
-                    sizes={
-                      index === 0 || index === 1
-                        ? "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        : "(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                    }
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     alt={image.alt || "Portfolio image"}
                     className="w-full h-full object-cover"
                     loading="lazy"
                     decoding="async"
                   />
                 ) : (
-                  <span
-                    className={`flex items-center justify-center rounded-full bg-gray-200 ${index === 0 || index === 1 ? "w-[60px] h-[60px] md:w-20 md:h-20" : "w-10 h-10 md:w-14 md:h-14"}`}
-                  >
-                    <Image
-                      className={`text-gray-400 ${index === 0 || index === 1 ? "w-8 h-8 md:w-10 md:h-10" : "w-6 h-6 md:w-8 md:h-8"}`}
-                    />
+                  <span className="flex items-center justify-center rounded-full bg-gray-200 w-10 h-10 md:w-14 md:h-14">
+                    <Image className="text-gray-400 w-6 h-6 md:w-8 md:h-8" />
                   </span>
                 )}
 
@@ -107,6 +233,116 @@ export default function BusinessPortfolioSection({
             );
           })}
       </div>
+
+      {selectedPreview?.url && (
+        <div className="fixed inset-0 z-110 bg-black/90 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/20">
+            <p className="text-white text-sm truncate pr-2">
+              {selectedPreview.alt || "Portfolio Preview"}
+            </p>
+            <div className="flex items-center gap-2">
+              {!isPreviewVideo && (
+                <>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8"
+                    onClick={zoomOut}
+                    disabled={zoomScale <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8"
+                    onClick={zoomIn}
+                    disabled={zoomScale >= 3}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+              {validImages.length > 1 && (
+                <>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8"
+                    onClick={goToPrevious}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-8 w-8"
+                    onClick={goToNext}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-8 w-8"
+                onClick={closePreview}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-hidden p-4 md:p-6 touch-none">
+            <div className="h-full w-full flex items-center justify-center">
+              {isPreviewVideo ? (
+                <video
+                  src={selectedPreview.url}
+                  className="max-h-full max-w-full object-contain"
+                  controls
+                  autoPlay
+                  playsInline
+                />
+              ) : (
+                <img
+                  src={getOptimizedImageUrl(selectedPreview.url, {
+                    width: 1800,
+                    quality: 92,
+                    format: "auto",
+                    crop: "fill",
+                    gravity: "auto",
+                  })}
+                  srcSet={generateSrcSet(selectedPreview.url)}
+                  sizes="100vw"
+                  alt={selectedPreview.alt || "Portfolio image"}
+                  className={`max-h-full max-w-full object-contain select-none transition-transform ${
+                    zoomScale > 1
+                      ? isDragging
+                        ? "cursor-grabbing"
+                        : "cursor-grab"
+                      : "cursor-default"
+                  }`}
+                  style={{
+                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomScale})`,
+                    transformOrigin: "center",
+                  }}
+                  loading="eager"
+                  decoding="async"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  draggable={false}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -161,7 +161,11 @@ export default async function BusinessPage({ params }: PageProps) {
     openingHours: business.openingHours ? (Array.isArray(business.openingHours) ? business.openingHours : JSON.parse(business.openingHours as string)) as any[] : undefined
   } as any
 
-  return <BusinessProfile business={processedBusiness} categories={mappedCategories} />
+  return (
+    <div className="mx-auto">
+      <BusinessProfile business={processedBusiness} categories={mappedCategories} />
+    </div>
+  )
 }
 
 export async function generateMetadata({ params }: PageProps) {

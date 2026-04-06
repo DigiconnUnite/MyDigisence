@@ -855,7 +855,7 @@ export default function ProfessionalProfile({
       >
         {/* PAGE HEADER - Desktop Only */}
         <header className="hidden md:flex shrink-0 bg-white shadow-none border-b z-50">
-          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto  px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-3 shrink-0">
                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">

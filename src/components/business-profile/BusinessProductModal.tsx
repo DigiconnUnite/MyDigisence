@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { generateSrcSet, getOptimizedImageUrl } from "@/lib/image-utils";
-import { Image } from "lucide-react";
+import { Image, Minus, Plus, X } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 import { Product } from "@/components/business-profile/BusinessProfile.types";
 
@@ -30,9 +33,124 @@ export default function BusinessProductModal({
   onSelectRelatedProduct,
   onInquireRelatedProduct,
 }: BusinessProductModalProps) {
+  const [zoomViewerOpen, setZoomViewerOpen] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const pinchStartDistanceRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1);
+  const touchPanStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setZoomViewerOpen(false);
+      setZoomScale(1);
+      setPan({ x: 0, y: 0 });
+      setIsDragging(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (zoomScale <= 1) {
+      setPan({ x: 0, y: 0 });
+    }
+  }, [zoomScale]);
+
+  const closeZoomViewer = () => {
+    setZoomViewerOpen(false);
+    setZoomScale(1);
+    setPan({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const zoomIn = () => setZoomScale((prev) => Math.min(prev + 0.5, 3));
+  const zoomOut = () => setZoomScale((prev) => Math.max(prev - 0.5, 1));
+
+  const getTouchDistance = (touches: React.TouchList): number => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (zoomScale <= 1) return;
+    setIsDragging(true);
+    dragStartRef.current = {
+      x: e.clientX - pan.x,
+      y: e.clientY - pan.y,
+    };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!isDragging || !dragStartRef.current || zoomScale <= 1) return;
+    setPan({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length === 2) {
+      pinchStartDistanceRef.current = getTouchDistance(e.touches);
+      pinchStartScaleRef.current = zoomScale;
+      touchPanStartRef.current = null;
+      return;
+    }
+
+    if (e.touches.length === 1 && zoomScale > 1) {
+      touchPanStartRef.current = {
+        x: e.touches[0].clientX - pan.x,
+        y: e.touches[0].clientY - pan.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length === 2 && pinchStartDistanceRef.current) {
+      const currentDistance = getTouchDistance(e.touches);
+      const nextScale = Math.min(
+        Math.max(
+          pinchStartScaleRef.current *
+            (currentDistance / pinchStartDistanceRef.current),
+          1,
+        ),
+        3,
+      );
+      setZoomScale(nextScale);
+      e.preventDefault();
+      return;
+    }
+
+    if (e.touches.length === 1 && zoomScale > 1 && touchPanStartRef.current) {
+      setPan({
+        x: e.touches[0].clientX - touchPanStartRef.current.x,
+        y: e.touches[0].clientY - touchPanStartRef.current.y,
+      });
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length < 2) {
+      pinchStartDistanceRef.current = null;
+    }
+
+    if (e.touches.length === 0) {
+      touchPanStartRef.current = null;
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto hide-scrollbar">
         <DialogHeader>
           <DialogTitle className="text-xl md:text-2xl">{selectedProduct?.name}</DialogTitle>
           <DialogDescription>Product details and related items</DialogDescription>
@@ -55,9 +173,10 @@ export default function BusinessProductModal({
                     srcSet={generateSrcSet(selectedProduct.image)}
                     sizes="(max-width: 768px) 100vw, 600px"
                     alt={selectedProduct.name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain cursor-zoom-in"
                     loading="eager"
                     decoding="async"
+                    onClick={() => setZoomViewerOpen(true)}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full bg-gray-100">
@@ -89,6 +208,11 @@ export default function BusinessProductModal({
                     </span>
                   )}
                 </Badge>
+                {selectedProduct.image && selectedProduct.image.trim() !== "" && (
+                  <div className="absolute bottom-3 left-3 rounded-full bg-black/60 px-2 py-1 text-xs text-white">
+                    Tap to zoom
+                  </div>
+                )}
               </div>
             </div>
 
@@ -248,7 +372,76 @@ export default function BusinessProductModal({
             )}
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {zoomViewerOpen && selectedProduct?.image && (
+        <div className="fixed inset-0 z-110 bg-black/90 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/20">
+            <p className="text-white text-sm truncate pr-2">{selectedProduct.name}</p>
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-8 w-8"
+                onClick={zoomOut}
+                disabled={zoomScale <= 1}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-8 w-8"
+                onClick={zoomIn}
+                disabled={zoomScale >= 3}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="h-8 w-8"
+                onClick={closeZoomViewer}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-hidden p-4 md:p-6 touch-none">
+            <div className="h-full w-full flex items-center justify-center">
+              <img
+                src={getOptimizedImageUrl(selectedProduct.image, {
+                  width: 1600,
+                  quality: 95,
+                  format: "auto",
+                })}
+                alt={selectedProduct.name}
+                className={`max-h-full max-w-full object-contain select-none transition-transform ${
+                  zoomScale > 1
+                    ? isDragging
+                      ? "cursor-grabbing"
+                      : "cursor-grab"
+                    : "cursor-default"
+                }`}
+                style={{
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoomScale})`,
+                  transformOrigin: "center",
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                draggable={false}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useSocket } from "@/hooks/useSocket";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -55,6 +64,7 @@ import {
   Menu,
   Tag,
   Search,
+  Filter,
   Fullscreen,
   ImageOff,
   Home,
@@ -113,6 +123,7 @@ export default function BusinessProfile({
   business: initialBusiness,
   categories: initialCategories = [],
 }: BusinessProfileProps) {
+  const PRODUCTS_PAGE_SIZE = 12;
   const searchParams = useSearchParams();
   const [business, setBusiness] = useState(initialBusiness);
   const [inquiryModal, setInquiryModal] = useState(false);
@@ -133,7 +144,6 @@ export default function BusinessProfile({
   const [mounted, setMounted] = useState(false);
   const [viewAllBrands, setViewAllBrands] = useState(false);
   const [viewAllProducts, setViewAllProducts] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("home");
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -141,6 +151,9 @@ export default function BusinessProfile({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [visibleProductsCount, setVisibleProductsCount] = useState(
+    PRODUCTS_PAGE_SIZE,
+  );
 
   const { toast } = useToast();
 
@@ -155,6 +168,7 @@ export default function BusinessProfile({
   const contactRef = useRef<HTMLDivElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -337,6 +351,54 @@ export default function BusinessProfile({
   const relatedProducts = useMemo(() => {
     return getRelatedProducts(business.products, selectedProductModal);
   }, [business.products, selectedProductModal]);
+
+  const visibleFilteredProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleProductsCount);
+  }, [filteredProducts, visibleProductsCount]);
+
+  const selectedCategoryLabel = useMemo(() => {
+    if (selectedCategory === "all") return "All";
+    return categories.find((category) => category.id === selectedCategory)?.name || "All";
+  }, [categories, selectedCategory]);
+
+  // Reset incremental rendering when filters change.
+  useEffect(() => {
+    setVisibleProductsCount(PRODUCTS_PAGE_SIZE);
+  }, [searchTerm, selectedCategory, selectedBrand, PRODUCTS_PAGE_SIZE]);
+
+  // Infinite load-more trigger for products grid.
+  useEffect(() => {
+    if (!viewAllProducts) return;
+
+    const trigger = loadMoreTriggerRef.current;
+    const scrollContainer = mainContentRef.current;
+    if (!trigger) return;
+    if (!scrollContainer) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          setVisibleProductsCount((prev) => {
+            if (prev >= filteredProducts.length) return prev;
+            return Math.min(prev + PRODUCTS_PAGE_SIZE, filteredProducts.length);
+          });
+        });
+      },
+      {
+        root: scrollContainer,
+        rootMargin: "300px 0px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(trigger);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [viewAllProducts, filteredProducts.length, PRODUCTS_PAGE_SIZE]);
 
   const handleInquiry = useCallback(
     async (e: React.FormEvent) => {
@@ -533,8 +595,6 @@ export default function BusinessProfile({
           container.scrollTo({ top: 0, behavior: "smooth" });
         }
       }
-      // Close mobile menu if open
-      setMobileMenuOpen(false);
     },
     [],
   );
@@ -642,7 +702,6 @@ export default function BusinessProfile({
         });
       }
     }
-    setMobileMenuOpen(false);
   };
 
   if (isLoading) {
@@ -655,13 +714,13 @@ export default function BusinessProfile({
       className="h-screen w-full overflow-hidden bg-orange-50 flex flex-col"
       suppressHydrationWarning
     >
-      {/* PAGE HEADER - HIDDEN ON MOBILE (hidden md:flex) */}
-      <header className="shrink-0 bg-white shadow-sm border-b z-50 hidden md:flex">
-        <div className="w-full mx-auto px-4 sm:px-4 lg:px-4">
+      {/* PAGE HEADER */}
+      <header className="shrink-0 bg-white shadow-sm border-b z-50 flex">
+        <div className="container mx-auto px-4 sm:px-4 lg:px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo & Business Name */}
             <div className="flex items-center space-x-3 shrink-0">
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border border-gray-100">
                 {business.logo && business.logo.trim() !== "" ? (
                   <img
                     src={getOptimizedImageUrl(business.logo)}
@@ -674,7 +733,7 @@ export default function BusinessProfile({
                 )}
               </div>
               <div className="h-6 w-px bg-gray-300 hidden md:block"></div>
-              <span className="text-lg font-bold text-gray-900 hidden md:block">
+              <span className="text-sm md:text-lg font-bold text-gray-900 block max-w-[140px] truncate">
                 {business.name}
               </span>
             </div>
@@ -774,97 +833,22 @@ export default function BusinessProfile({
               </div>
             </nav>
 
-            {/* Mobile Menu Button - Hidden because Header is hidden on mobile anyway, but keeping code structure */}
-            <div className="md:hidden shrink-0">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <Menu />
-              </Button>
+            <div className="flex items-center shrink-0 ml-3 md:ml-4">
+              <Link href="/" aria-label="Go to home page" className="inline-flex">
+                <img
+                  src="/logo.png"
+                  alt="Mydigisence Logo"
+                  className="h-10 w-10 rounded-full object-cover border border-gray-200 bg-white p-1"
+                  loading="eager"
+                />
+              </Link>
             </div>
+
           </div>
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t">
-            <div className="px-4 py-3 space-y-2">
-              {/* About Link Removed from Mobile Menu */}
-              <button
-                className={`w-full flex items-center text-sm font-medium ${
-                  activeSection === "home" ? "text-orange-600" : "text-gray-600"
-                } px-3 py-2 rounded-lg hover:bg-gray-50`}
-                onClick={() => {
-                  setActiveSection("home");
-                  mainContentRef.current?.scrollTo({
-                    top: 0,
-                    behavior: "smooth",
-                  });
-                  setMobileMenuOpen(false);
-                }}
-              >
-                <Home className="w-4 h-4 mr-2" />
-                Home
-              </button>
-              <button
-                className={`w-full flex items-center text-sm font-medium ${
-                  activeSection === "brands"
-                    ? "text-orange-600"
-                    : "text-gray-600"
-                } px-3 py-2 rounded-lg hover:bg-gray-50`}
-                onClick={() => {
-                  scrollToSection(
-                    brandsRef as React.RefObject<HTMLDivElement>,
-                    "brands",
-                  );
-                  setMobileMenuOpen(false);
-                }}
-              >
-                <Grid3X3 className="w-4 h-4 mr-2" />
-                Brands
-              </button>
-              <button
-                className={`w-full flex items-center text-sm font-medium ${
-                  activeSection === "products"
-                    ? "text-orange-600"
-                    : "text-gray-600"
-                } px-3 py-2 rounded-lg hover:bg-gray-50`}
-                onClick={() => {
-                  scrollToSection(
-                    productsRef as React.RefObject<HTMLDivElement>,
-                    "products",
-                  );
-                  setMobileMenuOpen(false);
-                }}
-              >
-                <ShoppingBag className="w-4 h-4 mr-2" />
-                Products
-              </button>
-              <button
-                className={`w-full flex items-center text-sm font-medium ${
-                  activeSection === "portfolio"
-                    ? "text-orange-600"
-                    : "text-gray-600"
-                } px-3 py-2 rounded-lg hover:bg-gray-50`}
-                onClick={() => {
-                  scrollToSection(
-                    portfolioRef as React.RefObject<HTMLDivElement>,
-                    "portfolio",
-                  );
-                  setMobileMenuOpen(false);
-                }}
-              >
-                <Briefcase className="w-4 h-4 mr-2" />
-                Portfolio
-              </button>
-            </div>
-          </div>
-        )}
       </header>
 
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 overflow-hidden">
+      <div className="flex-1 container mx-auto grid grid-cols-1 md:grid-cols-4 overflow-hidden">
         <aside className="hidden hide-scrollbar md:block md:col-span-1 h-full overflow-y-auto z-20  ">
           <div className="flex flex-col p-4 lg:gap-4 w-full">
             <BusinessInfoCard business={business} />
@@ -939,7 +923,7 @@ export default function BusinessProfile({
                   <div className="sticky top-0 z-30 mb-6">
                     {mounted && (
                       <div
-                        className="flex flex-row gap-3 py-2 backdrop-blur-lg"
+                        className="flex flex-row gap-0 py-2 backdrop-blur-lg"
                         suppressHydrationWarning
                       >
                         <div className="relative flex-1 min-w-0">
@@ -948,41 +932,62 @@ export default function BusinessProfile({
                             placeholder="Search products..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 h-10 bg-gray-50 border-gray-200 focus-visible:ring-orange-500 text-sm"
+                            className="pl-9 h-10 bg-white border-gray-200 focus-visible:ring-orange-500 text-sm rounded-r-none"
                           />
                         </div>
-                        <Select
-                          value={selectedCategory}
-                          onValueChange={setSelectedCategory}
-                        >
-                          <SelectTrigger className="w-[100px] shrink-0 h-10 bg-gray-50 border-gray-200 text-sm">
-                            <SelectValue placeholder="All" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="h-10 shrink-0 bg-white border-gray-200 text-sm gap-2 px-3 rounded-l-none"
+                            >
+                              <Filter className="h-4 w-4" />
+                              <span className="max-w-[80px] truncate">{selectedCategoryLabel}</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuLabel>Filter by category</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setSelectedCategory("all")}>
+                              All
+                            </DropdownMenuItem>
                             {categories.map((cat) => (
-                              <SelectItem key={cat.id} value={cat.id}>
+                              <DropdownMenuItem
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(cat.id)}
+                              >
                                 {cat.name}
-                              </SelectItem>
+                              </DropdownMenuItem>
                             ))}
-                          </SelectContent>
-                        </Select>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     )}
                   </div>
 
                   {viewAllProducts ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-                      {filteredProducts.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          onOpenProduct={openProductModal}
-                          onShare={handleShare}
-                          onInquire={handleProductWhatsappInquiry}
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+                        {visibleFilteredProducts.map((product) => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            onOpenProduct={openProductModal}
+                            onShare={handleShare}
+                            onInquire={handleProductWhatsappInquiry}
+                          />
+                        ))}
+                      </div>
+
+                      {visibleProductsCount < filteredProducts.length && (
+                        <div
+                          ref={loadMoreTriggerRef}
+                          className="h-10 w-full mt-4"
+                          aria-hidden
                         />
-                      ))}
-                    </div>
+                      )}
+
+                    </>
                   ) : (
                     <Carousel
                       opts={{
@@ -995,7 +1000,7 @@ export default function BusinessProfile({
                         {filteredProducts.map((product) => (
                           <CarouselItem
                             key={product.id}
-                            className="basis-1/2 md:basis-1/3 lg:basis-1/4 pl-4 md:pl-4"
+                            className="basis-full md:basis-1/3 lg:basis-1/4 pl-4 md:pl-4"
                           >
                             <ProductCard
                               product={product}
@@ -1022,56 +1027,7 @@ export default function BusinessProfile({
               sectionRef={portfolioRef}
             />
 
-            {/* About Us Text & Opening Hours (Moved to Main Content) */}
-            <section className="w-full py-8 mb-20   md:py-12 bg-white rounded-3xl shadow-sm px-6 md:px-8">
-              <div className="flex flex-col md:flex-row gap-8 md:gap-12">
-                {/* Right Side: Opening Hours & GST Number */}
-                <div className="flex-1">
-                
-                  <div className="space-y-4 flex justify-between">
-                    <div>
-                      <Label className="flex flex-2  text-gray-600 mb-1">
-                        Opening Hours
-                      </Label>
-                      {business.openingHours &&
-                      business.openingHours.length > 0 ? (
-                        <ul className="text-sm flex-1 text-gray-800">
-                          {business.openingHours.map(
-                            (item: any, idx: number) => (
-                              <li
-                                key={idx}
-                                className="flex flex-1 gap-5 justify-between items-center py-0.5"
-                              >
-                                <span className="font-medium">{item.day}</span>
-                                <span></span>
-                                <span></span>
-                                <span>
-                                  {item.open && item.close
-                                    ? `${item.open} - ${item.close}`
-                                    : "Closed"}
-                                </span>
-                              </li>
-                            ),
-                          )}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-gray-400">Not provided</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className="block text-gray-600 mb-1">
-                        GST Number
-                      </Label>
-                      <p className="text-sm text-gray-800">
-                        {business.gstNumber || (
-                          <span className="text-gray-400">Not provided</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+          
           </div>
 
           {/* Mobile Bottom Navigation - All 4 items visible directly (About removed) */}
