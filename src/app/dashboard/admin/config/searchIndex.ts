@@ -2,6 +2,7 @@ export type AdminView =
   | "dashboard"
   | "businesses"
   | "professionals"
+  | "blogs"
   | "categories"
   | "inquiries"
   | "registration-requests"
@@ -42,6 +43,13 @@ export const ADMIN_SEARCH_INDEX: AdminSearchItem[] = [
     description: "View and manage all professionals",
     view: "professionals",
     keywords: ["professional", "profile", "expert", "service"],
+  },
+  {
+    id: "view-blogs",
+    label: "Manage Blogs",
+    description: "Create and publish blog posts from Super Admin",
+    view: "blogs",
+    keywords: ["blog", "article", "content", "post", "publish"],
   },
   {
     id: "view-categories",

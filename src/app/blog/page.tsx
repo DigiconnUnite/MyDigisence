@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Clock3 } from "lucide-react";
 import UnifiedPublicLayout from "@/components/UnifiedPublicLayout";
-import { blogPosts } from "@/lib/blog-data";
+import { getPublishedBlogPosts } from "@/lib/blogs";
 
 export const metadata: Metadata = {
   title: "Blog | DigiSence",
@@ -19,7 +19,9 @@ const coverImages = [
   "/footer-bg.jpg",
 ];
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const blogPosts = await getPublishedBlogPosts();
+
   return (
     <UnifiedPublicLayout variant="solid" sidebarVariant="home">
       <div className="relative overflow-hidden">
@@ -35,7 +37,7 @@ export default function BlogPage() {
                   <div className="p-2 pb-0">
                     <div className="relative h-56 w-full overflow-hidden rounded-xl  md:h-60">
                       <Image
-                        src={coverImages[index % coverImages.length]}
+                        src={post.coverImage || coverImages[index % coverImages.length]}
                         alt={post.title}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"

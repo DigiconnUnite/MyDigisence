@@ -16,6 +16,7 @@ import {
   MessageSquare,
   BarChart3,
   TrendingUp,
+  FileText,
   UserCheck,
   Home,
   Grid3X3,
@@ -56,6 +57,7 @@ const VALID_ADMIN_VIEWS: AdminView[] = [
   "dashboard",
   "businesses",
   "professionals",
+  "blogs",
   "categories",
   "inquiries",
   "registration-requests",
@@ -171,6 +173,8 @@ export default function SuperAdminDashboard() {
         return "Search businesses by name, email, category...";
       case "professionals":
         return "Search professionals by name, email, headline...";
+      case "blogs":
+        return "Search blogs by title, category, or author...";
       case "categories":
         return "Search categories...";
       case "inquiries":
@@ -1403,6 +1407,13 @@ export default function SuperAdminDashboard() {
       mobileIcon: User,
       value: "professionals",
       mobileTitle: "Professional",
+    },
+    {
+      title: "Blogs",
+      icon: FileText,
+      mobileIcon: FileText,
+      value: "blogs",
+      mobileTitle: "Blogs",
     },
     {
       title: "Categories",

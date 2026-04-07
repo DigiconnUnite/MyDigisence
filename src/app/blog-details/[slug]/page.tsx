@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, CalendarDays, Clock3, UserRound } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Clock3, UserRound } from "lucide-react";
 import UnifiedPublicLayout from "@/components/UnifiedPublicLayout";
-import { blogPosts, getPostBySlug, getRelatedPosts } from "@/lib/blog-data";
+import {
+  getPublishedBlogPostBySlug,
+  getPublishedBlogPosts,
+  getRelatedPublishedBlogPosts,
+} from "@/lib/blogs";
 
 const coverImages = [
   "/footer-bg.jpg",
@@ -15,24 +19,15 @@ const coverImages = [
   "/d-1.png",
 ];
 
-const getCoverImage = (postSlug: string) => {
-  const postIndex = blogPosts.findIndex((item) => item.slug === postSlug);
-  return coverImages[(postIndex >= 0 ? postIndex : 0) % coverImages.length];
-};
-
 interface BlogDetailsPageProps {
   params: Promise<{
     slug: string;
   }>;
 }
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
-}
-
 export async function generateMetadata({ params }: BlogDetailsPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPublishedBlogPostBySlug(slug);
 
   if (!post) {
     return {
@@ -48,28 +43,22 @@ export async function generateMetadata({ params }: BlogDetailsPageProps): Promis
 
 export default async function BlogDetailsPage({ params }: BlogDetailsPageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPublishedBlogPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
-  const imageSrc = getCoverImage(post.slug);
-  const relatedPosts = getRelatedPosts(post.slug, 3);
+  const allPosts = await getPublishedBlogPosts();
+  const imageIndex = Math.max(0, allPosts.findIndex((item) => item.slug === post.slug));
+  const imageSrc = post.coverImage || coverImages[imageIndex % coverImages.length];
+  const relatedPosts = await getRelatedPublishedBlogPosts(post.slug, post.category, 3);
 
   return (
     <UnifiedPublicLayout variant="solid" sidebarVariant="home">
-      <div className="bg-slate-100">
-        <section className="container mx-auto px-4 py-10 md:px-6 md:py-14">
-          <div className="mx-auto max-w-4xl">
-            <Link
-              href="/blog"
-              className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-slate-900"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Blog
-            </Link>
-
-            <div className="mb-4 flex flex-wrap items-center gap-3 text-xs text-slate-600 md:text-sm">
+      <div className="">
+        <section className="max-w-7xl mx-auto px-4 py-10 md:px-6 md:py-14">
+          <div className=" mx-auto ">
+            <div className="mb-4  flex flex-wrap items-center gap-3 text-xs text-slate-600 md:text-sm">
               <span className="rounded-full border border-slate-300 bg-white px-3 py-1 font-semibold text-slate-700">
                 {post.category}
               </span>
@@ -95,8 +84,8 @@ export default async function BlogDetailsPage({ params }: BlogDetailsPageProps) 
               {post.excerpt}
             </p>
 
-            <div className="mt-6 overflow-hidden rounded-lg border border-slate-300 bg-white p-2">
-              <div className="relative h-56 w-full overflow-hidden rounded-md md:h-80">
+            <div className="mt-6 overflow-hidden rounded-lg border ">
+              <div className="relative h-96 w-full overflow-hidden rounded-md ">
                 <Image
                   src={imageSrc}
                   alt={post.title}
@@ -107,55 +96,77 @@ export default async function BlogDetailsPage({ params }: BlogDetailsPageProps) 
               </div>
             </div>
 
-            <article className="mt-8 rounded-lg border border-slate-300 bg-white p-5 md:p-7">
-              {post.sections.map((section) => (
-                <div key={section.heading} className="mb-8 last:mb-0">
-                  <h2 className="text-xl font-extrabold text-slate-900 md:text-2xl">
-                    {section.heading}
-                  </h2>
-                  <div className="mt-3 space-y-4 text-sm leading-relaxed text-slate-700 md:text-base">
-                    {section.content.map((paragraph) => (
-                      <p key={paragraph}>{paragraph}</p>
-                    ))}
+            <article className="mt-8 rounded-lg border border-slate-200 bg-white p-5 md:p-7">
+              {post.contentHtml ? (
+                <div
+                  className="blog-rich-content space-y-4 text-sm leading-relaxed text-slate-700 md:text-base"
+                  dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+                />
+              ) : (
+                post.sections.map((section) => (
+                  <div key={section.heading} className="mb-8 last:mb-0">
+                    <h2 className="text-xl font-extrabold text-slate-900 md:text-2xl">
+                      {section.heading}
+                    </h2>
+                    <div className="mt-3 space-y-4 text-sm leading-relaxed text-slate-700 md:text-base">
+                      {section.content.map((paragraph) => (
+                        <p key={paragraph}>{paragraph}</p>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </article>
-
-            <section className="mt-8">
-              <h2 className="text-xl font-extrabold text-slate-900 md:text-2xl">Related Blogs</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {relatedPosts.map((related) => (
-                  <Link
-                    key={related.slug}
-                    href={`/blog-details/${related.slug}`}
-                    className="group block overflow-hidden rounded-lg border border-slate-300 bg-white transition hover:-translate-y-1"
-                  >
+          </div>
+          <section className="mt-8 border-t pt-8 border-t-slate-700/50">
+            <h2 className="text-xl font-extrabold text-slate-900 md:text-2xl">
+              Related Blogs
+            </h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {relatedPosts.map((related, index) => (
+                <Link
+                  key={related.slug}
+                  href={`/blog-details/${related.slug}`}
+                  className="group block overflow-hidden rounded-2xl border border-slate-400/90 bg-white transition duration-300 hover:-translate-y-1"
+                >
+                  <article className="rounded-lg bg-white">
                     <div className="p-2 pb-0">
-                      <div className="relative h-40 w-full overflow-hidden rounded-md md:h-44">
+                      <div className="relative h-56 w-full overflow-hidden rounded-xl md:h-60">
                         <Image
-                          src={getCoverImage(related.slug)}
+                          src={related.coverImage || coverImages[index % coverImages.length]}
                           alt={related.title}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                          className="object-cover transition duration-500 group-hover:scale-105"
+                          className="object-cover transition duration-700 group-hover:scale-110"
                         />
                       </div>
                     </div>
-                    <div className="p-4">
-                      <p className="line-clamp-2 text-sm font-bold text-slate-900 md:text-base">
+
+                    <div className="p-4 md:p-5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                          {related.category}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
+                          <Clock3 className="h-3.5 w-3.5" />
+                          {related.readTime}
+                        </span>
+                      </div>
+
+                      <h2 className="mt-3 line-clamp-2 text-lg font-extrabold leading-tight text-slate-900 md:text-xl">
                         {related.title}
-                      </p>
-                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-slate-700 transition group-hover:text-cyan-700">
-                        Read Blog
-                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </h2>
+
+                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-800 transition group-hover:text-cyan-700">
+                        Read Article
+                        <ArrowUpRight className="h-4 w-4 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                       </span>
                     </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          </section>
         </section>
       </div>
     </UnifiedPublicLayout>

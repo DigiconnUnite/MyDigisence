@@ -8,6 +8,7 @@ import InquiriesView from "./InquiriesView";
 import RegistrationRequestsView from "./RegistrationRequestsView";
 import BusinessListingsView from "./BusinessListingsView";
 import SettingsView from "./SettingsView";
+import BlogsView from "./BlogsView";
 import type { SettingsTabId } from "../config/searchIndex";
 
 interface MainViewRouterProps {
@@ -295,6 +296,8 @@ export default function MainViewRouter(props: MainViewRouterProps) {
           businessListingBulkToast={(description) => props.toast({ title: "Info", description })}
         />
       );
+    case "blogs":
+      return <BlogsView />;
     case "analytics":
       return (
         <AnalyticsView
