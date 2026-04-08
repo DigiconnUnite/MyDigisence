@@ -29,11 +29,13 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 export async function createUser(email: string, password: string, name?: string, role: UserRole = 'BUSINESS_ADMIN'): Promise<AuthUser> {
+  // Normalize email to lowercase for case-insensitive matching
+  const normalizedEmail = email.toLowerCase()
   const hashedPassword = await hashPassword(password)
   
   const user = await db.user.create({
     data: {
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       name,
       role,
@@ -54,12 +56,30 @@ export async function createUser(email: string, password: string, name?: string,
 }
 
 export async function authenticateUser(email: string, password: string): Promise<AuthUser | null> {
-  const user = await db.user.findUnique({
-    where: { email },
+  // Normalize email to lowercase for case-insensitive matching
+  const normalizedEmail = email.trim().toLowerCase();
+
+  let user = await db.user.findUnique({
+    where: { email: normalizedEmail },
     include: {
       business: true,
     },
   })
+
+  // Fallback for legacy records that may have mixed-case emails.
+  if (!user) {
+    user = await db.user.findFirst({
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: 'insensitive',
+        },
+      },
+      include: {
+        business: true,
+      },
+    })
+  }
 
   if (!user || !user.password) {
     return null

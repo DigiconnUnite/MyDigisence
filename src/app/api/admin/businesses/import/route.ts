@@ -105,11 +105,12 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < data.length; i++) {
         const row = data[i]
         const rowNumber = i + 2 // +2 because CSV is 0-indexed and header is row 1
+        const normalizedEmail = row.email.trim().toLowerCase()
 
         try {
           // Check if email already exists
           const existingUser = await tx.user.findUnique({
-            where: { email: row.email },
+            where: { email: normalizedEmail },
           })
 
           if (existingUser) {
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
           // Create user and business
           const user = await tx.user.create({
             data: {
-              email: businessData.email,
+              email: normalizedEmail,
               name: businessData.adminName,
               password: hashedPassword,
               role: 'BUSINESS_ADMIN',

@@ -13,7 +13,10 @@ const resetPasswordSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, otp, password } = resetPasswordSchema.parse(body);
+    const { email: rawEmail, otp, password } = resetPasswordSchema.parse(body);
+    
+    // Normalize email to lowercase for case-insensitive matching
+    const email = rawEmail.toLowerCase();
 
     // Verify OTP
     const otpResult = verifyOTP(email, otp, 'password_reset');

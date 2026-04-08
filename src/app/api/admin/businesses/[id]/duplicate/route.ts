@@ -56,13 +56,13 @@ export async function POST(
     const baseEmail = originalBusiness.admin.email.split('@')[0]
     const timestamp = Date.now().toString().slice(-4)
     const domain = originalBusiness.admin.email.split('@')[1]
-    let newEmail = `${baseEmail}+copy${timestamp}@${domain}`
+    let newEmail = `${baseEmail}+copy${timestamp}@${domain}`.toLowerCase()
     
     // Check if email exists, if so, add more random characters
     let emailExists = await db.user.findUnique({ where: { email: newEmail } })
     while (emailExists) {
       const randomStr = Math.random().toString(36).substring(2, 6)
-      newEmail = `${baseEmail}+copy${timestamp}${randomStr}@${domain}`
+      newEmail = `${baseEmail}+copy${timestamp}${randomStr}@${domain}`.toLowerCase()
       emailExists = await db.user.findUnique({ where: { email: newEmail } })
     }
 

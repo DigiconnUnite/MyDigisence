@@ -25,9 +25,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Normalize email to lowercase
+    const normalizedEmail = email.toLowerCase();
+
     // Check if user already exists
     const existingUser = await db.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
     // Create new user
     const newUser = await db.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
         role: "BUSINESS_ADMIN",
       },
