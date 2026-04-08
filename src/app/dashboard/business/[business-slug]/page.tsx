@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, type ComponentProps } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { getOptimizedImageUrl, handleImageError } from "@/lib/image-utils";
 import { useToast } from "@/hooks/use-toast";
 import {
   Card,
@@ -13,13 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -31,14 +23,6 @@ import {
 } from "@/components/ui/table";
 
 import { UnifiedModal } from "@/components/ui/UnifiedModal";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -66,7 +50,6 @@ import {
   Palette,
   ChevronDown,
   ChevronUp,
-  User,
   Pause,
   CheckCircle,
   Home,
@@ -84,103 +67,60 @@ import ImageUpload from "@/components/ui/image-upload";
 
 import HeroBannerManager from "@/components/ui/hero-banner-manager";
 import BusinessBannerUploader from "@/components/ui/business-banner-uploader";
-import { BusinessInfoCard } from "../components/BusinessInfoCard";
 import SharedSidebar from "../../components/SharedSidebar";
 import SharedDashboardHeader from "../../components/SharedDashboardHeader";
+import type {
+  BrandContent,
+  Business,
+  Category,
+  Inquiry,
+  PortfolioContent,
+  Product,
+} from "../types";
+import {
+  buildBusinessStats,
+  getUniqueProductImages,
+} from "../hooks/businessDataHelpers";
+import { useBusinessDataLoader } from "../hooks/useBusinessDataLoader";
+import { useBusinessMutations } from "../hooks/useBusinessMutations";
+import { useProductMutations } from "../hooks/useProductMutations";
+import { useCategoryMutations } from "../hooks/useCategoryMutations";
+import { useInquiryMutations } from "../hooks/useInquiryMutations";
+import { BusinessDashboardOverview } from "../components/BusinessDashboardOverview";
+import { BusinessProductsSection } from "../components/BusinessProductsSection";
+import { BusinessInquiriesSection } from "../components/BusinessInquiriesSection";
+import { BusinessBrandsSection } from "../components/BusinessBrandsSection";
+import { BusinessPortfolioSection } from "../components/BusinessPortfolioSection";
+import { BusinessCategoriesSection } from "../components/BusinessCategoriesSection";
+import { BusinessConfirmationDialogs } from "../components/BusinessConfirmationDialogs";
+import { BusinessProductModal } from "../components/BusinessProductModal";
+import { BusinessCategoryModal } from "../components/BusinessCategoryModal";
+import { BusinessInfoSection } from "../components/BusinessInfoSection";
+import { BusinessHeroSection } from "../components/BusinessHeroSection";
+import { BusinessPlaceholderSection } from "../components/BusinessPlaceholderSection";
+import { BusinessHeaderAvatar } from "../components/BusinessHeaderAvatar";
 
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price: string | null;
-  image: string | null;
-  inStock: boolean;
-  isActive: boolean;
-  additionalInfo?: Record<string, string>;
-  createdAt: Date;
-  updatedAt: Date;
-  businessId: string;
-  categoryId: string | null;
-  brandName: string | null;
-  category?: {
-    id: string;
-    name: string;
-  };
-  brand?: {
-    id: string;
-    name: string;
-  };
-}
+const createEmptyProductFormData = () => ({
+  name: "",
+  description: "",
+  price: "",
+  image: "",
+  categoryId: "",
+  brandName: "",
+  additionalInfo: {} as Record<string, string>,
+  inStock: true,
+  isActive: true,
+});
 
-interface Inquiry {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  message: string;
-  status: "NEW" | "READ" | "REPLIED" | "CLOSED";
-  createdAt: string;
-  updatedAt: string;
-  product?: {
-    id: string;
-    name: string;
-  };
-}
-
-interface Business {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  logo: string | null;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  website: string | null;
-  facebook: string | null;
-  twitter: string | null;
-  instagram: string | null;
-  linkedin: string | null;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  adminId: string;
-  categoryId: string | null;
-  heroContent: any;
-  brandContent: any;
-  portfolioContent: any;
-  additionalContent: any;
-  admin: {
-    name?: string | null;
-    email: string;
-  };
-  category?: {
-    id: string;
-    name: string;
-  };
-  products: Product[];
-}
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  parentId?: string;
-  parent?: {
-    id: string;
-    name: string;
-  };
-  children?: {
-    id: string;
-    name: string;
-  }[];
-  _count?: {
-    products: number;
-  };
-}
+const createEmptyCategoryFormData = () => ({
+  name: "",
+  description: "",
+  parentId: "",
+});
 
 export default function BusinessAdminDashboard() {
+  type HeroBannerContent = ComponentProps<typeof HeroBannerManager>["heroContent"];
+
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -190,7 +130,7 @@ export default function BusinessAdminDashboard() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<any>("dashboard");
+  const [activeSection, setActiveSection] = useState<string>("dashboard");
 
   // Dialog states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -211,17 +151,7 @@ export default function BusinessAdminDashboard() {
   const [showBulkDeactivateDialog, setShowBulkDeactivateDialog] = useState(false);
 
   // Form states
-  const [productFormData, setProductFormData] = useState({
-    name: "",
-    description: "",
-    price: "",
-    image: "",
-    categoryId: "",
-    brandName: "",
-    additionalInfo: {} as Record<string, string>,
-    inStock: true,
-    isActive: true,
-  });
+  const [productFormData, setProductFormData] = useState(createEmptyProductFormData());
   const [businessInfoFormData, setBusinessInfoFormData] = useState<{
     name: string;
     description: string;
@@ -257,10 +187,10 @@ export default function BusinessAdminDashboard() {
     openingHours: [],
     gstNumber: "",
   });
-  const [brandContent, setBrandContent] = useState<any>({ brands: [] });
-  const [portfolioContent, setPortfolioContent] = useState<any>({ images: [] });
-  const [footerContent, setFooterContent] = useState<any>({});
-  const [heroContent, setHeroContent] = useState<any>({
+  const [brandContent, setBrandContent] = useState<BrandContent>({ brands: [] });
+  const [portfolioContent, setPortfolioContent] = useState<PortfolioContent>({ images: [] });
+  const [footerContent, setFooterContent] = useState<Record<string, unknown>>({});
+  const [heroContent, setHeroContent] = useState<HeroBannerContent>({
     slides: [],
     autoPlay: true,
     transitionSpeed: 5,
@@ -298,11 +228,7 @@ export default function BusinessAdminDashboard() {
   const [productItemsPerPage, setProductItemsPerPage] = useState(10);
 
   // Categories management state
-  const [categoryFormData, setCategoryFormData] = useState({
-    name: "",
-    description: "",
-    parentId: "",
-  });
+  const [categoryFormData, setCategoryFormData] = useState(createEmptyCategoryFormData());
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
@@ -324,6 +250,80 @@ export default function BusinessAdminDashboard() {
     readInquiries: 0,
     repliedInquiries: 0,
   });
+
+  const { updateBusinessInfo, updateHeroContent, updateBrandContent, updatePortfolioContent } =
+    useBusinessMutations();
+  const {
+    saveProduct,
+    deleteProduct,
+    bulkSetProductActiveState,
+    bulkDeleteProducts,
+  } = useProductMutations();
+  const { saveCategory, deleteCategory } = useCategoryMutations();
+  const { updateInquiryStatus } = useInquiryMutations();
+
+  const applyBusinessFormState = useCallback((nextBusiness: Business | null) => {
+    if (!nextBusiness) {
+      setBusiness(null);
+      return;
+    }
+
+    setBusiness(nextBusiness);
+    setBrandContent(nextBusiness.brandContent || { brands: [] });
+    setPortfolioContent(nextBusiness.portfolioContent || { images: [] });
+    setFooterContent(nextBusiness.footerContent || {});
+    setHeroContent(
+      nextBusiness.heroContent || {
+        slides: [],
+        autoPlay: true,
+        transitionSpeed: 5,
+      },
+    );
+
+    setBusinessInfoFormData({
+      name: nextBusiness.name || "",
+      description: nextBusiness.description || "",
+      about: nextBusiness.about || "",
+      logo: nextBusiness.logo || "",
+      address: nextBusiness.address || "",
+      ...(nextBusiness.logo && { logo: nextBusiness.logo }),
+      phone: nextBusiness.phone || "",
+      email: nextBusiness.email || "",
+      website: nextBusiness.website || "",
+      ownerName: nextBusiness.admin?.name || "",
+      facebook: nextBusiness.facebook || "",
+      twitter: nextBusiness.twitter || "",
+      instagram: nextBusiness.instagram || "",
+      linkedin: nextBusiness.linkedin || "",
+      catalogPdf: nextBusiness.catalogPdf || "",
+      openingHours: nextBusiness.openingHours || [],
+      gstNumber: nextBusiness.gstNumber || "",
+    });
+  }, []);
+
+  const { loadBusinessDashboardData, cancelLoad } = useBusinessDataLoader({
+    onSuccess: ({ data, stats: nextStats, images: nextImages }) => {
+      applyBusinessFormState(data.business);
+      setCategories(data.categories);
+      setProducts(data.products);
+      setInquiries(data.inquiries);
+      setImages(nextImages);
+      setStats(nextStats);
+    },
+    onError: (message) => {
+      toast({
+        title: "Error",
+        description: `${message}. Please refresh the page.`,
+        variant: "destructive",
+      });
+    },
+    onFinally: () => setIsLoading(false),
+  });
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    await loadBusinessDashboardData();
+  }, [loadBusinessDashboardData]);
 
   useEffect(() => {
     // Check if mobile on initial load and on resize
@@ -355,189 +355,16 @@ export default function BusinessAdminDashboard() {
     if (user?.role === "BUSINESS_ADMIN") {
       fetchData();
     }
+
+    return () => {
+      cancelLoad();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, loading, router]);
+  }, [user, loading, router, fetchData, cancelLoad]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-
-      // Use temporary arrays for stats calculation
-      let tempProducts: Product[] = [];
-      let tempInquiries: Inquiry[] = [];
-
-      // Fetch business data
-      try {
-        const businessRes = await fetch("/api/business");
-        if (businessRes.ok) {
-          const data = await businessRes.json();
-          setBusiness(data.business);
-          setBrandContent(data.business.brandContent || { brands: [] });
-          setPortfolioContent(data.business.portfolioContent || { images: [] });
-          setFooterContent(data.business.footerContent || {});
-          setHeroContent(
-            data.business.heroContent || {
-              slides: [],
-              autoPlay: true,
-              transitionSpeed: 5,
-            },
-          );
-          setBusinessInfoFormData({
-            name: data.business.name || "",
-            description: data.business.description || "",
-            about: data.business.about || "",
-            logo: data.business.logo || "",
-            address: data.business.address || "",
-            // Ensure logo is properly set in form data
-            ...(data.business.logo && { logo: data.business.logo }),
-            phone: data.business.phone || "",
-            email: data.business.email || "",
-            website: data.business.website || "",
-            ownerName: data.business.admin?.name || "",
-            facebook: data.business.facebook || "",
-            twitter: data.business.twitter || "",
-            instagram: data.business.instagram || "",
-            linkedin: data.business.linkedin || "",
-            catalogPdf: data.business.catalogPdf || "",
-            openingHours: data.business.openingHours || [],
-            gstNumber: data.business.gstNumber || "",
-          });
-        } else {
-          const errorData = await businessRes.json();
-          toast({
-            title: "Error",
-            description: `Failed to load business data: ${errorData.error}`,
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Business data fetch error:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load business data. Please refresh the page.",
-          variant: "destructive",
-        });
-      }
-
-      // Fetch categories
-      try {
-        const categoriesRes = await fetch("/api/business/categories");
-        if (categoriesRes.ok) {
-          const data = await categoriesRes.json();
-          setCategories(data.categories);
-        } else {
-          console.warn("Failed to fetch categories");
-          setCategories([]);
-        }
-      } catch (error) {
-        console.error("Categories fetch error:", error);
-        setCategories([]);
-      }
-
-      // Fetch products
-      try {
-        const productsRes = await fetch("/api/business/products");
-        if (productsRes.ok) {
-          const data = await productsRes.json();
-          setProducts(data.products);
-          setImages([
-            ...new Set(data.products.map((p: Product) => p.image).filter(Boolean)),
-          ] as string[]);
-          tempProducts = data.products;
-        } else {
-          const errorData = await productsRes.json();
-          console.warn("Products fetch failed:", errorData.error);
-          setProducts([]);
-          setImages([]);
-          tempProducts = [];
-          toast({
-            title: "Warning",
-            description: "Failed to load products data.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Products fetch error:", error);
-        setProducts([]);
-        setImages([]);
-        tempProducts = [];
-        toast({
-          title: "Error",
-          description: "Failed to load products. Please check your connection.",
-          variant: "destructive",
-        });
-      }
-
-      // Fetch inquiries
-      try {
-        const inquiriesRes = await fetch("/api/business/inquiries");
-        if (inquiriesRes.ok) {
-          const data = await inquiriesRes.json();
-          setInquiries(data.inquiries);
-          tempInquiries = data.inquiries;
-        } else {
-          const errorData = await inquiriesRes.json();
-          console.warn("Inquiries fetch failed:", errorData.error);
-          setInquiries([]);
-          tempInquiries = [];
-          toast({
-            title: "Warning",
-            description: "Failed to load inquiries data.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Inquiries fetch error:", error);
-        setInquiries([]);
-        tempInquiries = [];
-        toast({
-          title: "Error",
-          description:
-            "Failed to load inquiries. Please check your connection.",
-          variant: "destructive",
-        });
-      }
-
-      // Calculate stats after fetching all data, use locally fetched data
-      setTimeout(() => {
-        const totalProducts = tempProducts.length;
-        const activeProducts = tempProducts.filter((p) => p.isActive).length;
-        const totalInquiries = tempInquiries.length;
-        const newInquiriesCt = tempInquiries.filter(
-          (i) => i.status === "NEW",
-        ).length;
-        const readInquiriesCt = tempInquiries.filter(
-          (i) => i.status === "READ",
-        ).length;
-        const repliedInquiriesCt = tempInquiries.filter(
-          (i) => i.status === "REPLIED",
-        ).length;
-
-        setStats({
-          totalProducts,
-          activeProducts,
-          totalInquiries,
-          newInquiries: newInquiriesCt,
-          readInquiries: readInquiriesCt,
-          repliedInquiries: repliedInquiriesCt,
-        });
-      }, 100);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
-      toast({
-        title: "Error",
-        description:
-          "An unexpected error occurred while loading data. Please refresh the page.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleProductEdit = (product: Product) => {
     setEditingProduct(product);
@@ -563,11 +390,9 @@ export default function BusinessAdminDashboard() {
     if (!productToDelete) return;
     setDeletingProduct(productToDelete.id);
     try {
-      const response = await fetch(`/api/business/products/${productToDelete.id}`, {
-        method: "DELETE",
-      });
+      const result = await deleteProduct(productToDelete.id);
 
-      if (response.ok) {
+      if (result.ok) {
         setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
         setStats((prev) => ({
           ...prev,
@@ -583,10 +408,9 @@ export default function BusinessAdminDashboard() {
         setShowDeleteProductDialog(false);
         setProductToDelete(null);
       } else {
-        const errorResult = await response.json();
         toast({
           title: "Error",
-          description: `Failed to delete product: ${errorResult.error}`,
+          description: result.error,
           variant: "destructive",
         });
       }
@@ -607,15 +431,12 @@ export default function BusinessAdminDashboard() {
   ) => {
     setUpdatingInquiry(inquiryId);
     try {
-      const response = await fetch(`/api/business/inquiries/${inquiryId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const result = await updateInquiryStatus(
+        inquiryId,
+        newStatus as Inquiry["status"],
+      );
 
-      if (response.ok) {
+      if (result.ok) {
         setInquiries((prev) =>
           prev.map((i) =>
             i.id === inquiryId ? { ...i, status: newStatus as any } : i,
@@ -626,10 +447,9 @@ export default function BusinessAdminDashboard() {
           description: "Inquiry status updated successfully!",
         });
       } else {
-        const errorResult = await response.json();
         toast({
           title: "Error",
-          description: `Failed to update status: ${errorResult.error}`,
+          description: result.error,
           variant: "destructive",
         });
       }
@@ -702,6 +522,117 @@ export default function BusinessAdminDashboard() {
         additionalInfo: newInfo,
       };
     });
+  };
+
+  const handleCloseProductDialog = () => {
+    setShowProductDialog(false);
+    setEditingProduct(null);
+    setProductFormData(createEmptyProductFormData());
+    setNewInfoKey("");
+    setNewInfoValue("");
+  };
+
+  const handleOpenProductDialog = () => {
+    setEditingProduct(null);
+    setProductFormData(createEmptyProductFormData());
+    setShowProductDialog(true);
+  };
+
+  const handleNavigateToProducts = () => {
+    setActiveSection("products");
+    handleOpenProductDialog();
+  };
+
+  const handleOpenCatalogPreview = () => {
+    if (business?.slug) {
+      window.open(`/catalog/${business.slug}`, "_blank");
+    }
+  };
+
+  const handleSaveProduct = async () => {
+    if (!productFormData.name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Product name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (productFormData.name.length < 2) {
+      toast({
+        title: "Validation Error",
+        description: "Product name must be at least 2 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingProduct(true);
+    try {
+      const result = await saveProduct(productFormData, editingProduct?.id);
+
+      if (result.ok && result.data?.product) {
+        const nextProduct = result.data.product;
+
+        if (editingProduct) {
+          setProducts((prev) =>
+            prev.map((p) => (p.id === editingProduct.id ? nextProduct : p)),
+          );
+
+          if (nextProduct.image && !images.includes(nextProduct.image)) {
+            const imageUrl = nextProduct.image;
+            setImages((prev) => [...new Set([...prev, imageUrl])]);
+          }
+
+          if (editingProduct.isActive !== nextProduct.isActive) {
+            setStats((prev) => ({
+              ...prev,
+              activeProducts: nextProduct.isActive
+                ? prev.activeProducts + 1
+                : prev.activeProducts - 1,
+            }));
+          }
+        } else {
+          setProducts((prev) => [...prev, nextProduct]);
+          if (nextProduct.image) {
+            const imageUrl = nextProduct.image;
+            setImages((prev) => [...new Set([...prev, imageUrl])]);
+          }
+          setStats((prev) => ({
+            ...prev,
+            totalProducts: prev.totalProducts + 1,
+            activeProducts: nextProduct.isActive
+              ? prev.activeProducts + 1
+              : prev.activeProducts,
+          }));
+        }
+
+        handleCloseProductDialog();
+        toast({
+          title: "Success",
+          description: editingProduct
+            ? "Product updated successfully!"
+            : "Product added successfully!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.ok
+            ? `Failed to ${editingProduct ? "update" : "add"} product`
+            : result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to ${editingProduct ? "update" : "add"} product. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingProduct(false);
+    }
   };
 
   const handleBasicInfoSave = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -806,29 +737,23 @@ export default function BusinessAdminDashboard() {
     });
 
     try {
-      const response = await fetch("/api/business", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
+      const result = await updateBusinessInfo(updateData);
 
-      if (response.ok) {
-        const result = await response.json();
+      if (result.ok && result.data?.business) {
         console.log("Business update successful. Response:", result);
-        console.log("Updated business logo:", result.business.logo);
-        setBusiness(result.business);
+        console.log("Updated business logo:", result.data.business.logo);
+        setBusiness(result.data.business);
         toast({
           title: "Success",
           description: "Business information updated successfully!",
         });
       } else {
-        const error = await response.json();
-        console.error("Business update failed:", error);
+        console.error("Business update failed:", result);
         toast({
           title: "Error",
-          description: `Failed to update: ${error.error}`,
+          description: result.ok
+            ? "Failed to update business information"
+            : result.error,
           variant: "destructive",
         });
       }
@@ -865,22 +790,268 @@ export default function BusinessAdminDashboard() {
     setShowCategoryModal(true);
   };
 
+  const handleCloseCategoryModal = () => {
+    setShowCategoryModal(false);
+    setEditingCategory(null);
+    setCategoryFormData(createEmptyCategoryFormData());
+  };
+
+  const handleSaveCategoryFromModal = async () => {
+    if (!categoryFormData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingCategory(true);
+    try {
+      const result = await saveCategory(categoryFormData, editingCategory?.id);
+
+      if (result.ok && result.data?.category) {
+        if (editingCategory) {
+          setCategories((prev) =>
+            prev.map((c) => (c.id === editingCategory.id ? result.data!.category! : c)),
+          );
+        } else {
+          setCategories((prev) => [...prev, result.data!.category!]);
+        }
+
+        handleCloseCategoryModal();
+        await fetchData();
+        toast({
+          title: "Success",
+          description: editingCategory
+            ? "Category updated successfully!"
+            : "Category created successfully!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.ok
+            ? `Failed to ${editingCategory ? "update" : "create"} category`
+            : result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to ${editingCategory ? "update" : "create"} category`,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleHeroContentChange = async (newContent: HeroBannerContent) => {
+    setHeroContent(newContent);
+    if (!business) return;
+    try {
+      const result = await updateHeroContent(newContent);
+      if (result.ok && result.data?.business) {
+        setBusiness(result.data.business);
+        toast({
+          title: "Success",
+          description: "Hero content saved successfully!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.ok
+            ? "Failed to save hero content"
+            : result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save hero content",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteCategory = (category: Category) => {
     setCategoryToDelete(category);
     setShowDeleteCategoryDialog(true);
   };
 
+  const handleCreateCategory = async () => {
+    if (!categoryFormData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingCategory(true);
+    try {
+      const result = await saveCategory(categoryFormData);
+
+      if (result.ok && result.data?.category) {
+        setCategories((prev) => [...prev, result.data!.category!]);
+        setCategoryFormData({
+          name: "",
+          description: "",
+          parentId: "",
+        });
+        await fetchData();
+        toast({
+          title: "Success",
+          description: "Category created successfully!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.ok ? "Failed to create category" : result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create category. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const handleAddBrand = async () => {
+    if (!brandContent.newBrandName?.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a brand name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingBrand(true);
+    const newBrand = {
+      name: brandContent.newBrandName.trim(),
+      logo: brandContent.newBrandLogo || "",
+    };
+
+    const updatedBrands = [...(brandContent.brands || []), newBrand];
+
+    try {
+      const result = await updateBrandContent(updatedBrands);
+
+      if (result.ok) {
+        setBrandContent((prev) => ({
+          ...prev,
+          brands: updatedBrands,
+          newBrandName: "",
+          newBrandLogo: "",
+        }));
+        toast({
+          title: "Success",
+          description: "Brand added successfully!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add brand. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingBrand(false);
+    }
+  };
+
+  const handleEditBrandName = async (index: number) => {
+    const brand = brandContent.brands[index];
+    if (!brand) return;
+
+    const newName = prompt("Edit brand name:", brand.name);
+    if (!newName || !newName.trim()) {
+      return;
+    }
+
+    const updatedBrands = [...brandContent.brands];
+    updatedBrands[index] = {
+      ...brand,
+      name: newName.trim(),
+    };
+
+    try {
+      const result = await updateBrandContent(updatedBrands);
+      if (result.ok) {
+        setBrandContent((prev) => ({
+          ...prev,
+          brands: updatedBrands,
+        }));
+        toast({
+          title: "Success",
+          description: "Brand updated successfully!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update brand. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSavePortfolioImages = async (images: { url: string; alt?: string }[]) => {
+    try {
+      const result = await updatePortfolioContent(images);
+
+      if (result.ok) {
+        setPortfolioContent((prev) => ({
+          ...prev,
+          images,
+        }));
+        toast({
+          title: "Success",
+          description: "Portfolio updated successfully!",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update portfolio. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const confirmDeleteCategory = async () => {
     if (!categoryToDelete) return;
     try {
-      const response = await fetch(
-        `/api/business/categories?id=${categoryToDelete.id}`,
-        {
-          method: "DELETE",
-        },
-      );
+      const result = await deleteCategory(categoryToDelete.id);
 
-      if (response.ok) {
+      if (result.ok) {
         await fetchData();
         toast({
           title: "Success",
@@ -889,10 +1060,9 @@ export default function BusinessAdminDashboard() {
         setShowDeleteCategoryDialog(false);
         setCategoryToDelete(null);
       } else {
-        const errorResult = await response.json();
         toast({
           title: "Error",
-          description: `Failed to delete category: ${errorResult.error}`,
+          description: result.error,
           variant: "destructive",
         });
       }
@@ -912,19 +1082,9 @@ export default function BusinessAdminDashboard() {
     );
 
     try {
-      const response = await fetch("/api/business", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          brandContent: {
-            brands: updatedBrands,
-          },
-        }),
-      });
+      const result = await updateBrandContent(updatedBrands);
 
-      if (response.ok) {
+      if (result.ok) {
         setBrandContent((prev: any) => ({
           ...prev,
           brands: updatedBrands,
@@ -937,10 +1097,9 @@ export default function BusinessAdminDashboard() {
         setBrandToDeleteIndex(null);
         setBrandToDeleteName("");
       } else {
-        const errorResult = await response.json();
         toast({
           title: "Error",
-          description: `Failed to delete brand: ${errorResult.error}`,
+          description: result.error,
           variant: "destructive",
         });
       }
@@ -960,17 +1119,9 @@ export default function BusinessAdminDashboard() {
     );
 
     try {
-      const response = await fetch("/api/business", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          portfolioContent: { images: updatedImages },
-        }),
-      });
+      const result = await updatePortfolioContent(updatedImages);
 
-      if (response.ok) {
+      if (result.ok) {
         setPortfolioContent((prev: any) => ({
           ...prev,
           images: updatedImages,
@@ -982,10 +1133,9 @@ export default function BusinessAdminDashboard() {
         setShowDeletePortfolioDialog(false);
         setPortfolioToDeleteIndex(null);
       } else {
-        const errorResult = await response.json();
         toast({
           title: "Error",
-          description: `Failed to delete portfolio image: ${errorResult.error}`,
+          description: result.error,
           variant: "destructive",
         });
       }
@@ -1000,19 +1150,11 @@ export default function BusinessAdminDashboard() {
 
   const confirmBulkActivate = async () => {
     try {
-      await Promise.all(
-        selectedProducts.map((id) =>
-          fetch(`/api/business/products/${id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              isActive: true,
-            }),
-          }),
-        ),
-      );
+      const results = await bulkSetProductActiveState(selectedProducts, true);
+      const failedResult = results.find((result) => !result.ok);
+      if (failedResult && !failedResult.ok) {
+        throw new Error(failedResult.error);
+      }
       await fetchData();
       setSelectedProducts([]);
       toast({
@@ -1031,19 +1173,11 @@ export default function BusinessAdminDashboard() {
 
   const confirmBulkDeactivate = async () => {
     try {
-      await Promise.all(
-        selectedProducts.map((id) =>
-          fetch(`/api/business/products/${id}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              isActive: false,
-            }),
-          }),
-        ),
-      );
+      const results = await bulkSetProductActiveState(selectedProducts, false);
+      const failedResult = results.find((result) => !result.ok);
+      if (failedResult && !failedResult.ok) {
+        throw new Error(failedResult.error);
+      }
       await fetchData();
       setSelectedProducts([]);
       toast({
@@ -1062,13 +1196,11 @@ export default function BusinessAdminDashboard() {
 
   const confirmBulkDelete = async () => {
     try {
-      await Promise.all(
-        selectedProducts.map((id) =>
-          fetch(`/api/business/products/${id}`, {
-            method: "DELETE",
-          }),
-        ),
-      );
+      const results = await bulkDeleteProducts(selectedProducts);
+      const failedResult = results.find((result) => !result.ok);
+      if (failedResult && !failedResult.ok) {
+        throw new Error(failedResult.error);
+      }
       await fetchData();
       setSelectedProducts([]);
       toast({
@@ -1461,9 +1593,7 @@ export default function BusinessAdminDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      business?.slug && window.open(`/catalog/${business.slug}`, "_blank")
-                    }
+                    onClick={handleOpenCatalogPreview}
                     className="rounded-full px-4 py-0.2  bg-slate-900 hover:bg-slate-800  text-white hover:text-white  border-0 hover:opacity-90 transition-opacity"
                   >
                     <Eye className="h-4 w-4 mr-2" />
@@ -1474,9 +1604,7 @@ export default function BusinessAdminDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      business?.slug && window.open(`/catalog/${business.slug}`, "_blank")
-                    }
+                    onClick={handleOpenCatalogPreview}
                     className="rounded-full px-3 py-0  bg-slate-800  text-white border-0 hover:text-white hover:opacity-90 transition-opacity"
                   >
                     <Eye className="h-3.5 w-3.5 mr-1.5" />
@@ -1486,24 +1614,10 @@ export default function BusinessAdminDashboard() {
               </>
             }
             avatar={
-              business?.logo ? (
-                <img
-                  src={getOptimizedImageUrl(business.logo, {
-                    width: 24,
-                    height: 24,
-                    quality: 85,
-                    format: "auto",
-                  })}
-                  alt={`${business.name} logo`}
-                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-200"
-                  onError={handleImageError}
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                  <User className="h-4 w-4 text-gray-400" />
-                </div>
-              )
+              <BusinessHeaderAvatar
+                businessName={business?.name || "Business Admin"}
+                logoUrl={business?.logo || null}
+              />
             }
           />
 
@@ -1512,2683 +1626,225 @@ export default function BusinessAdminDashboard() {
             <div className="p-4 max-w-7xl mx-auto sm:p-6">
               {/* Main Content based on activeSection */}
               {activeSection === "dashboard" && (
-                <>
-                  {/* Stats Overview */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-900">
-                          Total Products
-                        </CardTitle>
-                        <Package className="h-4 w-4 text-gray-400" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">
-                          {stats.totalProducts}
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          {stats.activeProducts} active
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-900">
-                          Total Inquiries
-                        </CardTitle>
-                        <Mail className="h-4 w-4 text-gray-400" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">
-                          {stats.totalInquiries}
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          {stats.newInquiries} new
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-900">
-                          Profile Completion
-                        </CardTitle>
-                        <BarChart3 className="h-4 w-4 text-gray-400" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">
-                          {business
-                            ? (() => {
-                                const keys = [
-                                  business.name ? 25 : 0,
-                                  business.description ? 25 : 0,
-                                  business.logo ? 25 : 0,
-                                  business.address ? 25 : 0,
-                                  business.phone ? 25 : 0,
-                                  business.email != null ? 25 : 0,
-                                  business.website ? 25 : 0,
-                                  heroSlides && heroSlides.length > 0 ? 25 : 0,
-                                ];
-                                let percent = keys.reduce(
-                                  (sum, val) => sum + val,
-                                  0,
-                                );
-                                // prevent >100%
-                                percent = Math.min(percent, 100);
-                                return percent + "%";
-                              })()
-                            : "0%"}
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Profile completion
-                        </p>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-900">
-                          Business Health
-                        </CardTitle>
-                        <Building className="h-4 w-4 text-gray-400" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">
-                          {business.isActive ? "Active" : "Inactive"}
-                        </div>
-                        <p className="text-xs text-gray-500">Status</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Quick Actions and Recent Activity */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card className="rounded-3xl transition-all duration-300 hover:shadow-lg">
-                      <CardHeader>
-                        <CardTitle>Quick Actions</CardTitle>
-                        <CardDescription>
-                          Common tasks to get you started
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <Button
-                          variant="default"
-                          onClick={() => {
-                            setActiveSection("products");
-                            setEditingProduct(null);
-                            setProductFormData({
-                              name: "",
-                              description: "",
-                              price: "",
-                              image: "",
-                              categoryId: "",
-                              brandName: "",
-                              additionalInfo: {},
-                              inStock: true,
-                              isActive: true,
-                            });
-                            setShowProductDialog(true);
-                          }}
-                          className="rounded-xl  text-white hover:opacity-90 transition-opacity"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add New Product
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setActiveSection("info")}
-                          className="w-full justify-start rounded-2xl"
-                        >
-                          <Settings className="h-4 w-4 mr-2" />
-                          Update Business Profile
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setActiveSection("inquiries")}
-                          className="w-full justify-start rounded-2xl"
-                        >
-                          <Mail className="h-4 w-4 mr-2" />
-                          Check New Inquiries
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="rounded-3xl transition-all duration-300 hover:shadow-lg">
-                      <CardHeader>
-                        <CardTitle>Recent Activity</CardTitle>
-                        <CardDescription>
-                          Latest updates and interactions
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {inquiries.slice(0, 3).map((inquiry) => (
-                            <div
-                              key={inquiry.id}
-                              className="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl"
-                            >
-                              <div className="shrink-0">
-                                <Mail className="h-5 w-5 text-blue-500" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
-                                  New inquiry from {inquiry.name}
-                                </p>
-                                <p className="text-sm text-gray-500 truncate">
-                                  {formatDate(inquiry.createdAt)}
-                                </p>
-                              </div>
-                              {/* Custom Status Badge with Indicator Dot */}
-                              <div
-                                className={`flex items-center gap-1.5 px-1.5 w-fit py-0.5 rounded-full border text-xs font-medium ${
-                                  inquiry.status === "NEW"
-                                    ? "bg-red-500/10 border-red-500/30 text-red-600"
-                                    : inquiry.status === "READ"
-                                      ? "bg-blue-500/10 border-blue-500/30 text-blue-700"
-                                      : inquiry.status === "REPLIED"
-                                        ? "bg-green-500/10 border-green-500/30 text-green-700"
-                                        : "bg-gray-500/10 border-gray-500/30 text-gray-600"
-                                }`}
-                              >
-                                <span
-                                  className={`w-2 h-2 rounded-full ${
-                                    inquiry.status === "NEW"
-                                      ? "bg-red-500"
-                                      : inquiry.status === "READ"
-                                        ? "bg-blue-500"
-                                        : inquiry.status === "REPLIED"
-                                          ? "bg-green-500"
-                                          : "bg-gray-500"
-                                  }`}
-                                ></span>
-                                {inquiry.status === "NEW"
-                                  ? "New"
-                                  : inquiry.status === "READ"
-                                    ? "Read"
-                                    : inquiry.status === "REPLIED"
-                                      ? "Replied"
-                                      : "Closed"}
-                              </div>
-                            </div>
-                          ))}
-                          {inquiries.length === 0 && (
-                            <p className="text-sm text-gray-500 text-center py-4">
-                              No recent activity
-                            </p>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </>
+                <BusinessDashboardOverview
+                  stats={stats}
+                  business={business}
+                  heroSlidesCount={heroSlides.length}
+                  inquiries={inquiries}
+                  formatDate={formatDate}
+                  onNavigateToProducts={handleNavigateToProducts}
+                  onNavigateToInfo={() => setActiveSection("info")}
+                  onNavigateToInquiries={() => setActiveSection("inquiries")}
+                />
               )}
 
               {activeSection === "info" && (
-                <div className=" mx-auto">
-                  <div className="mb-6">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Business Info
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      Manage your business information
-                    </p>
-                  </div>
-
-                  {/* Business Info Card */}
-                  <div className="mb-8">
-                    <BusinessInfoCard
-                      businessName={
-                        businessInfoFormData.name || "Your Business"
-                      }
-                      adminName={
-                        businessInfoFormData.ownerName || user?.name || "Admin"
-                      }
-                      description={
-                        businessInfoFormData.description ||
-                        "Add your business description"
-                      }
-                      logoUrl={businessInfoFormData.logo}
-                      onEdit={() => {
-                        // Force refresh when edit state changes
-                        setBusinessInfoFormData((prev) => ({ ...prev }));
-                      }}
-                      onLogoUpload={(url) => {
-                        setBusinessInfoFormData((prev) => ({
-                          ...prev,
-                          logo: url,
-                        }));
-                      }}
-                      gstNumber={businessInfoFormData.gstNumber}
-                      openingHours={businessInfoFormData.openingHours}
-                      address={businessInfoFormData.address}
-                      mobile={businessInfoFormData.phone}
-                      email={businessInfoFormData.email}
-                      socialLinks={{
-                        facebook: businessInfoFormData.facebook,
-                        twitter: businessInfoFormData.twitter,
-                        instagram: businessInfoFormData.instagram,
-                        linkedin: businessInfoFormData.linkedin,
-                      }}
-                    />
-                  </div>
-                </div>
+                <BusinessInfoSection
+                  formData={businessInfoFormData}
+                  fallbackAdminName={user?.name || "Admin"}
+                  onEdit={() => {
+                    // Force refresh when edit state changes
+                    setBusinessInfoFormData((prev) => ({ ...prev }));
+                  }}
+                  onLogoUpload={(url) => {
+                    setBusinessInfoFormData((prev) => ({
+                      ...prev,
+                      logo: url,
+                    }));
+                  }}
+                />
               )}
 
               {activeSection === "hero" && (
-                <div className=" mx-auto">
-                  <div className="mb-6">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Hero Banner
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      Manage your hero section
-                    </p>
-                  </div>
-
-
-                  {/* Hero Banner Manager - Advanced Multiple Slides */}
-                  <Card className="rounded-3xl p-0 shadow-none bg-transparent">
-                    <CardContent className="p-0" >
-                      <HeroBannerManager
-                        heroContent={heroContent}
-                        onChange={async (newContent) => {
-                          setHeroContent(newContent);
-                          if (!business) return;
-                          try {
-                            const response = await fetch("/api/business", {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ heroContent: newContent }),
-                            });
-                            if (response.ok) {
-                              const result = await response.json();
-                              setBusiness(result.business);
-                              toast({
-                                title: "Success",
-                                description: "Hero content saved successfully!",
-                              });
-                            } else {
-                              toast({
-                                title: "Error",
-                                description: "Failed to save hero content",
-                                variant: "destructive",
-                              });
-                            }
-                          } catch (error) {
-                            toast({
-                              title: "Error",
-                              description: "Failed to save hero content",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
+                <BusinessHeroSection
+                  heroContent={heroContent}
+                  onChange={handleHeroContentChange}
+                />
               )}
 
               {activeSection === "brands" && (
-                <div className=" mx-auto">
-                  <div className="mb-6">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Brand Slider
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      Manage your brand slider
-                    </p>
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Section Title */}
-                    <div>
-                      <Label className="text-sm font-medium">
-                        Page Title for Brand Section
-                      </Label>
-                      <Input
-                        value={sectionTitles.brands}
-                        onChange={(e) =>
-                          setSectionTitles((prev) => ({
-                            ...prev,
-                            brands: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter section title"
-                        className="rounded-2xl bg-white"
-                      />
-                    </div>
-
-                    {/* Add New Brand Section */}
-                    <Card className="rounded-3xl">
-                      <CardHeader>
-                        <CardTitle className="text-lg">Add New Brand</CardTitle>
-                        <CardDescription>
-                          Add a new brand to your brand slider
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Brand Name</Label>
-                          <Input
-                            placeholder="Enter brand name"
-                            value={brandContent.newBrandName || ""}
-                            onChange={(e) =>
-                              setBrandContent((prev: any) => ({
-                                ...prev,
-                                newBrandName: e.target.value,
-                              }))
-                            }
-                            className="bg-white rounded-2xl"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Brand Photo</Label>
-                          <div className="space-y-2">
-                            <Input
-                              placeholder="Photo URL or upload below"
-                              value={brandContent.newBrandLogo || ""}
-                              onChange={(e) =>
-                                setBrandContent((prev: any) => ({
-                                  ...prev,
-                                  newBrandLogo: e.target.value,
-                                }))
-                              }
-                              className="bg-white rounded-2xl"
-                            />
-                            <ImageUpload
-                              onUpload={(url) =>
-                                setBrandContent((prev: any) => ({
-                                  ...prev,
-                                  newBrandLogo: url,
-                                }))
-                              }
-                            />
-                          </div>
-                        </div>
-                        <Button
-                          onClick={async () => {
-                            if (!brandContent.newBrandName?.trim()) {
-                              toast({
-                                title: "Error",
-                                description: "Please enter a brand name",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-
-                            setSavingBrand(true);
-                            const newBrand = {
-                              name: brandContent.newBrandName.trim(),
-                              logo: brandContent.newBrandLogo || "",
-                            };
-
-                            const updatedBrands = [
-                              ...(brandContent.brands || []),
-                              newBrand,
-                            ];
-
-                            try {
-                              const response = await fetch("/api/business", {
-                                method: "PUT",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  brandContent: { brands: updatedBrands },
-                                }),
-                              });
-
-                              if (response.ok) {
-                                setBrandContent((prev: any) => ({
-                                  ...prev,
-                                  brands: updatedBrands,
-                                  newBrandName: "",
-                                  newBrandLogo: "",
-                                }));
-                                toast({
-                                  title: "Success",
-                                  description: "Brand added successfully!",
-                                });
-                              } else {
-                                const errorResult = await response.json();
-                                toast({
-                                  title: "Error",
-                                  description: `Failed to add brand: ${errorResult.error}`,
-                                  variant: "destructive",
-                                });
-                              }
-                            } catch (error) {
-                              toast({
-                                title: "Error",
-                                description:
-                                  "Failed to add brand. Please try again.",
-                                variant: "destructive",
-                              });
-                            } finally {
-                              setSavingBrand(false);
-                            }
-                          }}
-                          disabled={savingBrand}
-                          className="w-full rounded-2xl"
-                        >
-                          {savingBrand ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Adding...
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add Brand
-                            </>
-                          )}
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    {/* Brands Table Section */}
-                    <Card className="p-0 overflow-hidden rounded-xl">
-                      <CardContent className="p-0">
-                        {brandContent.brands?.length > 0 ? (
-                          <Table>
-                            <TableHeader className="bg-[#080322] ">
-                              <TableRow>
-                                <TableHead className="text-white font-medium">
-                                  Brand Name
-                                </TableHead>
-                                <TableHead className="text-white font-medium">
-                                  Logo
-                                </TableHead>
-                                <TableHead className="w-32 text-white font-medium">
-                                  Actions
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {brandContent.brands.map(
-                                (brand: any, index: number) => (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-medium">
-                                      {brand.name}
-                                    </TableCell>
-                                    <TableCell>
-                                      {brand.logo ? (
-                                        <img
-                                          src={getOptimizedImageUrl(
-                                            brand.logo,
-                                            {
-                                              width: 32,
-                                              height: 32,
-                                              quality: 85,
-                                              format: "auto",
-                                            },
-                                          )}
-                                          alt={brand.name}
-                                          className="h-8 w-8 object-cover rounded-2xl"
-                                          loading="lazy"
-                                        />
-                                      ) : (
-                                        <div className="h-8 w-8 bg-gray-200 rounded-2xl flex items-center justify-center">
-                                          <ImageIcon className="h-4 w-4 text-gray-400" />
-                                        </div>
-                                      )}
-                                    </TableCell>
-                                    <TableCell>
-                                      <div className="flex space-x-2">
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={async () => {
-                                            const newName = prompt(
-                                              "Edit brand name:",
-                                              brand.name,
-                                            );
-                                            if (newName && newName.trim()) {
-                                              const updatedBrands = [
-                                                ...brandContent.brands,
-                                              ];
-                                              updatedBrands[index] = {
-                                                ...brand,
-                                                name: newName.trim(),
-                                              };
-
-                                              try {
-                                                const response = await fetch(
-                                                  "/api/business",
-                                                  {
-                                                    method: "PUT",
-                                                    headers: {
-                                                      "Content-Type":
-                                                        "application/json",
-                                                    },
-                                                    body: JSON.stringify({
-                                                      brandContent: {
-                                                        brands: updatedBrands,
-                                                      },
-                                                    }),
-                                                  },
-                                                );
-
-                                                if (response.ok) {
-                                                  setBrandContent((prev: any) => ({
-                                                    ...prev,
-                                                    brands: updatedBrands,
-                                                  }));
-                                                  toast({
-                                                    title: "Success",
-                                                    description:
-                                                      "Brand updated successfully!",
-                                                  });
-                                                } else {
-                                                  const errorResult =
-                                                    await response.json();
-                                                  toast({
-                                                    title: "Error",
-                                                    description: `Failed to update brand: ${errorResult.error}`,
-                                                    variant: "destructive",
-                                                  });
-                                                }
-                                              } catch (error) {
-                                                toast({
-                                                  title: "Error",
-                                                  description:
-                                                    "Failed to update brand. Please try again.",
-                                                  variant: "destructive",
-                                                });
-                                              }
-                                            }
-                                          }}
-                                          className="rounded-xl"
-                                        >
-                                          <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => {
-                                            setBrandToDeleteIndex(index);
-                                            setBrandToDeleteName(brand.name);
-                                            setShowDeleteBrandDialog(true);
-                                          }}
-                                          className="rounded-xl"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                ),
-                              )}
-                            </TableBody>
-                          </Table>
-                        ) : (
-                          <div className="text-center py-8">
-                            <Palette className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">
-                              No brands to manage
-                            </h3>
-                            <p className="text-gray-600">
-                              Add brands using the editor panel
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                <BusinessBrandsSection
+                  sectionTitle={sectionTitles.brands}
+                  onSectionTitleChange={(value) =>
+                    setSectionTitles((prev) => ({ ...prev, brands: value }))
+                  }
+                  brandContent={brandContent}
+                  savingBrand={savingBrand}
+                  onBrandNameChange={(value) =>
+                    setBrandContent((prev) => ({ ...prev, newBrandName: value }))
+                  }
+                  onBrandLogoChange={(value) =>
+                    setBrandContent((prev) => ({ ...prev, newBrandLogo: value }))
+                  }
+                  onBrandLogoUpload={(url) =>
+                    setBrandContent((prev) => ({ ...prev, newBrandLogo: url }))
+                  }
+                  onAddBrand={handleAddBrand}
+                  onEditBrand={handleEditBrandName}
+                  onDeleteBrand={(index, name) => {
+                    setBrandToDeleteIndex(index);
+                    setBrandToDeleteName(name);
+                    setShowDeleteBrandDialog(true);
+                  }}
+                />
               )}
 
               {activeSection === "portfolio" && (
-                <div className=" mx-auto">
-                  <div className="mb-6">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Portfolio Manager
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      Manage your portfolio images
-                    </p>
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Section Title */}
-                    <div>
-                      <Label className="text-sm font-medium">
-                        Page Title for Portfolio Section
-                      </Label>
-                      <Input
-                        value={sectionTitles.portfolio}
-                        onChange={(e) =>
-                          setSectionTitles((prev) => ({
-                            ...prev,
-                            portfolio: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter section title"
-                        className="rounded-2xl bg-white"
-                      />
-                    </div>
-
-                    {/* Portfolio Grid - Bento Layout */}
-                    <Card className="rounded-3xl overflow-hidden">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle>Portfolio Grid</CardTitle>
-                            <CardDescription>
-                              Click empty slots to add, icons to manage.
-                            </CardDescription>
-                          </div>
-                          <div className="text-sm text-gray-500 font-medium">
-                            {(portfolioContent.images || []).length}/6 Images
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
-                          {Array.from({ length: 6 }).map((_, index) => {
-                            const image = (portfolioContent.images || [])[
-                              index
-                            ];
-
-                            // Grid Positioning Logic
-                            const gridClasses = [
-                              // --- ROW 1: 2 Rectangles ---
-                              "md:row-span-1 md:col-span-2 col-span-2 row-span-2", // Index 0: Rect (Spans full width on mobile, 2 cols on desktop)
-                              "md:row-span-1 md:col-span-2 col-span-2 row-span-2", // Index 1: Rect (Spans full width on mobile, 2 cols on desktop)
-
-                              // --- ROW 2: 4 Squares ---
-                              "md:row-span-1 md:col-span-1 col-span-1", // Index 2: Square
-                              "md:row-span-1 md:col-span-1 col-span-1", // Index 3: Square
-                              "md:row-span-1 md:col-span-1 col-span-1", // Index 4: Square
-                              "md:row-span-1 md:col-span-1 col-span-1", // Index 5: Square
-                            ];
-
-                            // Identify Type
-                            // Indices 0 & 1 are Rectangles (16:9)
-                            // Indices 2-5 are Squares (1:1)
-                            const isRect = index === 0 || index === 1;
-                            const isSquare = !isRect;
-
-                            // Aspect Ratio
-                            const aspectRatioClass = isRect
-                              ? "aspect-video"
-                              : "aspect-square";
-
-                            // Square Sizing Logic (To ensure proper shape)
-                            // On Desktop (4 cols): Squares are w-1/4 (25%).
-                            // On Mobile (2 cols): Squares are w-1/2 (50%).
-
-                            const isVideo =
-                              image?.url &&
-                              (image.url.includes(".mp4") ||
-                                image.url.includes(".webm") ||
-                                image.url.includes(".ogg"));
-
-                            const handleImageUpdate = (
-                              index: number,
-                              url: string,
-                            ) => {
-                              const updatedImages = [
-                                ...(portfolioContent.images || []),
-                              ];
-                              updatedImages[index] = {
-                                url,
-                                alt: "Portfolio image",
-                              };
-                              savePortfolioImages(updatedImages);
-                            };
-
-                            const savePortfolioImages = async (
-                              images: any[],
-                            ) => {
-                              try {
-                                const response = await fetch("/api/business", {
-                                  method: "PUT",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                  body: JSON.stringify({
-                                    portfolioContent: { images },
-                                  }),
-                                });
-
-                                if (response.ok) {
-                                  setPortfolioContent((prev: any) => ({
-                                    ...prev,
-                                    images,
-                                  }));
-                                  toast({
-                                    title: "Success",
-                                    description:
-                                      "Portfolio updated successfully!",
-                                  });
-                                } else {
-                                  const errorResult = await response.json();
-                                  toast({
-                                    title: "Error",
-                                    description: `Failed to update portfolio: ${errorResult.error}`,
-                                    variant: "destructive",
-                                  });
-                                }
-                              } catch (error) {
-                                toast({
-                                  title: "Error",
-                                  description:
-                                    "Failed to update portfolio. Please try again.",
-                                  variant: "destructive",
-                                });
-                              }
-                            };
-
-                            return (
-                              <div
-                                key={index}
-                                className={`
-                                        relative bg-gray-100 border-2 border-dashed border-gray-300
-                                        rounded-2xl overflow-hidden group transition-all duration-300
-                                        ${image ? "border-gray-200 shadow-sm hover:shadow-md" : "hover:border-blue-400 hover:bg-blue-50"}
-                                        ${gridClasses[index]}
-                                        ${aspectRatioClass}
-                                       
-                                      `}
-                              >
-                                {/* Empty Slot: Click to Open File Manager */}
-                                {!image && (
-                                  <div
-                                    className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer z-10"
-                                    onClick={() => {
-                                      const fileInput =
-                                        document.createElement("input");
-                                      fileInput.type = "file";
-                                      fileInput.accept = "image/*,video/*";
-                                      fileInput.onchange = (e) => {
-                                        const target =
-                                          e.target as HTMLInputElement;
-                                        if (target.files && target.files[0]) {
-                                          const file = target.files[0];
-                                          const reader = new FileReader();
-                                          reader.onload = (event) => {
-                                            const result = event.target?.result;
-                                            if (typeof result === "string") {
-                                              handleImageUpdate(index, result);
-                                            }
-                                          };
-                                          reader.readAsDataURL(file);
-                                        }
-                                      };
-                                      fileInput.click();
-                                    }}
-                                  >
-                                    <div
-                                      className={`
-                                                flex items-center justify-center rounded-full bg-white shadow-sm mb-3
-                                                ${isRect ? "w-16 h-16" : "w-12 h-12"}
-                                              `}
-                                    >
-                                      <Plus
-                                        className={`text-gray-400 ${isRect ? "w-8 h-8" : "w-6 h-6"}`}
-                                      />
-                                    </div>
-                                    <span className="text-xs font-medium text-gray-500 group-hover:text-blue-600">
-                                      {isRect
-                                        ? "Add Rect Image (16:9)"
-                                        : "Add Square Image"}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Filled Slot: Image or Video */}
-                                {image && (
-                                  <>
-                                    {/* Media Content */}
-                                    <div className="absolute inset-0 bg-gray-200">
-                                      {isVideo ? (
-                                        <video
-                                          src={image.url}
-                                          className="w-full h-full object-cover"
-                                          muted
-                                          loop
-                                          playsInline
-                                        />
-                                      ) : (
-                                        <img
-                                          src={image.url}
-                                          alt={image.alt || "Portfolio image"}
-                                          className="w-full h-full object-cover"
-                                          loading="lazy"
-                                        />
-                                      )}
-                                    </div>
-
-                                    {/* Dark Overlay on Hover */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20" />
-
-                                    {/* Action Buttons (Edit & Delete) */}
-                                    <div className="absolute top-2 right-2 flex space-x-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                      {/* Edit Button */}
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const fileInput =
-                                            document.createElement("input");
-                                          fileInput.type = "file";
-                                          fileInput.accept = "image/*,video/*";
-                                          fileInput.onchange = (e) => {
-                                            const target =
-                                              e.target as HTMLInputElement;
-                                            if (
-                                              target.files &&
-                                              target.files[0]
-                                            ) {
-                                              const file = target.files[0];
-                                              const reader = new FileReader();
-                                              reader.onload = (event) => {
-                                                const result =
-                                                  event.target?.result;
-                                                if (
-                                                  typeof result === "string"
-                                                ) {
-                                                  handleImageUpdate(
-                                                    index,
-                                                    result,
-                                                  );
-                                                }
-                                              };
-                                              reader.readAsDataURL(file);
-                                            }
-                                          };
-                                          fileInput.click();
-                                        }}
-                                        className="bg-white/90 backdrop-blur text-gray-700 hover:text-blue-600 hover:bg-white p-2 rounded-full shadow-lg transition-transform hover:scale-105"
-                                        title="Edit Image"
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-
-                                      {/* Delete Button */}
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setPortfolioToDeleteIndex(index);
-                                          setShowDeletePortfolioDialog(true);
-                                        }}
-                                        className="bg-white/90 backdrop-blur text-gray-700 hover:text-red-600 hover:bg-white p-2 rounded-full shadow-lg transition-transform hover:scale-105"
-                                        title="Delete Image"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                <BusinessPortfolioSection
+                  sectionTitle={sectionTitles.portfolio}
+                  onSectionTitleChange={(value) =>
+                    setSectionTitles((prev) => ({ ...prev, portfolio: value }))
+                  }
+                  images={portfolioContent.images || []}
+                  onSaveImages={handleSavePortfolioImages}
+                  onDeleteImageRequest={(index) => {
+                    setPortfolioToDeleteIndex(index);
+                    setShowDeletePortfolioDialog(true);
+                  }}
+                />
               )}
 
               {activeSection === "categories" && (
-                <div className=" mx-auto">
-                  <div className="mb-6">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Category Manager
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      Configure business categories and classifications
-                    </p>
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Section Title */}
-                    <div>
-                      <Label className="text-sm font-medium mb-1">
-                        Section Title
-                      </Label>
-                      <Input
-                        value={sectionTitles.categories}
-                        onChange={(e) =>
-                          setSectionTitles((prev) => ({
-                            ...prev,
-                            categories: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter section title"
-                        className="bg-white rounded-2xl"
-                      />
-                    </div>
-
-                    {/* Add New Category Section */}
-                    <Card className="rounded-3xl">
-                      <CardHeader>
-                        <CardTitle className="text-lg">
-                          Add New Category
-                        </CardTitle>
-                        <CardDescription>
-                          Add a new category for your products
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Category Name *</Label>
-                          <Input
-                            placeholder="Enter category name"
-                            value={categoryFormData.name}
-                            onChange={(e) =>
-                              setCategoryFormData((prev) => ({
-                                ...prev,
-                                name: e.target.value,
-                              }))
-                            }
-                            className="bg-white rounded-2xl"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Description</Label>
-                          <Textarea
-                            placeholder="Describe this category"
-                            value={categoryFormData.description}
-                            onChange={(e) =>
-                              setCategoryFormData((prev) => ({
-                                ...prev,
-                                description: e.target.value,
-                              }))
-                            }
-                            rows={3}
-                            className="bg-white rounded-2xl"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Parent Category</Label>
-                          <Select
-                            value={categoryFormData.parentId || "none"}
-                            onValueChange={(value) =>
-                              setCategoryFormData((prev) => ({
-                                ...prev,
-                                parentId: value === "none" ? "" : value,
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="bg-white rounded-2xl">
-                              <SelectValue placeholder="Select parent category (optional)" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">No parent</SelectItem>
-                              {categories
-                                .filter((cat) => !cat.parentId)
-                                .map((category) => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.id}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="default"
-                            onClick={async () => {
-                              if (!categoryFormData.name.trim()) {
-                                toast({
-                                  title: "Error",
-                                  description: "Category name is required",
-                                  variant: "destructive",
-                                });
-                                return;
-                              }
-
-                              setSavingCategory(true);
-                              try {
-                                const response = await fetch("/api/business/categories", {
-                                  method: "POST",
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                  body: JSON.stringify(categoryFormData),
-                                });
-
-                                if (response.ok) {
-                                  const data = await response.json();
-                                  setCategories((prev) => [...prev, data.category]);
-                                  setCategoryFormData({
-                                    name: "",
-                                    description: "",
-                                    parentId: "",
-                                  });
-                                  await fetchData();
-                                  toast({
-                                    title: "Success",
-                                    description: "Category created successfully!",
-                                  });
-                                } else {
-                                  const errorResult = await response.json();
-                                  toast({
-                                    title: "Error",
-                                    description: `Failed to create category: ${errorResult.error}`,
-                                    variant: "destructive",
-                                  });
-                                }
-                              } catch (error) {
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to create category. Please try again.",
-                                  variant: "destructive",
-                                });
-                              } finally {
-                                setSavingCategory(false);
-                              }
-                            }}
-                            disabled={savingCategory}
-                            className="rounded-xl  hover:opacity-90 transition-opacity"
-                          >
-                            {savingCategory ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Saving...
-                              </>
-                            ) : (
-                              "Add New Category"
-                            )}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Categories Table Section */}
-                    <Card className=" p-0 rounded-xl overflow-hidden">
-                      <CardContent className="p-0">
-                        {categories.length > 0 ? (
-                          <Table>
-                            <TableHeader className="bg-[#080322] ">
-                              <TableRow>
-                                <TableHead className="text-white font-medium">
-                                  Category Name
-                                </TableHead>
-                                <TableHead className="text-white font-medium">
-                                  Description
-                                </TableHead>
-                                <TableHead className="text-white font-medium">
-                                  Parent
-                                </TableHead>
-                                <TableHead className="w-32 text-white font-medium">
-                                  Actions
-                                </TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {categories.map((category) => (
-                                <TableRow key={category.id}>
-                                  <TableCell className="font-medium">
-                                    {category.name}
-                                  </TableCell>
-                                  <TableCell>
-                                    {category.description || "—"}
-                                  </TableCell>
-                                  <TableCell>
-                                    {category.parent
-                                      ? category.parent.name
-                                      : "—"}
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex space-x-2">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => {
-                                          setEditingCategory(category);
-                                          setCategoryFormData({
-                                            name: category.name,
-                                            description:
-                                              category.description || "",
-                                            parentId: category.parentId || "",
-                                          });
-                                          setShowCategoryModal(true);
-                                        }}
-                                        className="rounded-xl"
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() =>
-                                          handleDeleteCategory(category)
-                                        }
-                                        className="rounded-xl"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        ) : (
-                          <div className="text-center py-8">
-                            <Grid3X3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">
-                              No categories yet
-                            </h3>
-                            <p className="text-gray-600">
-                              Add your first category using the form above
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                <BusinessCategoriesSection
+                  sectionTitle={sectionTitles.categories}
+                  onSectionTitleChange={(value) =>
+                    setSectionTitles((prev) => ({ ...prev, categories: value }))
+                  }
+                  categoryFormData={categoryFormData}
+                  onCategoryFormChange={setCategoryFormData}
+                  categories={categories}
+                  savingCategory={savingCategory}
+                  onCreateCategory={handleCreateCategory}
+                  onEditCategory={handleEditCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                />
               )}
 
               {activeSection === "products" && (
-                <div className=" mx-auto">
-                  <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                      <h1 className="text-lg font-bold text-gray-900">
-                        Products & Services
-                      </h1>
-                      <p className="text-md text-gray-600">
-                        Manage your product offerings
-                      </p>
-                    </div>
-                    <Button
-                      variant="default"
-                      onClick={() => {
-                        setEditingProduct(null);
-                        setProductFormData({
-                          name: "",
-                          description: "",
-                          price: "",
-                          image: "",
-                          categoryId: "",
-                          brandName: "",
-                          additionalInfo: {},
-                          inStock: true,
-                          isActive: true,
-                        });
-                        setShowProductDialog(true);
-                      }}
-                      className="rounded-xl  hover:opacity-90 transition-opacity"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Product
-                    </Button>
-                  </div>
-
-                  <div className="mb-6 flex justify-end">
-                    <Select
-                      value={selectedCategory}
-                      onValueChange={(value) => {
-                        setSelectedCategory(value === "all" ? "" : value);
-                        setProductCurrentPage(1); // Reset to first page on filter change
-                      }}
-                    >
-                      <SelectTrigger className="w-full bg-white sm:w-48 rounded-2xl">
-                        <SelectValue placeholder="Filter by category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Card className="p-0 bg-white rounded-xl overflow-hidden">
-                    <CardContent className="p-0">
-                      {mounted && selectedProducts.length > 0 && (
-                        <div className="p-4 bg-blue-50 border-b border-blue-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-sm font-medium text-blue-900">
-                              {selectedProducts.length} product
-                              {selectedProducts.length > 1 ? "s" : ""} selected
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setShowBulkActivateDialog(true)}
-                              className="rounded-xl"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Activate
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setShowBulkDeactivateDialog(true)}
-                              className="rounded-xl"
-                            >
-                              <Pause className="h-4 w-4 mr-2" />
-                              Deactivate
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setShowBulkDeleteDialog(true)}
-                              className="rounded-xl"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </Button>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setSelectedProducts([])}
-                            className="rounded-xl"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                      <div className="overflow-x-auto border border-gray-200 rounded-md ">
-                        <Table>
-                          <TableHeader className="bg-[#080322] ">
-                            <TableRow>
-                              <TableHead className="w-12 text-white font-medium">
-                                <Checkbox
-                                  checked={
-                                    selectedProducts.length ===
-                                      products.filter(
-                                        (p) =>
-                                          p.name
-                                            .toLowerCase()
-                                            .includes(
-                                              searchTerm.toLowerCase(),
-                                            ) &&
-                                          (selectedCategory === "" ||
-                                            p.categoryId === selectedCategory),
-                                      ).length && selectedProducts.length > 0
-                                  }
-                                  onCheckedChange={(checked) => {
-                                    const filteredProducts = products.filter(
-                                      (p) =>
-                                        p.name
-                                          .toLowerCase()
-                                          .includes(searchTerm.toLowerCase()) &&
-                                        (selectedCategory === "" ||
-                                          p.categoryId === selectedCategory),
-                                    );
-                                    if (checked) {
-                                      setSelectedProducts(
-                                        filteredProducts.map((p) => p.id),
-                                      );
-                                    } else {
-                                      setSelectedProducts([]);
-                                    }
-                                  }}
-                                />
-                              </TableHead>
-                              <TableHead className="text-white font-medium">
-                                Image
-                              </TableHead>
-                              <TableHead className="text-white font-medium">
-                                Name
-                              </TableHead>
-                              <TableHead className="text-white font-medium">
-                                Category
-                              </TableHead>
-                              <TableHead className="text-white font-medium">
-                                Brand
-                              </TableHead>
-                              <TableHead className="text-white font-medium">
-                                Price
-                              </TableHead>
-                              <TableHead className="text-white font-medium">
-                                Status
-                              </TableHead>
-                              <TableHead className="w-32 text-white font-medium">
-                                Actions
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {(() => {
-                              // Filter products based on search and category
-                              const filteredProducts = products.filter(
-                                (product) =>
-                                  product.name
-                                    .toLowerCase()
-                                    .includes(searchTerm.toLowerCase()) &&
-                                  (selectedCategory === "" ||
-                                    product.categoryId === selectedCategory),
-                              );
-                              
-                              // Calculate pagination
-                              const totalFilteredProducts = filteredProducts.length;
-                              const totalPages = Math.ceil(totalFilteredProducts / productItemsPerPage);
-                              const startIndex = (productCurrentPage - 1) * productItemsPerPage;
-                              const endIndex = startIndex + productItemsPerPage;
-                              const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
-                              
-                              return paginatedProducts.map((product) => (
-                                <TableRow key={product.id}>
-                                  <TableCell>
-                                    <Checkbox
-                                      checked={selectedProducts.includes(
-                                        product.id,
-                                      )}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setSelectedProducts((prev) => [
-                                            ...prev,
-                                            product.id,
-                                          ]);
-                                        } else {
-                                          setSelectedProducts((prev) =>
-                                            prev.filter(
-                                              (id) => id !== product.id,
-                                            ),
-                                          );
-                                        }
-                                      }}
-                                    />
-                                  </TableCell>
-                                  <TableCell>
-                                    {product.image ? (
-                                      <img
-                                        src={getOptimizedImageUrl(
-                                          product.image,
-                                          {
-                                            width: 50,
-                                            height: 50,
-                                            quality: 85,
-                                            format: "auto",
-                                          },
-                                        )}
-                                        alt={product.name}
-                                        className="w-12 h-12 object-cover rounded-2xl"
-                                        loading="lazy"
-                                      />
-                                    ) : (
-                                      <div className="w-12 h-12 bg-gray-200 rounded-2xl flex items-center justify-center">
-                                        <ImageIcon className="h-6 w-6 text-gray-400" />
-                                      </div>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="font-medium">
-                                    {product.name}
-                                  </TableCell>
-                                  <TableCell>
-                                    {product.category ? (
-                                      <Badge
-                                        variant="secondary"
-                                        className="rounded-full"
-                                      >
-                                        {product.category.name}
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-gray-400">—</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell>
-                                    {product.brandName ? (
-                                      <Badge
-                                        variant="outline"
-                                        className="rounded-full"
-                                      >
-                                        {product.brandName}
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-gray-400">—</span>
-                                    )}
-                                  </TableCell>
-                                  <TableCell>{product.price || "—"}</TableCell>
-                                  <TableCell>
-                                    {/* Custom Stock Status Badge with Indicator Dot */}
-                                    <div
-                                      className={`flex items-center gap-1.5 px-1.5 w-fit py-0.5 rounded-full border text-xs font-medium ${
-                                        product.inStock
-                                          ? "bg-lime-500/10 border-lime-500/30 text-lime-700"
-                                          : "bg-red-500/10 border-red-500/30 text-red-600"
-                                      }`}
-                                    >
-                                      <span
-                                        className={`w-2 h-2 rounded-full ${
-                                          product.inStock
-                                            ? "bg-lime-500"
-                                            : "bg-red-500"
-                                        }`}
-                                      ></span>
-                                      {product.inStock
-                                        ? "In Stock"
-                                        : "Out of Stock"}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex space-x-2">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => {
-                                          handleProductEdit(product);
-                                          setShowProductDialog(true);
-                                        }}
-                                        className="rounded-xl"
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleShare(product)}
-                                        className="rounded-xl"
-                                      >
-                                        <Share2 className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        onClick={() =>
-                                          handleProductDelete(product)
-                                        }
-                                        className="rounded-xl"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ));
-                            })()}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      {products.length === 0 && (
-                        <div className="text-center py-12">
-                          <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            No products yet
-                          </h3>
-                          <p className="text-gray-600 mb-4">
-                            Add your first product or service to get started
-                          </p>
-                          <Button
-                            onClick={() => {
-                              setEditingProduct(null);
-                              setProductFormData({
-                                name: "",
-                                description: "",
-                                price: "",
-                                image: "",
-                                categoryId: "",
-                                brandName: "",
-                                additionalInfo: {},
-                                inStock: true,
-                                isActive: true,
-                              });
-                              setShowProductDialog(true);
-                            }}
-                            className="rounded-xl bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white hover:opacity-90 transition-opacity"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Product
-                          </Button>
-                        </div>
-                      )}
-                      {/* Pagination Component */}
-                      {products.length > 0 && (
-                        <div className="p-4 border-t border-gray-200">
-                          <Pagination
-                            currentPage={productCurrentPage}
-                            totalPages={Math.ceil(
-                              products.filter(
-                                (p) =>
-                                  p.name
-                                    .toLowerCase()
-                                    .includes(searchTerm.toLowerCase()) &&
-                                  (selectedCategory === "" ||
-                                    p.categoryId === selectedCategory),
-                              ).length / productItemsPerPage
-                            )}
-                            totalItems={products.filter(
-                              (p) =>
-                                p.name
-                                  .toLowerCase()
-                                  .includes(searchTerm.toLowerCase()) &&
-                                (selectedCategory === "" ||
-                                  p.categoryId === selectedCategory),
-                            ).length}
-                            itemsPerPage={productItemsPerPage}
-                            onPageChange={setProductCurrentPage}
-                            onItemsPerPageChange={(limit) => {
-                              setProductItemsPerPage(limit);
-                              setProductCurrentPage(1); // Reset to first page when changing items per page
-                            }}
-                            className="flex-wrap"
-                          />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                <BusinessProductsSection
+                  products={products}
+                  categories={categories}
+                  searchTerm={searchTerm}
+                  selectedCategory={selectedCategory}
+                  selectedProducts={selectedProducts}
+                  mounted={mounted}
+                  productCurrentPage={productCurrentPage}
+                  productItemsPerPage={productItemsPerPage}
+                  onSelectedCategoryChange={setSelectedCategory}
+                  onSelectedProductsChange={setSelectedProducts}
+                  onProductCurrentPageChange={setProductCurrentPage}
+                  onProductItemsPerPageChange={setProductItemsPerPage}
+                  onOpenBulkActivate={() => setShowBulkActivateDialog(true)}
+                  onOpenBulkDeactivate={() => setShowBulkDeactivateDialog(true)}
+                  onOpenBulkDelete={() => setShowBulkDeleteDialog(true)}
+                  onAddProduct={handleOpenProductDialog}
+                  onEditProduct={(product) => {
+                    handleProductEdit(product);
+                    setShowProductDialog(true);
+                  }}
+                  onShareProduct={handleShare}
+                  onDeleteProduct={handleProductDelete}
+                />
               )}
 
               {activeSection === "inquiries" && (
-                <div className=" mx-auto">
-                  <div className="mb-8">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Customer Inquiries
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      View and respond to customer inquiries
-                    </p>
-                  </div>
-
-                  {inquiries.length === 0 ? (
-                    <Card className="rounded-3xl">
-                      <CardContent className="text-center py-12">
-                        <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          No inquiries yet
-                        </h3>
-                        <p className="text-gray-600">
-                          Customer inquiries will appear here when people
-                          contact you
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-900">
-                              Total
-                            </CardTitle>
-                            <Mail className="h-4 w-4 text-gray-400" />
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">
-                              {stats.totalInquiries}
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              All inquiries
-                            </p>
-                          </CardContent>
-                        </Card>
-                        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-900">
-                              New
-                            </CardTitle>
-                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">
-                              {stats.newInquiries}
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              Awaiting review
-                            </p>
-                          </CardContent>
-                        </Card>
-                        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-900">
-                              Read
-                            </CardTitle>
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">
-                              {stats.readInquiries}
-                            </div>
-                            <p className="text-xs text-gray-500">Viewed</p>
-                          </CardContent>
-                        </Card>
-                        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg">
-                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-900">
-                              Replied
-                            </CardTitle>
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">
-                              {stats.repliedInquiries}
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              Response sent
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </div>
-
-                      <div className="space-y-4">
-                        {inquiries.slice(0, 10).map((inquiry) => (
-                          <Card
-                            key={inquiry.id}
-                            className="border-l-4 border-l-blue-500 rounded-3xl transition-all duration-300 hover:shadow-lg"
-                          >
-                            <CardContent className="pt-6">
-                              <div className="flex justify-between items-start mb-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center space-x-3 mb-2">
-                                    <h4 className="font-semibold text-lg">
-                                      {inquiry.name}
-                                    </h4>
-                                    {/* Custom Status Badge with Indicator Dot */}
-                                    <div
-                                      className={`flex items-center gap-1.5 px-1.5 w-fit py-0.5 rounded-full border text-xs font-medium ${
-                                        inquiry.status === "NEW"
-                                          ? "bg-red-500/10 border-red-500/30 text-red-600"
-                                          : inquiry.status === "READ"
-                                            ? "bg-blue-500/10 border-blue-500/30 text-blue-700"
-                                            : inquiry.status === "REPLIED"
-                                              ? "bg-green-500/10 border-green-500/30 text-green-700"
-                                              : "bg-gray-500/10 border-gray-500/30 text-gray-600"
-                                      }`}
-                                    >
-                                      <span
-                                        className={`w-2 h-2 rounded-full ${
-                                          inquiry.status === "NEW"
-                                            ? "bg-red-500"
-                                            : inquiry.status === "READ"
-                                              ? "bg-blue-500"
-                                              : inquiry.status === "REPLIED"
-                                                ? "bg-green-500"
-                                                : "bg-gray-500"
-                                        }`}
-                                      ></span>
-                                      {inquiry.status === "NEW"
-                                        ? "New"
-                                        : inquiry.status === "READ"
-                                          ? "Read"
-                                          : inquiry.status === "REPLIED"
-                                            ? "Replied"
-                                            : "Closed"}
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-gray-600">
-                                    <div className="flex items-center space-x-1">
-                                      <Mail className="h-4 w-4" />
-                                      <a
-                                        href={`mailto:${inquiry.email}`}
-                                        className="text-blue-600 hover:underline"
-                                      >
-                                        {inquiry.email}
-                                      </a>
-                                    </div>
-                                    {inquiry.phone && (
-                                      <div className="flex items-center space-x-1">
-                                        <Phone className="h-4 w-4" />
-                                        <a
-                                          href={`tel:${inquiry.phone}`}
-                                          className="text-blue-600 hover:underline"
-                                        >
-                                          {inquiry.phone}
-                                        </a>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>{formatDate(inquiry.createdAt)}</span>
-                                  </div>
-                                </div>
-                                {inquiry.product && (
-                                  <div className="flex items-center space-x-2 mt-2">
-                                    <Package className="h-4 w-4 text-gray-400" />
-                                    <span className="text-sm text-gray-600">
-                                      Regarding:{" "}
-                                      <strong>{inquiry.product.name}</strong>
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="mb-4">
-                                <p className="text-gray-700 whitespace-pre-wrap">
-                                  {inquiry.message}
-                                </p>
-                                <Separator />
-
-                                <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                                  {inquiry.status === "NEW" && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() =>
-                                        handleInquiryStatusUpdate(
-                                          inquiry.id,
-                                          "READ",
-                                        )
-                                      }
-                                      className="rounded-xl"
-                                    >
-                                      <Eye className="h-4 w-4 mr-1" />
-                                      Mark as Read
-                                    </Button>
-                                  )}
-                                  {(inquiry.status === "NEW" ||
-                                    inquiry.status === "READ") && (
-                                    <Button
-                                      size="sm"
-                                      onClick={() =>
-                                        handleInquiryStatusUpdate(
-                                          inquiry.id,
-                                          "REPLIED",
-                                        )
-                                      }
-                                      className="rounded-xl"
-                                    >
-                                      <Mail className="h-4 w-4 mr-1" />
-                                      Mark as Replied
-                                    </Button>
-                                  )}
-                                  {(inquiry.status === "NEW" ||
-                                    inquiry.status === "READ" ||
-                                    inquiry.status === "REPLIED") && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() =>
-                                        handleInquiryStatusUpdate(
-                                          inquiry.id,
-                                          "CLOSED",
-                                        )
-                                      }
-                                      className="rounded-xl"
-                                    >
-                                      <FileText className="h-4 w-4 mr-1" />
-                                      Close
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <BusinessInquiriesSection
+                  inquiries={inquiries}
+                  stats={stats}
+                  formatDate={formatDate}
+                  onStatusUpdate={handleInquiryStatusUpdate}
+                />
               )}
 
               {activeSection === "analytics" && (
-                <div className=" mx-auto">
-                  <div className="mb-8">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Analytics
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      Track your business performance
-                    </p>
-                  </div>
-                  <Card className="rounded-3xl">
-                    <CardContent className="text-center py-12">
-                      <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Analytics Coming Soon
-                      </h3>
-                      <p className="text-gray-600">
-                        Detailed analytics and insights will be available here
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
+                <BusinessPlaceholderSection
+                  heading="Analytics"
+                  subtitle="Track your business performance"
+                  cardTitle="Analytics Coming Soon"
+                  cardDescription="Detailed analytics and insights will be available here"
+                  icon={BarChart3}
+                />
               )}
 
               {activeSection === "settings" && (
-                <div className=" mx-auto">
-                  <div className="mb-8">
-                    <h1 className="text-lg font-bold text-gray-900">
-                      Settings
-                    </h1>
-                    <p className="text-md text-gray-600">
-                      Manage your account and preferences
-                    </p>
-                  </div>
-                  <Card className="rounded-3xl">
-                    <CardContent className="text-center py-12">
-                      <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        Settings Coming Soon
-                      </h3>
-                      <p className="text-gray-600">
-                        Account settings and preferences will be available here
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
+                <BusinessPlaceholderSection
+                  heading="Settings"
+                  subtitle="Manage your account and preferences"
+                  cardTitle="Settings Coming Soon"
+                  cardDescription="Account settings and preferences will be available here"
+                  icon={Settings}
+                />
               )}
             </div>
           </div>
 
-          {/* Category Management Modal */}
-          <UnifiedModal
+          <BusinessCategoryModal
             isOpen={showCategoryModal}
-            onClose={(open) => {
-              if (!open) {
-                setShowCategoryModal(false);
-                setEditingCategory(null);
-                setCategoryFormData({
-                  name: "",
-                  description: "",
-                  parentId: "",
-                });
-              }
-            }}
-            title={editingCategory ? "Edit Category" : "Add New Category"}
-            description={
-              editingCategory
-                ? "Update category details"
-                : "Create a new category for your products"
+            editingCategory={editingCategory}
+            categoryFormData={categoryFormData}
+            setCategoryFormData={setCategoryFormData}
+            categories={categories}
+            sectionTitle={sectionTitles.categories}
+            onSectionTitleChange={(value) =>
+              setSectionTitles((prev) => ({
+                ...prev,
+                categories: value,
+              }))
             }
-            footer={
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowCategoryModal(false);
-                    setEditingCategory(null);
-                    setCategoryFormData({
-                      name: "",
-                      description: "",
-                      parentId: "",
-                    });
-                  }}
-                  className="rounded-xl"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={async () => {
-                    if (!categoryFormData.name.trim()) {
-                      toast({
-                        title: "Error",
-                        description: "Category name is required",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-
-                    setSavingCategory(true);
-                    try {
-                      const url = editingCategory
-                        ? `/api/business/categories?id=${editingCategory.id}`
-                        : "/api/business/categories";
-                      const method = editingCategory ? "PUT" : "POST";
-
-                      const response = await fetch(url, {
-                        method,
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(categoryFormData),
-                      });
-
-                      if (response.ok) {
-                        const data = await response.json();
-                        if (editingCategory) {
-                          setCategories((prev) =>
-                            prev.map((c) =>
-                              c.id === editingCategory.id ? data.category : c,
-                            ),
-                          );
-                        } else {
-                          setCategories((prev) => [...prev, data.category]);
-                        }
-                        setCategoryFormData({
-                          name: "",
-                          description: "",
-                          parentId: "",
-                        });
-                        setEditingCategory(null);
-                        setShowCategoryModal(false);
-                        await fetchData();
-                        toast({
-                          title: "Success",
-                          description: editingCategory
-                            ? "Category updated successfully!"
-                            : "Category created successfully!",
-                        });
-                      } else {
-                        const errorResult = await response.json();
-                        toast({
-                          title: "Error",
-                          description: `Failed to ${editingCategory ? "update" : "create"} category: ${errorResult.error}`,
-                          variant: "destructive",
-                        });
-                      }
-                    } catch (error) {
-                      toast({
-                        title: "Error",
-                        description: `Failed to ${editingCategory ? "update" : "create"} category`,
-                        variant: "destructive",
-                      });
-                    } finally {
-                      setSavingCategory(false);
-                    }
-                  }}
-                  disabled={savingCategory}
-                  className="rounded-xl"
-                >
-                  {savingCategory ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : editingCategory ? (
-                    "Update Category"
-                  ) : (
-                    "Add Category"
-                  )}
-                </Button>
-              </>
-            }
-          >
-            <div className="space-y-6">
-              {/* Section Title */}
-              <div>
-                <Label className="text-sm font-medium">Section Title</Label>
-                <div className="relative">
-                  <Input
-                    value={sectionTitles.categories}
-                    onChange={(e) =>
-                      setSectionTitles((prev) => ({
-                        ...prev,
-                        categories: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter section title"
-                    className="pl-10 rounded-md"
-                  />
-                  <Type className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Category Name *</Label>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter category name"
-                    value={categoryFormData.name}
-                    onChange={(e) =>
-                      setCategoryFormData((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    className="pl-10 rounded-md"
-                  />
-                  <FolderTree className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  placeholder="Describe this category"
-                  value={categoryFormData.description}
-                  onChange={(e) =>
-                    setCategoryFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  rows={3}
-                  className="rounded-md"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Parent Category</Label>
-                <Select
-                  value={categoryFormData.parentId || "none"}
-                  onValueChange={(value) =>
-                    setCategoryFormData((prev) => ({
-                      ...prev,
-                      parentId: value === "none" ? "" : value,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="rounded-md">
-                    <SelectValue placeholder="Select parent category (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No parent</SelectItem>
-                    {categories
-                      .filter((cat) => !cat.parentId)
-                      .map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </UnifiedModal>
+            savingCategory={savingCategory}
+            onClose={handleCloseCategoryModal}
+            onSave={handleSaveCategoryFromModal}
+          />
         </div>
 
         {/* Product Management Modal */}
-        <UnifiedModal
+        <BusinessProductModal
           isOpen={showProductDialog}
-          onClose={(open) => {
-            if (!open) {
-              setShowProductDialog(false);
-              setEditingProduct(null);
-              setProductFormData({
-                name: "",
-                description: "",
-                price: "",
-                image: "",
-                categoryId: "",
-                brandName: "",
-                additionalInfo: {},
-                inStock: true,
-                isActive: true,
-              });
-            }
-          }}
-          title={editingProduct ? "Edit Product" : "Add New Product"}
-          description={
-            editingProduct
-              ? "Update product details"
-              : "Create a new product or service"
-          }
-          footer={
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowProductDialog(false);
-                  setEditingProduct(null);
-                  setProductFormData({
-                    name: "",
-                    description: "",
-                    price: "",
-                    image: "",
-                    categoryId: "",
-                    brandName: "",
-                    additionalInfo: {},
-                    inStock: true,
-                    isActive: true,
-                  });
-                }}
-                className="rounded-xl"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={async () => {
-                  // Client-side validation
-                  if (!productFormData.name.trim()) {
-                    toast({
-                      title: "Validation Error",
-                      description: "Product name is required",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
+          editingProduct={editingProduct}
+          productFormData={productFormData}
+          setProductFormData={setProductFormData}
+          categories={categories}
+          brandContent={brandContent}
+          images={images}
+          mounted={mounted}
+          savingProduct={savingProduct}
+          newInfoKey={newInfoKey}
+          newInfoValue={newInfoValue}
+          onNewInfoKeyChange={setNewInfoKey}
+          onNewInfoValueChange={setNewInfoValue}
+          onAddInfo={handleAddInfo}
+          onRemoveInfo={handleRemoveInfo}
+          onClose={handleCloseProductDialog}
+          onSave={handleSaveProduct}
+        />
 
-                  if (productFormData.name.length < 2) {
-                    toast({
-                      title: "Validation Error",
-                      description:
-                        "Product name must be at least 2 characters long",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-
-                  setSavingProduct(true);
-                  try {
-                    const url = editingProduct
-                      ? `/api/business/products/${editingProduct.id}`
-                      : "/api/business/products";
-                    const method = editingProduct ? "PUT" : "POST";
-                    const response = await fetch(url, {
-                      method,
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(productFormData),
-                    });
-                    if (response.ok) {
-                      const data = await response.json();
-                      if (editingProduct) {
-                        // Update existing product
-                        setProducts((prev) =>
-                          prev.map((p) =>
-                            p.id === editingProduct.id ? data.product : p,
-                          ),
-                        );
-                        if (
-                          data.product.image &&
-                          !images.includes(data.product.image)
-                        ) {
-                          setImages((prev) => [
-                            ...new Set([...prev, data.product.image]),
-                          ]);
-                        }
-                        // Update stats if active status changed
-                        if (editingProduct.isActive !== data.product.isActive) {
-                          setStats((prev) => ({
-                            ...prev,
-                            activeProducts: data.product.isActive
-                              ? prev.activeProducts + 1
-                              : prev.activeProducts - 1,
-                          }));
-                        }
-                      } else {
-                        // Add new product
-                        setProducts((prev) => [...prev, data.product]);
-                        if (data.product.image) {
-                          setImages((prev) => [
-                            ...new Set([...prev, data.product.image]),
-                          ]);
-                        }
-                        setStats((prev) => ({
-                          ...prev,
-                          totalProducts: prev.totalProducts + 1,
-                          activeProducts: data.product.isActive
-                            ? prev.activeProducts + 1
-                            : prev.activeProducts,
-                        }));
-                      }
-                      setShowProductDialog(false);
-                      setEditingProduct(null);
-                      setProductFormData({
-                        name: "",
-                        description: "",
-                        price: "",
-                        image: "",
-                        categoryId: "",
-                        brandName: "",
-                        additionalInfo: {},
-                        inStock: true,
-                        isActive: true,
-                      });
-                      toast({
-                        title: "Success",
-                        description: editingProduct
-                          ? "Product updated successfully!"
-                          : "Product added successfully!",
-                      });
-                    } else {
-                      const errorResult = await response.json();
-                      toast({
-                        title: "Error",
-                        description: `Failed to ${editingProduct ? "update" : "add"} product: ${errorResult.error}`,
-                        variant: "destructive",
-                      });
-                    }
-                  } catch (error) {
-                    toast({
-                      title: "Error",
-                      description: `Failed to ${editingProduct ? "update" : "add"} product. Please try again.`,
-                      variant: "destructive",
-                    });
-                  } finally {
-                    setSavingProduct(false);
-                  }
-                }}
-                disabled={savingProduct}
-                className="rounded-xl"
-              >
-                {savingProduct ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingProduct ? "Update Product" : "Add Product"}
-                  </>
-                )}
-              </Button>
-            </>
-          }
-        >
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Product Name *</Label>
-              <div className="relative">
-                <Input
-                  id="name"
-                  value={productFormData.name}
-                  onChange={(e) =>
-                    setProductFormData((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter product name"
-                  required
-                  className="pl-10 rounded-md"
-                />
-                <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={productFormData.description}
-                onChange={(e) =>
-                  setProductFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Describe your product or service"
-                rows={4}
-                className="rounded-md"
-              />
-            </div>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="w-full md:w-1/2 space-y-2">
-                <Label htmlFor="price">Price</Label>
-                <div className="relative">
-                  <Input
-                    id="price"
-                    value={productFormData.price}
-                    onChange={(e) =>
-                      setProductFormData((prev) => ({
-                        ...prev,
-                        price: e.target.value,
-                      }))
-                    }
-                    placeholder="e.g., ₹50, Starting at ₹100, Free consultation"
-                    className="pl-10 rounded-md"
-                  />
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-              <div className="w-full md:w-1/2 space-y-2">
-                <Label htmlFor="image">Image URL</Label>
-                <div className="relative">
-                  <Input
-                    id="image"
-                    value={productFormData.image}
-                    onChange={(e) =>
-                      setProductFormData((prev) => ({
-                        ...prev,
-                        image: e.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                    className="pl-10 rounded-md"
-                  />
-                  <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Select Existing Image</Label>
-              <Select
-                key={images.length}
-                value={productFormData.image || "no-image"}
-                onValueChange={(value) =>
-                  setProductFormData((prev) => ({
-                    ...prev,
-                    image: value === "no-image" ? "" : value,
-                  }))
-                }
-              >
-                <SelectTrigger className="rounded-md w-full">
-                  <SelectValue placeholder="Choose an existing image" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no-image">No image</SelectItem>
-                  {images.map((image) => {
-                    // Display with image and ellipsized URL
-                    const MAX_URL_LENGTH = 32;
-                    let displayUrl = image;
-                    if (image.length > MAX_URL_LENGTH) {
-                      displayUrl = image.slice(0, MAX_URL_LENGTH) + "...";
-                    }
-                    return (
-                      <SelectItem
-                        className=" flex items-center gap-2"
-                        key={image}
-                        value={image}
-                      >
-                        <img
-                          src={image}
-                          alt={displayUrl}
-                          className="inline-block h-8 w-8  rounded-full object-cover border pr-2"
-                          style={{ minWidth: "2rem" }}
-                        />
-                        <span
-                          className="truncate border-l px-2 border-l-gray-300 "
-                          title={image}
-                        >
-                          {displayUrl}
-                        </span>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              {mounted && (
-                <ImageUpload
-                  onUpload={(url) =>
-                    setProductFormData((prev) => ({
-                      ...prev,
-                      image: url,
-                    }))
-                  }
-                />
-              )}
-            </div>
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Category Selection */}
-              <div className="w-full md:w-1/2 space-y-2">
-                <Label>Category</Label>
-                <Select
-                  key={categories.length}
-                  value={productFormData.categoryId}
-                  onValueChange={(value) =>
-                    setProductFormData((prev) => ({
-                      ...prev,
-                      categoryId: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="rounded-md w-full">
-                    <SelectValue placeholder="Choose a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Brand Selection */}
-              <div className="w-full md:w-1/2 space-y-2">
-                <Label>Brand</Label>
-                <div className="relative">
-                  <Select
-                    value={productFormData.brandName}
-                    onValueChange={(value) =>
-                      setProductFormData((prev) => ({
-                        ...prev,
-                        brandName: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="rounded-md w-full">
-                      <SelectValue placeholder="Choose a brand" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="max-h-48 overflow-y-auto">
-                        {(brandContent.brands || []).map((brand: any) => (
-                          <SelectItem key={brand.name} value={brand.name}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </div>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex border-t border-b py-2 items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="inStock"
-                  checked={productFormData.inStock}
-                  onCheckedChange={(checked) =>
-                    setProductFormData((prev) => ({
-                      ...prev,
-                      inStock: checked,
-                    }))
-                  }
-                />
-                <Label htmlFor="inStock">In Stock</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isActive"
-                  checked={productFormData.isActive}
-                  onCheckedChange={(checked) =>
-                    setProductFormData((prev) => ({
-                      ...prev,
-                      isActive: checked,
-                    }))
-                  }
-                />
-                <Label htmlFor="isActive">Visible </Label>
-              </div>
-            </div>
-
-            {/* Additional Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Additional Information</h3>
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <Input
-                      placeholder="Key (e.g., Material)"
-                      value={newInfoKey || ""}
-                      onChange={(e) => setNewInfoKey(e.target.value)}
-                      className="pl-10 rounded-md"
-                    />
-                    <Type className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        placeholder="Value (e.g., Cotton)"
-                        value={newInfoValue || ""}
-                        onChange={(e) => setNewInfoValue(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddInfo();
-                          }
-                        }}
-                        className="pl-10 rounded-md"
-                      />
-                      <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleAddInfo}
-                      disabled={!newInfoKey?.trim() || !newInfoValue?.trim()}
-                      className="rounded-md"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                {productFormData.additionalInfo &&
-                  Object.keys(productFormData.additionalInfo).length > 0 && (
-                    <div className="overflow-x-auto mt-4">
-                      <table className="min-w-full bg-gray-50 rounded-md">
-                        <tbody>
-                          {Object.entries(productFormData.additionalInfo).map(
-                            ([key, value], index) => (
-                              <tr
-                                key={index}
-                                className="border-b last:border-b-0"
-                              >
-                                <td className="px-3 py-2 font-medium text-sm">
-                                  {key}
-                                </td>
-                                <td className="px-3 py-2 text-sm">{value}</td>
-                                <td className="py-2 text-right pr-4">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleRemoveInfo(key)}
-                                    className="h-6 w-6 p-0 hover:bg-gray-200 rounded-full flex items-center justify-center ml-auto"
-                                    title="Remove field"
-                                  >
-                                    <span className="sr-only">Remove</span>
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </td>
-                              </tr>
-                            ),
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-              </div>
-            </div>
-          </div>
-        </UnifiedModal>
-
-        {/* Individual Delete/Confirmation Dialogs */}
-        
-        {/* Delete Product Dialog */}
-        <Dialog open={showDeleteProductDialog} onOpenChange={setShowDeleteProductDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Product</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete "{productToDelete?.name}"? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDeleteProductDialog(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmDeleteProduct}>
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Category Dialog */}
-        <Dialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Category</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete "{categoryToDelete?.name}"? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDeleteCategoryDialog(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmDeleteCategory}>
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Brand Dialog */}
-        <Dialog open={showDeleteBrandDialog} onOpenChange={setShowDeleteBrandDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Brand</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete "{brandToDeleteName}"? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDeleteBrandDialog(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmDeleteBrand}>
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Portfolio Image Dialog */}
-        <Dialog open={showDeletePortfolioDialog} onOpenChange={setShowDeletePortfolioDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Portfolio Image</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this portfolio image? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDeletePortfolioDialog(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmDeletePortfolio}>
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Bulk Activate Products Dialog */}
-        <Dialog open={showBulkActivateDialog} onOpenChange={setShowBulkActivateDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Activate Products</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to activate {selectedProducts.length} product{selectedProducts.length > 1 ? "s" : ""}?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowBulkActivateDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={confirmBulkActivate}>
-                Activate
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Bulk Deactivate Products Dialog */}
-        <Dialog open={showBulkDeactivateDialog} onOpenChange={setShowBulkDeactivateDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Deactivate Products</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to deactivate {selectedProducts.length} product{selectedProducts.length > 1 ? "s" : ""}?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowBulkDeactivateDialog(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmBulkDeactivate}>
-                Deactivate
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Bulk Delete Products Dialog */}
-        <Dialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Products</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete {selectedProducts.length} product{selectedProducts.length > 1 ? "s" : ""}? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowBulkDeleteDialog(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmBulkDelete}>
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <BusinessConfirmationDialogs
+          showDeleteProductDialog={showDeleteProductDialog}
+          setShowDeleteProductDialog={setShowDeleteProductDialog}
+          productToDelete={productToDelete}
+          onConfirmDeleteProduct={confirmDeleteProduct}
+          showDeleteCategoryDialog={showDeleteCategoryDialog}
+          setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
+          categoryToDelete={categoryToDelete}
+          onConfirmDeleteCategory={confirmDeleteCategory}
+          showDeleteBrandDialog={showDeleteBrandDialog}
+          setShowDeleteBrandDialog={setShowDeleteBrandDialog}
+          brandToDeleteName={brandToDeleteName}
+          onConfirmDeleteBrand={confirmDeleteBrand}
+          showDeletePortfolioDialog={showDeletePortfolioDialog}
+          setShowDeletePortfolioDialog={setShowDeletePortfolioDialog}
+          onConfirmDeletePortfolio={confirmDeletePortfolio}
+          showBulkActivateDialog={showBulkActivateDialog}
+          setShowBulkActivateDialog={setShowBulkActivateDialog}
+          showBulkDeactivateDialog={showBulkDeactivateDialog}
+          setShowBulkDeactivateDialog={setShowBulkDeactivateDialog}
+          showBulkDeleteDialog={showBulkDeleteDialog}
+          setShowBulkDeleteDialog={setShowBulkDeleteDialog}
+          selectedProductsCount={selectedProducts.length}
+          onConfirmBulkActivate={confirmBulkActivate}
+          onConfirmBulkDeactivate={confirmBulkDeactivate}
+          onConfirmBulkDelete={confirmBulkDelete}
+        />
       </div>
     </div>
   );

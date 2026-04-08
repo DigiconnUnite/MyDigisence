@@ -15,7 +15,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('Login request body received')
 
-    const { email, password, force = false } = loginSchema.parse(body)
+    const { email: rawEmail, password, force = false } = loginSchema.parse(body)
+    // Normalize email to lowercase for case-insensitive matching
+    const email = rawEmail.toLowerCase()
     console.log(`Login attempt for email: ${email}, force: ${force}`)
 
     const user = await authenticateUser(email, password)

@@ -10,7 +10,10 @@ const forgotPasswordSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = forgotPasswordSchema.parse(body);
+    const { email: rawEmail } = forgotPasswordSchema.parse(body);
+    
+    // Normalize email to lowercase for case-insensitive matching
+    const email = rawEmail.toLowerCase();
 
     console.log('[Forgot Password] Processing request for:', email);
 

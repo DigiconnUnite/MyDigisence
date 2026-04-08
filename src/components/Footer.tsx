@@ -193,16 +193,16 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="pt-6 border-t border-gray-700/50">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-center md:text-left order-2 md:order-1">
+          <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
+            <div className="text-center md:text-left md:justify-self-start">
               <p className="text-gray-400 text-sm">
-                © 2025 <strong className="text-white">DigiSence</strong>. All
+                © 2025 <strong className="text-white">mydigisence</strong>. All
                 rights reserved.
               </p>
             </div>
 
             {/* Centered Powered by Digiconn Unite */}
-            <div className="order-1 md:order-2 flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 md:justify-self-center">
               <p className="text-gray-400 text-sm text-center">
                 Powered by{" "}
                 <Link
@@ -218,7 +218,7 @@ export default function Footer() {
             </div>
 
             {/* Privacy & Terms Links */}
-            <div className="flex gap-2 text-sm order-3">
+            <div className="flex gap-2 text-sm justify-center md:justify-self-end">
               <Link
                 href="/privacy"
                 className="text-gray-400 hover:text-primary transition-colors duration-300"

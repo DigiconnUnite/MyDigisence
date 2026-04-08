@@ -41,7 +41,8 @@ export async function POST(
 
     // Idempotency/recovery: if an account already exists for this email,
     // complete the inquiry status instead of failing permanently.
-    const existingUser = await db.user.findUnique({ where: { email: inquiry.email } })
+    const normalizedEmail = inquiry.email.toLowerCase()
+    const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } })
     if (existingUser) {
       const existingBusiness = inquiry.type === 'BUSINESS'
         ? await db.business.findUnique({ where: { adminId: existingUser.id } })
@@ -83,7 +84,7 @@ export async function POST(
       const result = await db.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: {
-            email: inquiry.email,
+            email: normalizedEmail,
             name: inquiry.name,
             password: hashedPassword,
             role: 'BUSINESS_ADMIN',
@@ -119,7 +120,7 @@ export async function POST(
       const result = await db.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: {
-            email: inquiry.email,
+            email: normalizedEmail,
             name: inquiry.name,
             password: hashedPassword,
             role: 'PROFESSIONAL_ADMIN',

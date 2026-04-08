@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { QueryProvider } from "@/lib/queryProvider";
 import SmoothScrollProvider from "@/components/SmoothScrollProvider";
-
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-archivo",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://mydigisence.com'),
@@ -97,7 +90,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${archivo.variable} antialiased hide-scrollbar bg-background text-foreground`}
+        className="antialiased hide-scrollbar bg-background text-foreground"
       >
         <ThemeProvider>
           <QueryProvider>

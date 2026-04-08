@@ -78,10 +78,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     const validatedData = registrationInquirySchema.parse(body)
+    
+    // Normalize email to lowercase for case-insensitive matching
+    const normalizedEmail = validatedData.email.toLowerCase()
 
     // Check for duplicate email in existing users
     const existingUser = await db.user.findUnique({
-      where: { email: validatedData.email }
+      where: { email: normalizedEmail }
     })
 
     if (existingUser) {
@@ -94,7 +97,7 @@ export async function POST(request: NextRequest) {
     // Check for duplicate email in pending inquiries
     const existingInquiry = await db.registrationInquiry.findFirst({
       where: {
-        email: validatedData.email,
+        email: normalizedEmail,
         status: { in: ['PENDING', 'UNDER_REVIEW'] }
       }
     })

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,22 @@ export default function ProfessionalRegistrationPage() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const oauthError = searchParams.get("error");
+    if (oauthError) {
+      setError(oauthError);
+    }
+  }, [searchParams]);
+
+  const handleGoogleSignup = () => {
+    if (!formData.termsAccepted) {
+      setError("Please accept Terms of Service and Privacy Policy before continuing with Google.");
+      return;
+    }
+    window.location.href = "/api/auth/google?mode=signup&role=PROFESSIONAL_ADMIN";
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -363,6 +379,16 @@ export default function ProfessionalRegistrationPage() {
               )}
 
               {/* Submit Button */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11 border-slate-300 bg-white hover:bg-slate-50 text-slate-700"
+                onClick={handleGoogleSignup}
+                disabled={loading}
+              >
+                Sign up with Google
+              </Button>
+
               <Button
                 type="submit"
                 className="w-full h-11  bg-slate-800 cursor-pointer hover:opacity-90 text-white font-medium transition-all transform hover:-translate-y-0.5"

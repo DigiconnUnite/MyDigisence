@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Archivo:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "tailwind-rounded-out";
@@ -45,8 +45,8 @@ body {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-sans: Archivo, sans-serif;
-  --font-heading: Archivo, sans-serif;
+  --font-sans: "Roboto", Archivo, sans-serif;
+  --font-heading: "Roboto", Archivo, sans-serif;
   --font-mono: JetBrains Mono, monospace;
   --font-serif: Source Serif 4, serif;
 
@@ -117,8 +117,8 @@ body {
   --sidebar-accent-foreground: oklch(0.4910 0.1442 43.4774);
   --sidebar-border: oklch(0.9271 0.0075 260.7315);
   --sidebar-ring: oklch(0.7857 0.1716 68.5720);
-  --font-sans: Archivo, sans-serif;
-  --font-heading: Archivo, sans-serif;
+  --font-sans: "Roboto", Archivo, sans-serif;
+  --font-heading: "Roboto", Archivo, sans-serif;
   --font-serif: Source Serif 4, serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.475rem;
@@ -176,8 +176,8 @@ body {
   --sidebar-accent-foreground: oklch(0.9277 0.1183 95.5956);
   --sidebar-border: oklch(0.3715 0 0);
   --sidebar-ring: oklch(0.7857 0.1716 68.5720);
-  --font-sans: Archivo, sans-serif;
-  --font-heading: Archivo, sans-serif;
+  --font-sans: "Roboto", Archivo, sans-serif;
+  --font-heading: "Roboto", Archivo, sans-serif;
   --font-serif: Source Serif 4, serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.475rem;
@@ -216,16 +216,16 @@ html {
 }
 
 
-/* Archivo Font Classes */
+/* Primary font classes */
 
 /* Main font for entire website */
 .font-archivo {
-  font-family: "Archivo", var(--font-sans);
+  font-family: var(--font-sans);
 }
 
 /* Bold font for headings */
 .font-heading {
-  font-family: "Archivo", var(--font-heading);
+  font-family: var(--font-heading);
   font-weight: 700;
   letter-spacing: -0.02em;
 }

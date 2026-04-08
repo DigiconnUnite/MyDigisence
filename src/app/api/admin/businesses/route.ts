@@ -180,10 +180,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const createData = createBusinessSchema.parse(body)
+    const normalizedEmail = createData.email.trim().toLowerCase()
 
     // Check if email already exists
     const existingUser = await db.user.findUnique({
-      where: { email: createData.email },
+      where: { email: normalizedEmail },
     })
 
     if (existingUser) {
@@ -206,7 +207,7 @@ export async function POST(request: NextRequest) {
     const result = await db.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
-          email: createData.email,
+          email: normalizedEmail,
           password: hashedPassword,
           name: createData.adminName,
           role: 'BUSINESS_ADMIN',
@@ -220,7 +221,7 @@ export async function POST(request: NextRequest) {
           description: createData.description && createData.description !== '' ? createData.description : undefined,
           address: createData.address && createData.address !== '' ? createData.address : undefined,
           phone: createData.phone && createData.phone !== '' ? createData.phone : undefined,
-          email: createData.email,
+          email: normalizedEmail,
           website: createData.website && createData.website !== '' ? createData.website : undefined,
           categoryId: createData.categoryId && createData.categoryId !== '' ? createData.categoryId : undefined,
           adminId: user.id,
@@ -255,7 +256,7 @@ export async function POST(request: NextRequest) {
     try {
       await sendAccountCreationNotification({
         name: createData.adminName,
-        email: createData.email,
+        email: normalizedEmail,
         password: createData.password,
         accountType: 'business',
         loginUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://mydigisence.com'}/login`,
@@ -277,7 +278,7 @@ export async function POST(request: NextRequest) {
       success: true,
       business: result.business,
       loginCredentials: {
-        email: createData.email,
+        email: normalizedEmail,
         password: createData.password,
       },
     }, {

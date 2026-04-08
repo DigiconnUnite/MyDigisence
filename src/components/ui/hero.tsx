@@ -163,12 +163,12 @@ export default function HeroSectionOne() {
   }, [isDragging]);
 
   return (
+    
     <div
-      className="relative pt-28 pb-12 sm:py-16 md:py-20 lg:py-28 min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] lg:min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
+      className="relative pt-24 pb-10 sm:py-14 md:py-18 lg:py-24  border border-white/20 shadow-xl min-h-[calc(112vh-1.5rem)] sm:min-h-[calc(115vh-2rem)] lg:min-h-[calc(120vh-2.5rem)] overflow-hidden bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: "url('/footer-bg.jpg')" }}
     >
-      {/* White gradient overlay at bottom for smooth transition to next section */}
-      <div className="absolute top-0 left-0 right-0 h-32 sm:h-40 md:h-48 lg:h-54 bg-gradient-to-t from-transparent to-black z-10"></div>
+  
 
       {/* LAYER 3: Content (z-20 & z-30) */}
       <div className="relative mx-auto flex max-w-7xl flex-col items-center justify-center px-4 sm:px-6 z-20">
