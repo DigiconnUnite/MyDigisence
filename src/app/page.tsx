@@ -37,12 +37,9 @@ export default function HomePage() {
 
   return (
     <>
-      {/* {isLoading && <HomePreloader />} */}
       <UnifiedPublicLayout variant="transparent" sidebarVariant="home">
-      {/* Main Content Container with gradient background */}
-      <div className="secondary-light-gradient pt-0  md:pb-0">
+        <div className="secondary-light-gradient pt-0  md:pb-0">
         <HeroSectionOne />
-
         {/* Who Is It For? Section */}
         <section className="py-10 md:py-20 bg-white">
           <div className="container  mx-auto px-4">

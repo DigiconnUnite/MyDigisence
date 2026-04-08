@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, Suspense } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { getOptimizedImageUrl } from '@/lib/image-utils'
@@ -16,7 +15,6 @@ import {
   Building2,
   MapPin,
   Phone,
-  Mail,
   ShoppingBag,
   Coffee,
   ShoppingCart,
@@ -231,27 +229,28 @@ function BusinessesContent() {
         <section className="container mx-auto pb-16 sm:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 mt-8 md:mt-12">
           <div className="">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-2 sm:gap-4">
-                {Array.from({ length: 8 }).map((_, i) => (
+              <div className="grid grid-cols-1 justify-items-center gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
                   <Card
                     key={i}
-                    className="overflow-hidden border pt-0 rounded-2xl bg-white flex flex-col h-full relative"
+                    className="h-full w-full max-w-[420px] overflow-hidden rounded-2xl border bg-white flex flex-col md:flex-row"
                   >
-                    {/* Skeleton Layout Matching New Design */}
-                    <div className="p-3 sm:p-4 flex flex-col h-full relative z-10 pointer-events-none">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <Skeleton className="h-14 w-14 sm:h-16 sm:w-16 rounded-full shrink-0" />
-                        <div className="flex-1 space-y-2">
-                          <Skeleton className="h-5 w-3/4" />
-                          <Skeleton className="h-3 w-1/2" />
-                        </div>
-                      </div>
-                      <div className="space-y-2 mb-3">
+                    {/* Left Side Skeleton */}
+                    <div className="w-full md:w-36 shrink-0 p-1.5 pb-0 sm:p-2.5 sm:pb-2.5">
+                      <Skeleton className="mx-auto h-28 w-28 rounded-xl sm:h-32 sm:w-32 md:h-36 md:w-36" />
+                    </div>
+                    {/* Right Side Skeleton */}
+                    <div className="p-3 sm:p-4 flex-1 space-y-3">
+                      <Skeleton className="h-6 w-2/3" />
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-3 w-1/3" />
+                      <div className="space-y-2">
                         <Skeleton className="h-3 w-full" />
-                        <Skeleton className="h-3 w-2/3" />
+                        <Skeleton className="h-3 w-5/6" />
                       </div>
-                      <div className="mt-auto pt-2">
-                        <Skeleton className="h-9 w-full" />
+                      <div className="flex gap-2 pt-2">
+                        <Skeleton className="h-9 w-20 rounded-full" />
+                        <Skeleton className="h-9 w-24 rounded-full" />
                       </div>
                     </div>
                   </Card>
@@ -281,16 +280,16 @@ function BusinessesContent() {
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 justify-items-center gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {filteredBusinesses.map((business) => (
                     <Link
                       key={business.id}
                       href={`/catalog/${business.slug}`}
-                      className="group block h-full"
+                      className="group block w-full max-w-[420px]"
                       aria-label={`View details for ${business.name}`}
                       onClick={() => setLoadingCardId(business.id)}
                     >
-                      <Card className="relative h-full overflow-hidden py-0 rounded-2xl border border-slate-400/90 bg-white/95 shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-400/80 hover:shadow-none">
+                      <Card className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-400/90 bg-white/95 py-0 shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-400/80 hover:shadow-none">
                         {loadingCardId === business.id && (
                           <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
                             <div className="flex flex-col items-center gap-2">
@@ -302,90 +301,86 @@ function BusinessesContent() {
                           </div>
                         )}
 
-                        <div className="p-1.5 pb-0">
-                          <div className="h-24 rounded-xl bg-linear-to-r from-slate-900 via-slate-800 to-cyan-800 sm:h-28 md:h-32" />
-                        </div>
-
-                        <div className="p-3 sm:p-4">
-                          <div className="-mt-10 mb-3 flex items-end justify-between sm:-mt-12">
-                            {business.logo ? (
-                              <img
-                                src={getOptimizedImageUrl(business.logo, {
-                                  width: 88,
-                                  height: 88,
-                                  quality: 90,
-                                  format: "auto",
-                                  crop: "fill",
-                                  gravity: "center",
-                                })}
-                                alt={business.name}
-                                className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-md sm:h-24 sm:w-24"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-linear-to-br from-slate-200 to-slate-300 shadow-md sm:h-24 sm:w-24">
-                                <Building2 className="h-9 w-9 text-slate-500 sm:h-10 sm:w-10" />
-                              </div>
-                            )}
-
-                            {business.address && (
-                              <div className="mb-1 inline-flex max-w-[58%] items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 sm:max-w-[60%] sm:text-xs">
-                                <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                                <span className="truncate" title={business.address}>
-                                  {business.address}
-                                </span>
-                              </div>
-                            )}
+                        <div className="flex flex-col gap-2 md:flex-row md:gap-3">
+                          {/* Left Side - Image Section */}
+                          <div className="w-full md:w-36 shrink-0 p-1.5 pb-0 sm:p-2.5 sm:pb-2.5">
+                            <div className="mx-auto flex h-28 w-28 items-center justify-center overflow-hidden rounded-xl bg-slate-50 sm:h-32 sm:w-32 md:h-36 md:w-36">
+                              {business.logo ? (
+                                <img
+                                  src={getOptimizedImageUrl(business.logo, {
+                                    width: 144,
+                                    height: 144,
+                                    quality: 90,
+                                    format: "auto",
+                                    crop: "fill",
+                                    gravity: "center",
+                                  })}
+                                  alt={business.name}
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <Building2 className="h-16 w-16 text-slate-400 opacity-40" />
+                              )}
+                            </div>
                           </div>
 
-                          <div className="space-y-3">
-                            <div className="min-w-0">
-                              <h3 className="truncate text-base font-bold text-slate-800 transition-colors group-hover:text-slate-950 sm:text-lg">
-                                {business.name}
-                              </h3>
-                              {business.category && (
-                                <Badge
-                                  variant="secondary"
-                                  className="mt-2 inline-flex max-w-full truncate border-transparent bg-slate-100 px-2.5 py-0 text-[11px] font-medium text-slate-600 sm:text-xs"
-                                >
-                                  {business.category.name}
-                                </Badge>
+                          {/* Right Side - Content Section */}
+                          <div className="min-w-0 p-3 sm:p-4 flex-1 flex flex-col">
+                            <div className="space-y-3">
+                              <div className="min-w-0">
+                                <h3 className="line-clamp-2 wrap-break-word text-base font-bold text-slate-800 transition-colors group-hover:text-slate-950 sm:text-lg">
+                                  {business.name}
+                                </h3>
+                                {(business.category || business.address) && (
+                                  <div className="mt-2 flex max-w-full flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-600 sm:text-xs md:flex-nowrap">
+                                    {business.category && (
+                                      <span
+                                        className="inline-flex max-w-full items-center gap-1"
+                                        title={business.category.name}
+                                      >
+                                        <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                        <span className="truncate">
+                                          {business.category.name}
+                                        </span>
+                                      </span>
+                                    )}
+                                    {business.category && business.address && (
+                                      <span className="text-slate-400">•</span>
+                                    )}
+                                    {business.address && (
+                                      <span className="inline-flex min-w-0 items-center gap-1">
+                                        <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                        <span
+                                          className="max-w-56 truncate"
+                                          title={business.address}
+                                        >
+                                          {business.address}
+                                        </span>
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              {business.description ? (
+                                <p className="line-clamp-2 wrap-break-word text-xs leading-5  text-slate-500 sm:text-sm">
+                                  {business.description}
+                                </p>
+                              ) : (
+                                <p className="line-clamp-2 wrap-break-word text-xs leading-relaxed text-slate-400 sm:text-sm">
+                                  View profile, offerings, and contact details
+                                  for this business.
+                                </p>
                               )}
                             </div>
 
-                            {business.description ? (
-                              <p className="line-clamp-2 text-xs leading-relaxed text-slate-500 sm:text-sm">
-                                {business.description}
-                              </p>
-                            ) : (
-                              <p className="line-clamp-2 text-xs leading-relaxed text-slate-400 sm:text-sm">
-                                View profile, offerings, and contact details for this business.
-                              </p>
-                            )}
-
-                            <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 sm:text-xs">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
-                                <ShoppingBag className="h-3 w-3" />
-                                {business.products?.length ?? 0} products
-                              </span>
-                              {business.phone && (
-                                <span className="rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
-                                  Phone available
-                                </span>
-                              )}
-                              {business.email && (
-                                <span className="rounded-full bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
-                                  Email available
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex gap-2 pt-1">
+                            <div className="mt-auto flex flex-wrap gap-2 pt-3 md:flex-nowrap">
                               {business.phone && (
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="h-9 flex-1 rounded-full border-slate-200 bg-white text-[11px] text-slate-700 shadow-none transition-colors hover:bg-slate-50 hover:text-slate-900 sm:text-xs"
+                                  className="h-9 min-w-0 flex-1 rounded-full border-slate-200 bg-white text-[11px] text-slate-700 shadow-none transition-colors hover:bg-slate-50 hover:text-slate-900 sm:text-xs"
                                   asChild
                                 >
                                   <a
@@ -400,7 +395,7 @@ function BusinessesContent() {
                               {business.phone && (
                                 <Button
                                   size="sm"
-                                  className="h-9 flex-1 rounded-full border-green-600 bg-green-600 text-[11px] text-white shadow-none transition-colors hover:bg-green-700 sm:text-xs"
+                                  className="h-9 min-w-0 flex-1 rounded-full border-green-600 bg-green-600 text-[11px] text-white shadow-none transition-colors hover:bg-green-700 sm:text-xs"
                                   asChild
                                 >
                                   <a
@@ -414,22 +409,6 @@ function BusinessesContent() {
                                   >
                                     <FaWhatsapp className="mr-1 h-3.5 w-3.5" />
                                     <span className="truncate">WhatsApp</span>
-                                  </a>
-                                </Button>
-                              )}
-                              {business.email && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-9 flex-1 rounded-full border-slate-200 bg-white text-[11px] text-slate-700 shadow-none transition-colors hover:bg-slate-50 hover:text-slate-900 sm:text-xs"
-                                  asChild
-                                >
-                                  <a
-                                    href={`mailto:${business.email}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Mail className="mr-1 h-3.5 w-3.5" />
-                                    <span className="truncate">Email</span>
                                   </a>
                                 </Button>
                               )}

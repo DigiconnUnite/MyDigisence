@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,18 @@ export default function BusinessLoginPage() {
   const [showForceButton, setShowForceButton] = useState(false);
   const { login, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleGoogleLogin = () => {
-    window.location.href = "/api/auth/google";
+    window.location.href = "/api/auth/google?mode=login&role=BUSINESS_ADMIN";
   };
+
+  useEffect(() => {
+    const oauthError = searchParams.get("error");
+    if (oauthError) {
+      setError(oauthError);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -240,6 +248,16 @@ export default function BusinessLoginPage() {
               )}
 
               {/* Submit Button */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11 border-slate-300 bg-white hover:bg-slate-50 text-slate-700"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+              >
+                Continue with Google
+              </Button>
+
               <Button
                 type="submit"
                 className="w-full h-11 shadow-lg bg-slate-800 cursor-pointer hover:opacity-90 text-white font-medium transition-all transform hover:-translate-y-0.5"
