@@ -121,7 +121,15 @@ function BusinessesContent() {
       } else {
         params.delete('q')
       }
-      router.push(`?${params.toString()}`, { scroll: false })
+
+      const currentQ = searchParams.get('q') || ''
+      const newQ = params.get('q') || ''
+
+      // Only push when the query actually changes to avoid navigation loop
+      if (currentQ !== newQ) {
+        const target = params.toString() ? `${pathname}?${params.toString()}` : pathname
+        router.push(target, { scroll: false })
+      }
     }, 300)
     return () => clearTimeout(timer)
   }, [searchTerm, router, searchParams])

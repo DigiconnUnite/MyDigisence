@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev",
     "build": "next build --webpack",
     "start": "NODE_ENV=production node server.js",
+    "dev:server": "node server.js",
     "lint": "eslint .",
     "test:admin-hooks": "tsx test-suite/admin-hooks-smoke-tests.ts",
     "postinstall": "prisma generate",

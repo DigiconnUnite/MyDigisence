@@ -301,8 +301,8 @@ export default function BusinessAdminDashboard() {
     });
   }, []);
 
-  const { loadBusinessDashboardData, cancelLoad } = useBusinessDataLoader({
-    onSuccess: ({ data, stats: nextStats, images: nextImages }) => {
+  const onSuccess = useCallback(
+    ({ data, stats: nextStats, images: nextImages }) => {
       applyBusinessFormState(data.business);
       setCategories(data.categories);
       setProducts(data.products);
@@ -310,14 +310,26 @@ export default function BusinessAdminDashboard() {
       setImages(nextImages);
       setStats(nextStats);
     },
-    onError: (message) => {
+    [applyBusinessFormState],
+  );
+
+  const onError = useCallback(
+    (message: string) => {
       toast({
         title: "Error",
         description: `${message}. Please refresh the page.`,
         variant: "destructive",
       });
     },
-    onFinally: () => setIsLoading(false),
+    [toast],
+  );
+
+  const onFinally = useCallback(() => setIsLoading(false), []);
+
+  const { loadBusinessDashboardData, cancelLoad } = useBusinessDataLoader({
+    onSuccess,
+    onError,
+    onFinally,
   });
 
   const fetchData = useCallback(async () => {
