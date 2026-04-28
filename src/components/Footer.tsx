@@ -28,7 +28,7 @@ export default function Footer() {
                 <img
                   src="/logo-header.png"
                   alt="DigiSence Logo"
-                  className="h-auto w-50 filter invert hue-rotate-180 transition-transform duration-300 group-hover:scale-110"
+                  className="h-9 w-auto filter invert hue-rotate-180 transition-transform duration-300 group-hover:scale-110"
                 />
               </div>
             </Link>
