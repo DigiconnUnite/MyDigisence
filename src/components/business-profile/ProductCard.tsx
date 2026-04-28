@@ -22,7 +22,7 @@ export default function ProductCard({
   return (
     <Card
       id={`product-${product.id}`}
-      className="group overflow-hidden p-0 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-2xl hover:-translate-y-0.5 hover:border-orange-200 transition-all duration-300 flex flex-col h-full "
+      className="group overflow-hidden p-0 rounded-2xl border border-slate-200/80 transition-all duration-300 flex flex-col h-full"
     >
       <div
         className="relative w-full rounded-xl  h-52 md:h-64 overflow-hidden cursor-pointer bg-white p-2"

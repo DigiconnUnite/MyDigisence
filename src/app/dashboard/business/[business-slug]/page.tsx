@@ -76,6 +76,7 @@ import type {
   Inquiry,
   PortfolioContent,
   Product,
+  BusinessDashboardData,
 } from "../types";
 import {
   buildBusinessStats,
@@ -302,7 +303,17 @@ export default function BusinessAdminDashboard() {
   }, []);
 
   const onSuccess = useCallback(
-    ({ data, stats: nextStats, images: nextImages }) => {
+    (
+      {
+        data,
+        stats: nextStats,
+        images: nextImages,
+      }: {
+        data: BusinessDashboardData;
+        stats: ReturnType<typeof buildBusinessStats>;
+        images: string[];
+      },
+    ) => {
       applyBusinessFormState(data.business);
       setCategories(data.categories);
       setProducts(data.products);
@@ -1030,19 +1041,21 @@ export default function BusinessAdminDashboard() {
   };
 
   const handleSavePortfolioImages = async (images: { url: string; alt?: string }[]) => {
+    // Optimistically update UI so uploaded image appears immediately in the grid
+    const previous = portfolioContent.images || [];
+    setPortfolioContent((prev) => ({ ...prev, images }));
+
     try {
       const result = await updatePortfolioContent(images);
 
       if (result.ok) {
-        setPortfolioContent((prev) => ({
-          ...prev,
-          images,
-        }));
         toast({
           title: "Success",
           description: "Portfolio updated successfully!",
         });
       } else {
+        // Revert optimistic update on failure
+        setPortfolioContent((prev) => ({ ...prev, images: previous }));
         toast({
           title: "Error",
           description: result.error,
@@ -1050,6 +1063,7 @@ export default function BusinessAdminDashboard() {
         });
       }
     } catch (error) {
+      setPortfolioContent((prev) => ({ ...prev, images: previous }));
       toast({
         title: "Error",
         description: "Failed to update portfolio. Please try again.",
@@ -1617,10 +1631,10 @@ export default function BusinessAdminDashboard() {
                     variant="outline"
                     size="sm"
                     onClick={handleOpenCatalogPreview}
-                    className="rounded-full px-3 py-0  bg-slate-800  text-white border-0 hover:text-white hover:opacity-90 transition-opacity"
+                    className="rounded-full p-2 bg-slate-800 text-white border-0 hover:text-white hover:opacity-90 transition-opacity"
+                    aria-label="View"
                   >
-                    <Eye className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-xs">View</span>
+                    <Eye className="h-4 w-4" />
                   </Button>
                 </div>
               </>
@@ -1703,10 +1717,6 @@ export default function BusinessAdminDashboard() {
 
               {activeSection === "portfolio" && (
                 <BusinessPortfolioSection
-                  sectionTitle={sectionTitles.portfolio}
-                  onSectionTitleChange={(value) =>
-                    setSectionTitles((prev) => ({ ...prev, portfolio: value }))
-                  }
                   images={portfolioContent.images || []}
                   onSaveImages={handleSavePortfolioImages}
                   onDeleteImageRequest={(index) => {

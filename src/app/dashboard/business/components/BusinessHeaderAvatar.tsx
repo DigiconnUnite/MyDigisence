@@ -14,13 +14,13 @@ export function BusinessHeaderAvatar({
     return (
       <img
         src={getOptimizedImageUrl(logoUrl, {
-          width: 24,
-          height: 24,
+          width: 32,
+          height: 32,
           quality: 85,
           format: "auto",
         })}
         alt={`${businessName} logo`}
-        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-200"
+        className="w-8 h-8 rounded-full object-cover border border-gray-200"
         onError={handleImageError}
         loading="lazy"
       />

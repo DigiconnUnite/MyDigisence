@@ -5,16 +5,12 @@ import { Label } from "@/components/ui/label";
 import type { PortfolioItem } from "../types";
 
 interface BusinessPortfolioSectionProps {
-  sectionTitle: string;
-  onSectionTitleChange: (value: string) => void;
   images: PortfolioItem[];
   onSaveImages: (images: PortfolioItem[]) => Promise<void>;
   onDeleteImageRequest: (index: number) => void;
 }
 
 export function BusinessPortfolioSection({
-  sectionTitle,
-  onSectionTitleChange,
   images,
   onSaveImages,
   onDeleteImageRequest,
@@ -59,16 +55,6 @@ export function BusinessPortfolioSection({
       </div>
 
       <div className="space-y-6">
-        <div>
-          <Label className="text-sm font-medium">Page Title for Portfolio Section</Label>
-          <Input
-            value={sectionTitle}
-            onChange={(e) => onSectionTitleChange(e.target.value)}
-            placeholder="Enter section title"
-            className="rounded-2xl bg-white"
-          />
-        </div>
-
         <Card className="rounded-3xl overflow-hidden">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
@@ -80,21 +66,11 @@ export function BusinessPortfolioSection({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
+            <div className="grid gap-3 md:gap-4 grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => {
                 const image = images[index];
 
-                const gridClasses = [
-                  "md:row-span-1 md:col-span-2 col-span-2 row-span-2",
-                  "md:row-span-1 md:col-span-2 col-span-2 row-span-2",
-                  "md:row-span-1 md:col-span-1 col-span-1",
-                  "md:row-span-1 md:col-span-1 col-span-1",
-                  "md:row-span-1 md:col-span-1 col-span-1",
-                  "md:row-span-1 md:col-span-1 col-span-1",
-                ];
-
-                const isRect = index === 0 || index === 1;
-                const aspectRatioClass = isRect ? "aspect-video" : "aspect-square";
+                const aspectRatioClass = "aspect-3/2";
                 const isVideo =
                   !!image?.url &&
                   (image.url.includes(".mp4") ||
@@ -104,13 +80,9 @@ export function BusinessPortfolioSection({
                 return (
                   <div
                     key={index}
-                    className={`
-                      relative bg-gray-100 border-2 border-dashed border-gray-300
-                      rounded-2xl overflow-hidden group transition-all duration-300
-                      ${image ? "border-gray-200 shadow-sm hover:shadow-md" : "hover:border-blue-400 hover:bg-blue-50"}
-                      ${gridClasses[index]}
-                      ${aspectRatioClass}
-                    `}
+                    className={`relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden group transition-all duration-300 ${
+                      image ? "border-gray-200 shadow-sm hover:shadow-md" : "hover:border-blue-400 hover:bg-blue-50"
+                    } ${aspectRatioClass}`}
                   >
                     {!image && (
                       <div
@@ -118,15 +90,14 @@ export function BusinessPortfolioSection({
                         onClick={() => openFilePicker(index)}
                       >
                         <div
-                          className={`
-                            flex items-center justify-center rounded-full bg-white shadow-sm mb-3
-                            ${isRect ? "w-16 h-16" : "w-12 h-12"}
-                          `}
+                          className={
+                            "flex items-center justify-center rounded-full bg-white shadow-sm mb-3 w-14 h-14"
+                          }
                         >
-                          <Plus className={`text-gray-400 ${isRect ? "w-8 h-8" : "w-6 h-6"}`} />
+                          <Plus className={"text-gray-400 w-7 h-7"} />
                         </div>
                         <span className="text-xs font-medium text-gray-500 group-hover:text-blue-600">
-                          {isRect ? "Add Rect Image (16:9)" : "Add Square Image"}
+                          Add Image (3:2)
                         </span>
                       </div>
                     )}

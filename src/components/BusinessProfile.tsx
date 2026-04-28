@@ -143,8 +143,9 @@ export default function BusinessProfile({
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [viewAllBrands, setViewAllBrands] = useState(false);
+  // Default to showing all products (View All). Carousel when false.
   const [viewAllProducts, setViewAllProducts] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [lastUpdateCheck, setLastUpdateCheck] = useState(Date.now());
@@ -172,8 +173,6 @@ export default function BusinessProfile({
 
   useEffect(() => {
     setMounted(true);
-    // Data is already loaded via SSR, remove artificial delay
-    setIsLoading(false);
     return () => {};
   }, []);
 
@@ -361,14 +360,21 @@ export default function BusinessProfile({
     return categories.find((category) => category.id === selectedCategory)?.name || "All";
   }, [categories, selectedCategory]);
 
-  // Reset incremental rendering when filters change.
+  // Reset visible products when filters change.
   useEffect(() => {
-    setVisibleProductsCount(PRODUCTS_PAGE_SIZE);
-  }, [searchTerm, selectedCategory, selectedBrand, PRODUCTS_PAGE_SIZE]);
+    if (viewAllProducts) {
+      setVisibleProductsCount(filteredProducts.length);
+    } else {
+      setVisibleProductsCount(PRODUCTS_PAGE_SIZE);
+    }
+  }, [searchTerm, selectedCategory, selectedBrand, PRODUCTS_PAGE_SIZE, viewAllProducts, filteredProducts.length]);
 
-  // Infinite load-more trigger for products grid.
+  // Infinite load-more trigger for products grid (only active if not already showing all items).
   useEffect(() => {
     if (!viewAllProducts) return;
+
+    // If already showing all products, no need to set up the observer
+    if (visibleProductsCount >= filteredProducts.length) return;
 
     const trigger = loadMoreTriggerRef.current;
     const scrollContainer = mainContentRef.current;
@@ -398,7 +404,7 @@ export default function BusinessProfile({
     return () => {
       observer.disconnect();
     };
-  }, [viewAllProducts, filteredProducts.length, PRODUCTS_PAGE_SIZE]);
+  }, [viewAllProducts, filteredProducts.length, PRODUCTS_PAGE_SIZE, visibleProductsCount]);
 
   const handleInquiry = useCallback(
     async (e: React.FormEvent) => {
@@ -711,7 +717,7 @@ export default function BusinessProfile({
   return (
     // DASHBOARD LAYOUT CONTAINER
     <div
-      className="h-screen w-full overflow-hidden bg-orange-50 flex flex-col"
+      className="min-h-screen w-full overflow-hidden bg-orange-50 flex flex-col"
       suppressHydrationWarning
     >
       {/* PAGE HEADER */}
@@ -912,7 +918,18 @@ export default function BusinessProfile({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setViewAllProducts(!viewAllProducts)}
+                      onClick={() => {
+                        const next = !viewAllProducts;
+                        setViewAllProducts(next);
+                        if (next) {
+                          // Show all products by default when enabling "View All"
+                          setVisibleProductsCount(filteredProducts.length);
+                          scrollToSection(productsRef as React.RefObject<HTMLDivElement>, "products");
+                        } else {
+                          // When switching back to carousel, scroll to top
+                          scrollToSection(productsRef as React.RefObject<HTMLDivElement>, "home");
+                        }
+                      }}
                       className=" border-gray-300"
                     >
                       {viewAllProducts ? "Show Less" : "View All"}
