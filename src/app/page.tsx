@@ -45,7 +45,7 @@ export default function HomePage() {
 
         {/* feature Section */}
         <section className="bg-slate-800 ">
-          <div className="container mx-auto px-4">
+          <div className="max-w-[1440px] border-r border-l border-white/20 mx-auto px-4">
             <div className="grid grid-cols-1 divide divide-x divide-slate-700 md:grid-cols-3 gap-8">
               {/* Column 1 */}
               <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -108,8 +108,8 @@ export default function HomePage() {
         </section>
 
         {/* Businesses Section */}
-        <section className="py-10 md:py-20 bg-white ">
-          <div className="container mx-auto px-4">
+        <section className="bg-white ">
+          <div className="max-w-[1440px] border-r py-10 md:py-20  border-l border-gray-200 mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div className="text-left flex flex-col h-full    mr-8">
                 <h2 className="text-3xl md:text-6xl font-bold text-gray-600 mb-6">
@@ -188,8 +188,8 @@ export default function HomePage() {
         </section>
 
         {/* Professionals Section */}
-        <section className="py-10 md:py-20 bg-white">
-          <div className="container mx-auto px-4">
+        <section className=" bg-white">
+            <div className="max-w-[1440px] py-10 md:py-20 border-r border-l border-gray-200 mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div className="flex flex-col overflow-hidden  h-full ">
                 <div className="h-full mt-auto  relative bg-slate-900 rounded-4xl  p-8 flex flex-col justify-between items-end text-center bg-cover bg-center">
@@ -260,59 +260,6 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-    
-
-        {/* CTA Section */}
-        <section className="py-10 md:py-20 max-w-7x mx-autol w-full px-4 sm:px-6 bg-white flex justify-center items-center">
-          <div className="container w-full mx-auto">
-            <div className="rounded-3xl border border-cyan/90  bg-slate-800 shadow-lg p-12 px-6 sm:px-12 text-center backdrop-blur-lg">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 drop-shadow-md text-white">
-                Ready to Transform Your Business?
-              </h2>
-              <p className="text-lg sm:text-xl mb-8 opacity-95 text-gray-200">
-                Join{" "}
-                <span className="font-semibold text-cyan-400">Mydigisence</span>{" "}
-                today and create your professional digital presence.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <Link href="/dashboard/admin">
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    className="rounded-full bg-cyan-400 text-slate-900 border-2 border-cyan-400 hover:bg-cyan-300 hover:border-cyan-300 transition-all duration-200 px-8 shadow-lg font-semibold"
-                  >
-                    Start Free Trial
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link href="/businesses">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="rounded-full border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400 hover:text-slate-900 px-8 shadow-md transition-all duration-200 font-semibold"
-                  >
-                    Contact Sales
-                  </Button>
-                </Link>
-              </div>
-              <div className="flex flex-wrap justify-center gap-5 text-sm opacity-90">
-                <div className="flex items-center bg-slate-800/70 rounded-full px-4 py-2 border border-cyan-400/30 shadow-sm mb-2 mx-1 text-gray-200">
-                  <CheckCircle className="h-4 w-4 mr-2 text-cyan-400" />
-                  No setup fees
-                </div>
-                <div className="flex items-center bg-slate-800/70 rounded-full px-4 py-2 border border-cyan-400/30 shadow-sm mb-2 mx-1 text-gray-200">
-                  <CheckCircle className="h-4 w-4 mr-2 text-cyan-400" />
-                  Your Online Presence
-                </div>
-                <div className="flex items-center bg-slate-800/70 rounded-full px-4 py-2 border border-cyan-400/30 shadow-sm mb-2 mx-1 text-gray-200">
-                  <CheckCircle className="h-4 w-4 mr-2 text-cyan-400" />
-                  Easy to use
                 </div>
               </div>
             </div>

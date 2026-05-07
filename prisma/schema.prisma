@@ -69,6 +69,24 @@ model Business {
    brandContent Json?     // Brand slider data
    portfolioContent Json? // Portfolio images data
 
+   // Stats and display fields for profile page
+   totalReviews      Int       @default(0)
+   averageRating     Float     @default(0)
+   happyCustomers    String?   // e.g., "50K+"
+   teamSize          String?   // e.g., "25+"
+   yearsInBusiness   String?   // e.g., "10+"
+   isVerified        Boolean   @default(false)
+   verifiedBadge     String?   // Badge text/icon identifier
+
+   // Enhanced content
+   highlights        Json?     // Array of highlight items
+   customTags        Json?     // Array of tag strings (Restaurant, Dine-in, etc.)
+   servicesList      Json?     // Services with icons/pricing
+   qrCodeUrl         String?   // Generated QR code URL
+
+   // Relations
+   reviews           Review[]
+
    // Indexes for performance
    @@index([isActive])
    @@index([categoryId])
@@ -115,6 +133,24 @@ model Professional {
    portfolio             Json?   // Portfolio data
    contactDetails        Json?   // Contact details
    ctaButton             Json?   // Call-to-action button data
+
+   // Stats and display fields for profile page
+   totalReviews          Int       @default(0)
+   averageRating         Float     @default(0)
+   projectsCompleted     String?   // e.g., "100+"
+   yearsExperience       String?   // e.g., "5+"
+   happyClients          String?   // e.g., "80+"
+   isVerified            Boolean   @default(false)
+   availability          String?   // e.g., "Available Now"
+   responseTime          String?   // e.g., "Within a few hours"
+
+   // Enhanced content
+   techStack             Json?     // Array of technology tags
+   qrCodeUrl             String?   // Generated QR code URL
+   vcardData             String?   // Generated vCard data
+
+   // Relations
+   reviews               Review[]
 
    // Indexes for performance
    @@index([isActive])
@@ -223,6 +259,30 @@ model Inquiry {
    @@index([businessId, status, createdAt])
    @@index([businessId, createdAt])
    @@map("inquiries")
+}
+
+model Review {
+   id              String   @id @default(cuid()) @map("_id")
+   rating          Int      // 1-5 stars
+   title           String?
+   content         String
+   authorName      String
+   authorImage     String?
+   isVerified      Boolean  @default(false)
+   createdAt       DateTime @default(now())
+   updatedAt       DateTime @updatedAt
+
+   // Polymorphic relation (review can be for business or professional)
+   businessId      String?
+   business        Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   professionalId  String?
+   professional    Professional? @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+   // Indexes for performance
+   @@index([businessId])
+   @@index([professionalId])
+   @@index([createdAt])
+   @@map("reviews")
 }
 
 model ProfessionalInquiry {

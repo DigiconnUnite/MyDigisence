@@ -3,13 +3,14 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Menu, Home, Building2, Users, Calculator, Mail, Filter, Code, Stethoscope, Scale, Hammer, Book, Palette, Megaphone, Briefcase, Camera, ChefHat, Pill, GraduationCap, TrendingUp, Laptop, BookOpen } from "lucide-react";
+import { X, Menu, Home, Building2, Users, Calculator, Mail, Filter, Code, Stethoscope, Scale, Hammer, Book, Palette, Megaphone, Briefcase, Camera, ChefHat, Pill, GraduationCap, TrendingUp, Laptop, BookOpen, ShoppingBag, Heart, Building, Coffee, ShoppingCart, Truck, Cog, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // Default navigation items for all pages
 const defaultNavItems = [
   { name: "Home", link: "/", icon: Home },
+  { name: "Marketplace", link: "/marketplace", icon: ShoppingBag },
   { name: "Businesses", link: "/businesses", icon: Building2 },
   { name: "Professionals", link: "/professionals", icon: Users },
   { name: "Blog", link: "/blog", icon: BookOpen },
@@ -53,6 +54,33 @@ const businessCategories = [
   { name: "Education", icon: Building2 },
 ];
 
+// Marketplace categories - combined
+const marketplaceCategories = [
+  { name: "IT Services", icon: Code },
+  { name: "Digital Marketing", icon: TrendingUp },
+  { name: "Education", icon: GraduationCap },
+  { name: "Healthcare", icon: Heart },
+  { name: "Real Estate", icon: Building },
+  { name: "Restaurant", icon: ChefHat },
+  { name: "Automotive", icon: Truck },
+  { name: "Consulting", icon: Briefcase },
+  { name: "Travel & Tourism", icon: Plane },
+  { name: "Beauty & Wellness", icon: Heart },
+  { name: "Shop", icon: ShoppingCart },
+  { name: "Hotel", icon: Building },
+  { name: "Cafe", icon: Coffee },
+  { name: "Retail", icon: ShoppingBag },
+  { name: "Manufacturing", icon: Cog },
+  { name: "Developer", icon: Code },
+  { name: "Doctor", icon: Stethoscope },
+  { name: "Lawyer", icon: Scale },
+  { name: "Engineer", icon: Hammer },
+  { name: "Teacher", icon: GraduationCap },
+  { name: "Designer", icon: Palette },
+  { name: "Photographer", icon: Camera },
+  { name: "Accountant", icon: Calculator },
+];
+
 // Pricing categories
 const pricingCategories = [
   { name: "Free Plan", icon: Calculator },
@@ -64,7 +92,7 @@ const pricingCategories = [
 export interface PublicPageSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  variant?: "home" | "professionals" | "businesses" | "pricing" | "contact";
+  variant?: "home" | "professionals" | "businesses" | "pricing" | "contact" | "marketplace";
   categories?: { name: string; icon: React.ComponentType<{ className?: string }> }[];
   onCategorySelect?: (category: string) => void;
   selectedCategory?: string | null;
@@ -86,6 +114,8 @@ export default function PublicPageSidebar({
       return categories;
     }
     switch (variant) {
+      case "marketplace":
+        return marketplaceCategories;
       case "professionals":
         return professionalCategories;
       case "businesses":
@@ -100,6 +130,7 @@ export default function PublicPageSidebar({
   // Get section title based on variant
   const getSectionTitle = () => {
     switch (variant) {
+      case "marketplace":
       case "professionals":
       case "businesses":
         return "Categories";

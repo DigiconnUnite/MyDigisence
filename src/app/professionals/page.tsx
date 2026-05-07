@@ -287,7 +287,7 @@ function ProfessionalsContent() {
                   {filteredProfessionals.map((professional) => (
                     <Link
                       key={professional.id}
-                      href={`/pcard/${professional.slug}`}
+                      href={`/p/${professional.slug}`}
                       className="group block h-full"
                       onClick={() => setLoadingCardId(professional.id)}
                     >

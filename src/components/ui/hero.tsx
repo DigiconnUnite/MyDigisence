@@ -40,7 +40,7 @@ export default function HeroSectionOne() {
       />
 
       {/* Main Content */}
-      <div className="relative mx-auto container px-4 sm:px-6 lg:px-8 z-20 min-h-[90vh] flex items-center">
+      <div className="relative mx-auto max-w-[1440px] border-r border-l border-white/20 px-4 sm:px-6 lg:px-8 z-20 min-h-[90vh] flex items-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-12 items-center w-full py-20 lg:py-0">
 
           {/* Left Side - Text Content */}

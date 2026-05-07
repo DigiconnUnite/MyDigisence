@@ -5,15 +5,43 @@ import { cn } from "@/lib/utils";
 import PublicPageHeader from "./PublicPageHeader";
 import PublicPageSidebar from "./PublicPageSidebar";
 import Footer from "./Footer";
-import { Users, Building2, Calculator, Mail, Home } from "lucide-react";
+import { Users, Building2, Calculator, Mail, Home, ShoppingBag, Code, Stethoscope, Scale, Hammer, GraduationCap, Palette, TrendingUp, Briefcase, Camera, ChefHat, Pill, Heart, GraduationCap as Education, Building, Coffee, ShoppingCart, Truck, Cog, Plane } from "lucide-react";
 
 // Default navigation items
 const defaultNavItems = [
   { name: "Home", link: "/", icon: Home },
+  { name: "Marketplace", link: "/marketplace", icon: ShoppingBag },
   { name: "Businesses", link: "/businesses", icon: Building2 },
   { name: "Professionals", link: "/professionals", icon: Users },
   { name: "Pricing", link: "/pricing", icon: Calculator },
   { name: "Contact Us", link: "/contact", icon: Mail },
+];
+
+// Marketplace categories - combined for both businesses and professionals
+const marketplaceCategories = [
+  { name: "IT Services", icon: Code },
+  { name: "Digital Marketing", icon: TrendingUp },
+  { name: "Education", icon: Education },
+  { name: "Healthcare", icon: Heart },
+  { name: "Real Estate", icon: Building },
+  { name: "Restaurant", icon: ChefHat },
+  { name: "Automotive", icon: Truck },
+  { name: "Consulting", icon: Briefcase },
+  { name: "Travel & Tourism", icon: Plane },
+  { name: "Beauty & Wellness", icon: Heart },
+  { name: "Shop", icon: ShoppingCart },
+  { name: "Hotel", icon: Building },
+  { name: "Cafe", icon: Coffee },
+  { name: "Retail", icon: ShoppingBag },
+  { name: "Manufacturing", icon: Cog },
+  { name: "Developer", icon: Code },
+  { name: "Doctor", icon: Stethoscope },
+  { name: "Lawyer", icon: Scale },
+  { name: "Engineer", icon: Hammer },
+  { name: "Teacher", icon: GraduationCap },
+  { name: "Designer", icon: Palette },
+  { name: "Photographer", icon: Camera },
+  { name: "Accountant", icon: Calculator },
 ];
 
 // Default categories for professionals
@@ -68,7 +96,7 @@ const homeCategories = [
 export interface UnifiedPublicLayoutProps {
   children: React.ReactNode;
   variant?: "transparent" | "solid";
-  sidebarVariant?: "home" | "professionals" | "businesses" | "pricing" | "contact";
+  sidebarVariant?: "home" | "professionals" | "businesses" | "pricing" | "contact" | "marketplace";
   showCategorySlider?: boolean;
   categories?: { name: string; icon: React.ComponentType<{ className?: string }> }[];
   pageSlug?: string; // Optional - used for auto-detecting variant
@@ -82,13 +110,16 @@ export interface UnifiedPublicLayoutProps {
 }
 
 // Auto-detect variant and sidebar variant based on page slug
-const detectVariants = (pageSlug?: string): { variant: "transparent" | "solid"; sidebarVariant: "home" | "professionals" | "businesses" | "pricing" | "contact" } => {
+const detectVariants = (pageSlug?: string): { variant: "transparent" | "solid"; sidebarVariant: "home" | "professionals" | "businesses" | "pricing" | "contact" | "marketplace" } => {
   if (!pageSlug || pageSlug === "/") {
     return { variant: "transparent", sidebarVariant: "home" };
   }
 
   const normalizedSlug = pageSlug.toLowerCase();
 
+  if (normalizedSlug.startsWith("/marketplace")) {
+    return { variant: "solid", sidebarVariant: "marketplace" };
+  }
   if (normalizedSlug.startsWith("/professionals")) {
     return { variant: "solid", sidebarVariant: "professionals" };
   }
@@ -106,6 +137,8 @@ const detectVariants = (pageSlug?: string): { variant: "transparent" | "solid"; 
 // Get default categories based on sidebar variant
 const getDefaultCategories = (sidebarVariant: string) => {
   switch (sidebarVariant) {
+    case "marketplace":
+      return marketplaceCategories;
     case "professionals":
       return defaultProfessions;
     case "businesses":
@@ -152,7 +185,7 @@ export default function UnifiedPublicLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-200">
+    <div className="min-h-screen white">
       {/* Sidebar */}
       <PublicPageSidebar
         isOpen={sidebarOpen}

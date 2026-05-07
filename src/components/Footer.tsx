@@ -17,12 +17,12 @@ export default function Footer() {
       className="w-full bg-cover bg-center bg-no-repeat relative"
       style={{ backgroundImage: "url('/footer-bg.jpg')" }}
     >
-      {/* Main Footer Content */}
-      <div className="relative mx-auto container px-3 sm:px-4 lg:px-6 py-12 lg:py-16">
+      {/* Layer 1: Main Footer - max 1440px width */}
+      <div className="relative mx-auto max-w-[1440px] border-l border-r border-white/20">
         {/* Main Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 lg:mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand Section */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 lg:border-r border-white/10">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <img
@@ -58,7 +58,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 lg:border-r border-white/10">
             <h3 className="text-lg font-semibold text-white relative inline-block">
               Quick Links
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-white rounded-full" />
@@ -85,7 +85,7 @@ export default function Footer() {
           </div>
 
           {/* Company & Support */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 lg:border-r border-white/10">
             <h3 className="text-lg font-semibold text-white relative inline-block">
               Company
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-white rounded-full" />
@@ -112,7 +112,7 @@ export default function Footer() {
           </div>
 
           {/* CTA & Contact Section */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8">
             <h3 className="text-lg font-semibold text-white relative inline-block">
               Contact
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-white rounded-full" />
@@ -157,21 +157,20 @@ export default function Footer() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Newsletter Section */}
-        <div className="border-t border-gray-700/50 pt-8 mb-8">
-          <div className="bg-slate-700/50 rounded-2xl p-4 sm:p-6">
+      {/* Layer 2: Subscription Section - Full width with border */}
+      <div className="w-full border-t  border-white/20">
+        <div className="relative mx-auto max-w-[1440px] border-l border-r border-white/20">
+          <div className="bg-slate-800/50 backdrop-blur-sm  p-4 sm:p-6 ">
             <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-              <div className="text-center flex  lg:text-left">
-                <div>
-                  <h4 className="text-xl font-semibold text-white mb-2 flex items-center gap-2">
-                    Subscribe to Our Newsletter
-                  </h4>
-                  <p className="text-gray-400 text-sm">
-                    Get the latest updates, tips, and offers delivered to your
-                    inbox.
-                  </p>
-                </div>
+              <div className="text-center lg:text-left">
+                <h4 className="text-xl font-semibold text-white mb-2 flex items-center gap-2">
+                  Subscribe to Our Newsletter
+                </h4>
+                <p className="text-gray-400 text-sm">
+                  Get the latest updates, tips, and offers delivered to your inbox.
+                </p>
               </div>
               <form className="flex w-full lg:w-auto gap-3 flex-col sm:flex-row">
                 <input
@@ -181,7 +180,7 @@ export default function Footer() {
                 />
                 <button
                   type="submit"
-                  className="bg-white  hover:opacity-90 px-8 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="bg-white hover:opacity-90 px-8 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   Subscribe
                   <Send className="h-4 w-4" />
@@ -190,14 +189,15 @@ export default function Footer() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Section */}
-        <div className="pt-6 border-t border-gray-700/50">
+      {/* Layer 3: Footer Bottom - Full width with border */}
+      <div className="w-full border-t border-white/20">
+        <div className="relative mx-auto max-w-[1440px] px-6 lg:px-8 py-6 border-l border-r border-white/20">
           <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
             <div className="text-center md:text-left md:justify-self-start">
               <p className="text-gray-400 text-sm">
-                © 2025 <strong className="text-white">mydigisence</strong>. All
-                rights reserved.
+                © 2025 <strong className="text-white">mydigisence</strong>. All rights reserved.
               </p>
             </div>
 

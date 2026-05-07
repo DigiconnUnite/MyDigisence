@@ -292,7 +292,7 @@ function BusinessesContent() {
                   {filteredBusinesses.map((business) => (
                     <Link
                       key={business.id}
-                      href={`/catalog/${business.slug}`}
+                      href={`/b/${business.slug}`}
                       className="group block w-full max-w-[420px]"
                       aria-label={`View details for ${business.name}`}
                       onClick={() => setLoadingCardId(business.id)}

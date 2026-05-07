@@ -28,6 +28,7 @@ import {
   Camera,
   ChefHat,
   Pill,
+  ShoppingBag,
 } from "lucide-react";
 
 export interface PublicPageHeaderProps {
@@ -52,6 +53,7 @@ export interface PublicPageHeaderProps {
 // Default navigation items
 const defaultNavItems = [
   { name: "Home", link: "/", icon: Home },
+  { name: "Marketplace", link: "/marketplace", icon: ShoppingBag },
   { name: "Businesses", link: "/businesses", icon: Building2 },
   { name: "Professionals", link: "/professionals", icon: Users },
   { name: "Blog", link: "/blog", icon: BookOpen },
@@ -140,12 +142,15 @@ export default function PublicPageHeader({
         className={cn(
           "fixed inset-x-0 top-0 z-30",
           isTransparent
-            ? "bg-transparent"
-            : "bg-white border-b border-gray-200 shadow-sm",
+            ? "bg-transparent border-b border-white/20"
+            : "bg-white border-b shadow-sm",
         )}
       >
-        <div className="mx-auto container px-3 sm:px-4 lg:px-6">
-          <div className="flex justify-between items-center relative h-14 md:h-16">
+        <div className={cn("mx-auto max-w-[1440px] px-4 border-r border-l ",
+          isTransparent
+          ? "border-white/20"
+            : "border-black/50",)}>
+          <div className="flex justify-between items-center relative h-14 md:h-16"> 
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <Image
@@ -234,8 +239,8 @@ export default function PublicPageHeader({
 
         {/* Category Slider - Only visible when showCategorySlider is true */}
         {showCategorySlider && (
-          <div className="hidden md:block bg-slate-50 border-t border-gray-200">
-            <div className="mx-auto container px-3 sm:px-4 lg:px-6">
+          <div className="hidden md:block bg-slate-50 border-t border-white/20">
+            <div className="mx-auto max-w-[1440px] px-4">
               <div className="relative">
                 {/* Scroll Left Button */}
                 <button
@@ -255,7 +260,7 @@ export default function PublicPageHeader({
                   <ChevronRight className="h-4 w-4 text-gray-600" />
                 </button>
 
-                {/* Category Scroll Container */}
+                {/* Category Scroll max-w-[1440px] */}
                 <div
                   ref={categoryScrollRef}
                   className="flex items-center overflow-x-auto scrollbar-hide px-8"
