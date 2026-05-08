@@ -16,9 +16,14 @@ datasource db {
 model User {
   id        String   @id @default(cuid()) @map("_id")
   email     String   @unique
+  username  String?  @unique
+  mobile    String?  @unique
   name      String?
   password  String
-  role      UserRole @default(BUSINESS_ADMIN)
+  role      UserRole @default(USER)
+  emailVerified Boolean @default(false)
+  onboardingCompleted Boolean @default(false)
+  userPath  UserPath?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -313,6 +318,13 @@ enum UserRole {
   SUPER_ADMIN
   BUSINESS_ADMIN
   PROFESSIONAL_ADMIN
+  USER
+}
+
+enum UserPath {
+  BUSINESS
+  PROFESSIONAL
+  NORMAL_USER
 }
 
 enum InquiryStatus {

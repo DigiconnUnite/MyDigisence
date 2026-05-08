@@ -26,10 +26,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Banner dimensions: 1500x500 pixels (3:1 aspect ratio)
-const BANNER_WIDTH = 1500;
-const BANNER_HEIGHT = 500;
-const ASPECT_RATIO = BANNER_WIDTH / BANNER_HEIGHT; // 3:1
+// Banner dimensions: 1920x320 pixels (6:1 aspect ratio)
+const BANNER_WIDTH = 1920;
+const BANNER_HEIGHT = 320;
+const ASPECT_RATIO = BANNER_WIDTH / BANNER_HEIGHT; // 6:1
 
 export interface BusinessBannerUploaderProps {
   /** Current banner URL (for editing existing banners) */

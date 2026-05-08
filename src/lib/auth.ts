@@ -28,7 +28,14 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return bcrypt.compare(password, hashedPassword)
 }
 
-export async function createUser(email: string, password: string, name?: string, role: UserRole = 'BUSINESS_ADMIN'): Promise<AuthUser> {
+export async function createUser(
+  email: string, 
+  password: string, 
+  name?: string, 
+  role: UserRole = 'USER' as UserRole,
+  username?: string,
+  mobile?: string
+): Promise<AuthUser> {
   // Normalize email to lowercase for case-insensitive matching
   const normalizedEmail = email.toLowerCase()
   const hashedPassword = await hashPassword(password)
@@ -39,47 +46,41 @@ export async function createUser(email: string, password: string, name?: string,
       password: hashedPassword,
       name,
       role,
+      username,
+      mobile,
     },
     include: {
       business: true,
     },
-  })
+  } as any)
 
   return {
     id: user.id,
     email: user.email,
     name: user.name || undefined,
     role: user.role as UserRole,
-    businessId: user.business?.id,
+    businessId: (user as any).business?.id,
     createdAt: user.createdAt.toISOString(),
   }
 }
 
-export async function authenticateUser(email: string, password: string): Promise<AuthUser | null> {
-  // Normalize email to lowercase for case-insensitive matching
-  const normalizedEmail = email.trim().toLowerCase();
+export async function authenticateUser(identifier: string, password: string): Promise<AuthUser | null> {
+  // Normalize identifier for case-insensitive matching
+  const normalizedIdentifier = identifier.trim().toLowerCase();
 
-  let user = await db.user.findUnique({
-    where: { email: normalizedEmail },
+  // Try to find user by email, username, or mobile
+  let user = await db.user.findFirst({
+    where: {
+      OR: [
+        { email: { equals: normalizedIdentifier, mode: 'insensitive' } },
+        { username: { equals: normalizedIdentifier, mode: 'insensitive' } },
+        { mobile: normalizedIdentifier }
+      ]
+    },
     include: {
       business: true,
     },
-  })
-
-  // Fallback for legacy records that may have mixed-case emails.
-  if (!user) {
-    user = await db.user.findFirst({
-      where: {
-        email: {
-          equals: normalizedEmail,
-          mode: 'insensitive',
-        },
-      },
-      include: {
-        business: true,
-      },
-    })
-  }
+  } as any)
 
   if (!user || !user.password) {
     return null
@@ -96,7 +97,7 @@ export async function authenticateUser(email: string, password: string): Promise
     email: user.email,
     name: user.name || undefined,
     role: user.role as UserRole,
-    businessId: user.business?.id,
+    businessId: (user as any).business?.id,
     createdAt: user.createdAt.toISOString(),
   }
 }
@@ -107,7 +108,7 @@ export async function getUserById(id: string): Promise<AuthUser | null> {
     include: {
       business: true,
     },
-  })
+  } as any)
 
   if (!user) {
     return null
@@ -118,7 +119,7 @@ export async function getUserById(id: string): Promise<AuthUser | null> {
     email: user.email,
     name: user.name || undefined,
     role: user.role as UserRole,
-    businessId: user.business?.id,
+    businessId: (user as any).business?.id,
   }
 }
 
@@ -142,7 +143,7 @@ export function generateToken(user: AuthUser): string {
     userId: user.id,
     email: user.email,
     role: user.role,
-    businessId: user.businessId,
+    businessId: (user as any).business?.id,
   }
 
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })

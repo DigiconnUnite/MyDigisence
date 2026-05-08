@@ -315,7 +315,7 @@ function MarketplaceContent() {
                       className="pl-10 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="hidden sm:flex gap-2">
                     <div className="relative min-w-[140px]">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <select
@@ -333,16 +333,36 @@ function MarketplaceContent() {
                       Search
                     </Button>
                   </div>
+                  {/* Mobile view - all in same row */}
+                  <div className="flex sm:hidden gap-2 items-center">
+                    <div className="relative flex-1">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <select
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="w-full pl-9 pr-9 py-2 text-sm border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-500 appearance-none"
+                      >
+                        <option>Agra, Uttar Pradesh</option>
+                        <option>Delhi, NCR</option>
+                        <option>Mumbai, Maharashtra</option>
+                        <option>Bangalore, Karnataka</option>
+                      </select>
+                    </div>
+                    <Button className="bg-slate-900 hover:bg-slate-800 text-white p-2">
+                      <Search className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </WavyBackground>
         {/* Main Content */}
-        <div className="max-w-[1440px] mx-auto border-r border-l border-gray-200 px-4 py-6">
+        <div className="max-w-[1440px] mx-auto border-r border-l border-gray-200 px-4 pt-0 sm:pt-6 pb-6">
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar */}
-            <aside className="w-full lg:w-64 flex-shrink-0 self-stretch">
+            {/* Sidebar - Hidden on mobile, shown on lg */}
+            <aside className="hidden lg:block w-64 flex-shrink-0 self-stretch">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-24 h-[calc(100vh-7rem)] overflow-y-auto">
                 {/* Navigation Section */}
                 <nav className="space-y-1">
@@ -438,9 +458,9 @@ function MarketplaceContent() {
             {/* Main Listings Area */}
             <main className="flex-1">
               {/* Results Header - Tab Style */}
-              <div className="flex items-center justify-between mb-6 border-b border-gray-200 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-gray-200 pb-4">
                 {/* Tabs */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
                   {[
                     { id: 'all', label: 'All', count: listings.length },
                     { id: 'business', label: 'Businesses', count: businesses.length },
@@ -466,7 +486,21 @@ function MarketplaceContent() {
                 </div>
 
                 {/* Right side controls */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 justify-between sm:justify-end">
+                  {/* Mobile Filter Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="lg:hidden flex items-center gap-2"
+                    onClick={() => {
+                      const sidebar = document.getElementById('mobile-filters')
+                      sidebar?.classList.toggle('hidden')
+                    }}
+                  >
+                    <Filter className="h-4 w-4" />
+                    <span className="hidden sm:inline">Filters</span>
+                  </Button>
+
                   {/* View Toggle */}
                   <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                     <button
@@ -549,6 +583,81 @@ function MarketplaceContent() {
               )}
             </main>
           </div>
+
+          {/* Mobile Filters Drawer */}
+          <div id="mobile-filters" className="hidden lg:hidden mt-4">
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+                <span className="text-sm font-semibold text-gray-900">Filters</span>
+                <button
+                  onClick={() => {
+                    const sidebar = document.getElementById('mobile-filters')
+                    sidebar?.classList.add('hidden')
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <ChevronDown className="h-5 w-5 rotate-180" />
+                </button>
+              </div>
+              {/* Navigation Section */}
+              <nav className="space-y-1 mb-4">
+                {marketplaceCategories.map((cat) => {
+                  const Icon = cat.icon
+                  const isActive = activeFilter === cat.filter
+                  const count = cat.filter === 'all' ? listings.length :
+                    cat.filter === 'business' ? businesses.length :
+                      professionals.length
+                  return (
+                    <button
+                      key={cat.filter}
+                      onClick={() => {
+                        setActiveFilter(cat.filter)
+                        document.getElementById('mobile-filters')?.classList.add('hidden')
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200",
+                        isActive
+                          ? "bg-slate-800 text-white"
+                          : "text-gray-700 hover:bg-gray-100"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {cat.name}
+                      </span>
+                      <span className={cn(
+                        "text-xs",
+                        isActive ? "text-white/70" : "text-gray-400"
+                      )}>({count})</span>
+                    </button>
+                  )
+                })}
+              </nav>
+              {/* Categories */}
+              <div className="pt-4 border-t border-gray-200">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 block">Categories</span>
+                <div className="flex flex-wrap gap-2">
+                  {['IT Services', 'Digital Marketing', 'Education', 'Healthcare', 'Real Estate', 'Restaurant', 'Automotive', 'Consulting', 'Travel & Tourism', 'Beauty & Wellness'].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        handleCategorySelect(selectedCategory === cat ? null : cat)
+                        document.getElementById('mobile-filters')?.classList.add('hidden')
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 text-sm rounded-full transition-colors duration-200",
+                        selectedCategory === cat
+                          ? "bg-slate-800 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      )}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Bottom CTA Section */}
@@ -589,12 +698,12 @@ function MarketplaceContent() {
                   </div>
                 </div>
                 {/* Join Card - Larger (spans 2 columns) */}
-                <div className="md:col-span-2 bg-gradient-to-r rounded-xl from-blue-600 to-blue-800 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="md:col-span-2 bg-gradient-to-r rounded-xl from-blue-600 to-blue-800 p-3 sm:p-4 flex items-center justify-between gap-2 sm:gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-1">Join Mydigisence Today</h3>
-                    <p className="text-blue-100 text-sm">Create your profile and start your digital presence journey.</p>
+                    <h3 className="text-base sm:text-xl font-bold text-white mb-0.5 sm:mb-1">Join Mydigisence Today</h3>
+                    <p className="text-blue-100 text-xs sm:text-sm">Create your profile and start your digital presence journey.</p>
                   </div>
-                  <Button className="bg-white text-blue-600 hover:bg-blue-50 px-6 flex-shrink-0" asChild>
+                  <Button className="bg-white text-blue-600 hover:bg-blue-50 px-3 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm flex-shrink-0" asChild>
                     <Link href="/register">Get Started Now</Link>
                   </Button>
                 </div>
@@ -616,7 +725,7 @@ function FeaturedCard({ item, isLoading }: { item: Listing; isLoading: boolean }
     : (item as Professional).professionalHeadline
 
   return (
-    <Card className="overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300">
+    <Card className="overflow-hidden group cursor-pointer border hover:shadow-lg transition-all duration-300">
       <div className="relative h-32 bg-gray-100">
         {image ? (
           <ImageWithFallback
@@ -737,18 +846,18 @@ function ListingCard({ item, viewMode, onClick, isLoading }: { item: Listing; vi
     ? (item as Business).description
     : (item as Professional).aboutme
 
-  const href = isBusiness ? `/catalog/${item.slug}` : `/pcard/${item.slug}`
+  const href = isBusiness ? `/b/${item.slug}` : `/p/${item.slug}`
 
   if (viewMode === 'list') {
     return (
-      <Card className="overflow-hidden hover:shadow-md transition-all duration-300">
-        <Link href={href} onClick={onClick} className="flex">
+      <Card className="overflow-hidden hover:shadow-md py-0 border border-slate-500/30 transition-all duration-300">
+        <Link href={href} onClick={onClick} className="flex flex-row">
           {isLoading && (
             <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center rounded-lg">
               <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
             </div>
           )}
-          <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gray-100 flex-shrink-0 flex items-center justify-center">
+          <div className="w-24 sm:w-40 h-24 sm:h-40 bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
             {image ? (
               <ImageWithFallback
                 src={image}
@@ -762,12 +871,12 @@ function ListingCard({ item, viewMode, onClick, isLoading }: { item: Listing; vi
           </div>
           <CardContent className="flex-1 p-4 flex flex-col justify-between">
             <div>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">{item.name}</h3>
-                  {subtitle && <p className="text-sm text-blue-600">{subtitle}</p>}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors truncate">{item.name}</h3>
+                  {subtitle && <p className="text-sm text-blue-600 truncate">{subtitle}</p>}
                 </div>
-                <div className="flex items-center gap-1 text-sm">
+                <div className="flex items-center gap-1 text-sm flex-shrink-0">
                   <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                   <span className="font-medium">{item.rating.toFixed(1)}</span>
                   <span className="text-gray-400">({item.reviewCount})</span>
@@ -808,7 +917,7 @@ function ListingCard({ item, viewMode, onClick, isLoading }: { item: Listing; vi
 
   // Grid View - Horizontal card layout matching the image
   return (
-    <Card className="overflow-hidden group hover:shadow-lg border border-slate-500/30 transition-all duration-300  p-0 relative border border-transparent hover:border-gray-800">
+    <Card className="overflow-hidden group hover:shadow-lg border border-slate-500/30 transition-all duration-300  p-0 relative  hover:border-gray-800">
       {isLoading && (
         <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center rounded-lg">
           <Loader2 className="h-6 w-6 animate-spin text-slate-600" />
@@ -816,7 +925,7 @@ function ListingCard({ item, viewMode, onClick, isLoading }: { item: Listing; vi
       )}
 
       {/* Top section - Image + Details (Clickable area) */}
-      <Link href={href} onClick={onClick} className="flex p-4 pb-2 block">
+      <Link href={href} onClick={onClick} className="flex flex-row p-4 pb-2 block">
         {/* Left side - Image/Logo */}
         <div className="flex-shrink-0">
           {isBusiness ? (
@@ -885,6 +994,7 @@ function ListingCard({ item, viewMode, onClick, isLoading }: { item: Listing; vi
         </div>
       </Link>
 
+      
       {/* Bottom section - Full width action buttons (Outside Link) */}
       <div className="grid grid-cols-2 border-t border-gray-100">
         {isBusiness ? (

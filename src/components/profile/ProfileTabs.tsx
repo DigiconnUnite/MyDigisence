@@ -22,7 +22,7 @@ export default function ProfileTabs({
   variant = "underline",
 }: ProfileTabsProps) {
   return (
-    <div className="border-b border-slate-200">
+    <div className="border-b border-t border-slate-200">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex gap-1 sm:gap-6 overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => (

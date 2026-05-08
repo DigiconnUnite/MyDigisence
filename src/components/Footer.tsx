@@ -22,7 +22,7 @@ export default function Footer() {
         {/* Main Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand Section */}
-          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 lg:border-r border-white/10">
+          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 border-r border-b border-white/10 sm:border-b-0">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <img
@@ -58,7 +58,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 lg:border-r border-white/10">
+          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 border-r border-b border-white/10 sm:border-b-0">
             <h3 className="text-lg font-semibold text-white relative inline-block">
               Quick Links
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-white rounded-full" />
@@ -85,7 +85,7 @@ export default function Footer() {
           </div>
 
           {/* Company & Support */}
-          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 lg:border-r border-white/10">
+          <div className="space-y-4 sm:space-y-6 p-6 lg:p-8 border-r border-b border-white/10 sm:border-b-0">
             <h3 className="text-lg font-semibold text-white relative inline-block">
               Company
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-white rounded-full" />

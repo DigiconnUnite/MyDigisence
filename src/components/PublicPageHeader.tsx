@@ -143,13 +143,13 @@ export default function PublicPageHeader({
           "fixed inset-x-0 top-0 z-30",
           isTransparent
             ? "bg-transparent border-b border-white/20"
-            : "bg-white border-b shadow-sm",
+            : "bg-white border-b shadow-xs",
         )}
       >
         <div className={cn("mx-auto max-w-[1440px] px-4 border-r border-l ",
           isTransparent
           ? "border-white/20"
-            : "border-black/50",)}>
+          : "border-black/20")}>
           <div className="flex justify-between items-center relative h-14 md:h-16"> 
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="relative">

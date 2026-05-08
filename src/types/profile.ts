@@ -44,6 +44,22 @@ export interface ProfessionalProfile {
   responseTime?: string
   
   // Content
+  heroContent?: {
+    slides: Array<{
+      mediaType?: 'image' | 'video'
+      media?: string
+      image?: string
+      headline?: string
+      subheadline?: string
+      subtext?: string
+      cta?: string
+      ctaLink?: string
+    }>
+    autoPlay?: boolean
+    transitionSpeed?: number
+    showDots?: boolean
+    showArrows?: boolean
+  }
   techStack?: string[]
   skills?: Array<{
     name: string
@@ -134,11 +150,22 @@ export interface BusinessProfile {
   banner?: string
   
   // Content
-  heroContent?: Array<{
-    image: string
-    title?: string
-    subtitle?: string
-  }>
+  heroContent?: {
+    slides: Array<{
+      mediaType?: 'image' | 'video'
+      media?: string
+      image?: string // legacy support
+      headline?: string
+      subheadline?: string
+      subtext?: string
+      cta?: string
+      ctaLink?: string
+    }>
+    autoPlay?: boolean
+    transitionSpeed?: number
+    showDots?: boolean
+    showArrows?: boolean
+  }
   brandContent?: Array<{
     name: string
     logo?: string

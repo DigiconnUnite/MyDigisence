@@ -435,13 +435,14 @@ export default function ProfessionalProfilePage({
       />
 
       {/* Hero Section - Outside container so banner extends to top */}
-      <div className="max-w-[1440px] mx-auto border-r border-l border-slate-200">
+      <div className="max-w-[1440px] mx-auto border-r border-l border-slate-200 pt-14 md:pt-16">
         <ProfileHero
           type="professional"
           name={professional.name}
           headline={professional.professionalHeadline}
           avatar={professional.profilePicture}
           banner={professional.banner}
+          heroContent={professional.heroContent}
           location={professional.location}
           rating={professional.averageRating}
           reviewCount={professional.totalReviews}

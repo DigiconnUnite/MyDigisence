@@ -603,13 +603,14 @@ export default function BusinessProfilePage({
       />
 
       {/* Hero Section - Outside container so banner extends to top */}
-      <div className="max-w-[1440px] mx-auto border-r border-l border-slate-200">
+      <div className="max-w-[1440px] mx-auto border-r border-l border-slate-200 pt-14 md:pt-16">
         <ProfileHero
           type="business"
           name={business.name}
           subtitle={business.category?.name}
           avatar={business.logo}
-          banner={business.banner || business.heroContent?.[0]?.image || portfolio[0]?.image}
+          banner={business.banner}
+          heroContent={business.heroContent}
           location={business.address}
           rating={business.averageRating}
           reviewCount={business.totalReviews}

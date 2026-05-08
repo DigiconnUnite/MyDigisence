@@ -94,6 +94,7 @@ export default async function ProfessionalPage({ params }: PageProps) {
     availability: rawData.availability || undefined,
     responseTime: rawData.responseTime || undefined,
     techStack: rawData.techStack,
+    heroContent: rawData.heroContent || undefined,
     qrCodeUrl: rawData.qrCodeUrl || undefined,
     vcardData: rawData.vcardData || undefined,
     reviews: [], // Will be populated when reviews relation is added
