@@ -78,6 +78,7 @@ import Link from "next/link";
 import { getOptimizedImageUrl, handleImageError, isValidImageUrl } from '@/lib/image-utils';
 import SharedSidebar from '../../components/SharedSidebar';
 import SharedDashboardHeader from "../../components/SharedDashboardHeader";
+import DashboardLoading from "../../components/DashboardLoading";
 
 
 import ImageUpload from "@/components/ui/image-upload";
@@ -1175,7 +1176,7 @@ export default function ProfessionalDashboard() {
             className={`space-y-6 pb-20 md:pb-0 animate-fadeIn ${themeSettings.gap}`}
           >
             <div className="mb-8">
-              <h1 className="text-lg  font-bold text-slate-800">
+              <h1 className="text-lg font-bold text-slate-800">
                 Professional Dashboard Overview
               </h1>
               <p className="text-md text-gray-600">
@@ -4761,176 +4762,7 @@ export default function ProfessionalDashboard() {
   }, []);
 
   if (loading || isLoading) {
-    return (
-      <div className="min-h-screen relative flex flex-col">
-        <div className="fixed inset-0 bg-slate-200 -z-10"></div>
-        {/* Top Header Bar */}
-        <div className="bg-white border rounded-3xl mt-3 mx-3 border-gray-200 shadow-sm">
-          <div className="flex justify-between items-center px-4 sm:px-6 py-2">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 rounded-2xl">
-                <Skeleton className="h-8 w-8" />
-              </div>
-              <div>
-                <Skeleton className="h-6 w-32" />
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Skeleton className="h-8 w-24 rounded-2xl hidden sm:flex" />
-              <Skeleton className="h-8 w-20 rounded-2xl hidden sm:flex" />
-              <div className="text-right hidden sm:block">
-                <Skeleton className="h-4 w-32 mb-1" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-              <Skeleton className="h-8 w-8 sm:h-12 sm:w-12 rounded-2xl" />
-            </div>
-          </div>
-        </div>
-
-        {/* Main Layout */}
-        <div className="flex flex-1 h-fit overflow-hidden">
-          {/* Left Sidebar - Desktop Only */}
-          {!isMobile && (
-            <div className="w-64 m-4 border rounded-3xl bg-white border-r border-gray-200 flex flex-col shadow-sm overflow-auto hide-scrollbar">
-              <div className="p-4 border-b border-gray-200 rounded-t-3xl">
-                <div className="flex items-center space-x-2">
-                  <Skeleton className="h-6 w-6" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              </div>
-              <nav className="flex-1 p-4">
-                <ul className="space-y-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <li key={i}>
-                      <div className="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl">
-                        <Skeleton className="h-5 w-5" />
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-              <div className="p-4 border-t border-gray-200 mb-5 mt-auto">
-                <div className="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl">
-                  <Skeleton className="h-5 w-5" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Middle Content */}
-          <div
-            className={`flex-1 m-4 rounded-3xl bg-white/50 backdrop-blur-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 ease-in-out pb-20 md:pb-0`}
-          >
-            <div className="flex-1 p-4 max-w-7xl mx-auto sm:p-6 overflow-auto hide-scrollbar">
-              {renderSkeletonContent()}
-            </div>
-          </div>
-        </div>
-
-        {/* Inquiry Details Dialog */}
-        <Dialog open={showInquiryDialog} onOpenChange={setShowInquiryDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Inquiry Details</DialogTitle>
-              <DialogDescription>
-                Review and respond to this client inquiry
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedInquiry && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Client Name</Label>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {selectedInquiry.name}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Email</Label>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {selectedInquiry.email}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Phone</Label>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {selectedInquiry.phone || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Status</Label>
-                    <div className="mt-1">
-                      <Badge variant="outline" className="rounded-full">
-                        {selectedInquiry.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium">Message</Label>
-                  <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">
-                    {selectedInquiry.message}
-                  </p>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium">Date Received</Label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {new Date(selectedInquiry.createdAt).toLocaleString()}
-                  </p>
-                </div>
-
-                <div className="flex gap-4 pt-4 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowInquiryDialog(false);
-                      setSelectedInquiry(null);
-                    }}
-                    className="flex-1"
-                  >
-                    Close
-                  </Button>
-                  {selectedInquiry.status === "NEW" && (
-                    <Button
-                      onClick={() => {
-                        handleInquiryStatusUpdate(selectedInquiry.id, "READ");
-                        setShowInquiryDialog(false);
-                        setSelectedInquiry(null);
-                      }}
-                      className="flex-1"
-                    >
-                      Mark as Read
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Mobile Bottom Navigation */}
-        {isMobile && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl border-t border-gray-200 z-40">
-            <div className="flex justify-around items-center py-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center justify-center py-2 px-3 rounded-xl"
-                >
-                  <Skeleton className="h-5 w-5 mb-1" />
-                  <Skeleton className="h-3 w-12" />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
+    return <DashboardLoading title="Professional Dashboard" navItemCount={menuItems.length} showSearch={true} />;
   }
 
   if (!user || user.role !== ("PROFESSIONAL_ADMIN" as UserRole)) {
@@ -4940,7 +4772,7 @@ export default function ProfessionalDashboard() {
   return (
     <ThemeProvider>
       <div className="min-h-screen flex h-screen relative">
-        <div className="fixed inset-0 bg-slate-200 -z-10"></div>
+        <div className="fixed inset-0 bg-zinc-100 -z-10"></div>
 
         {/* Main Layout: Sidebar + Content */}
         <div className="flex flex-1 overflow-hidden">

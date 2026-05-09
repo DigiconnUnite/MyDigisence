@@ -78,6 +78,9 @@ export default function DashboardRouter() {
           const errorData = await res.json().catch(() => ({ error: 'Service temporarily unavailable' }))
           setError(`Unable to load professional dashboard: ${errorData.error || 'Please try again later'}`)
         }
+      } else if (user.role === 'USER') {
+        router.push('/dashboard/user')
+        return
       } else {
         setError('Account type not recognized. Please contact support.')
       }

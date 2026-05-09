@@ -68,6 +68,8 @@ interface MainViewRouterProps {
   setSelectedCategories: React.Dispatch<React.SetStateAction<Set<string>>>;
   categories: any[];
   filteredCategories: any[];
+  categoryFilter: string;
+  setCategoryFilter: React.Dispatch<React.SetStateAction<string>>;
   toast: (args: { title: string; description: string; variant?: "destructive" }) => void;
   inquiries: any[];
   selectedInquiries: Set<string>;
@@ -230,6 +232,8 @@ export default function MainViewRouter(props: MainViewRouterProps) {
           }}
           handleEditCategory={props.handleEditCategory}
           handleDeleteCategory={props.handleDeleteCategory}
+          categoryFilter={props.categoryFilter}
+          setCategoryFilter={props.setCategoryFilter}
         />
       );
     case "inquiries":

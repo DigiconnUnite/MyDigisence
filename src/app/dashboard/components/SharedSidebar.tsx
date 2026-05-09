@@ -52,7 +52,7 @@ export default function SharedSidebar({
   if (isMobile) {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div className="flex justify-around items-center gap-2  px-3">
+        <div className="flex justify-around items-center gap-2 px-3">
           {navLinks.slice(0, 5).map((item) => {
             const MobileIcon = item.mobileIcon;
             return (
@@ -161,15 +161,15 @@ export default function SharedSidebar({
 
   return (
     <div
-      className={`bg-white border-r border-gray-200 flex flex-col shadow-sm transition-all duration-300 ease-in-out h-screen ${isCollapsed ? "w-16" : "w-64"}`}
+      className={`bg-zinc-50 border-r border-gray-200 flex flex-col shadow-sm transition-all duration-300 ease-in-out h-screen ${isCollapsed ? "w-16" : "w-64"}`}
     >
-      <div className="px-4 border-b border-gray-200 rounded-t-3xl h-13">
+      <div className="px-4 border-b border-gray-200 rounded-t-3xl h-14">
         <div className="flex items-center py-2 justify-between">
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="DigiSense" className="h-8 w-auto" />
+              <img src="/logo.png" alt="mydigisence" className="h-8 w-auto" />
               <span className="h-8 border-l border-gray-300 mx-2"></span>
-              <span className="font-semibold line-clamp-1 ">{headerTitle}</span>
+              <span className="font-semibold line-clamp-1">{headerTitle}</span>
             </div>
           )}
           <button
@@ -190,7 +190,7 @@ export default function SharedSidebar({
             <li key={item.value}>
               <button
                 onClick={() => onViewChange(item.value)}
-                className={`w-full flex items-center ${isCollapsed ? "justify-center" : "space-x-3"} cursor-pointer px-3 py-2 rounded-md text-left transition-colors ${
+                className={`w-full bg-gray-100 flex items-center ${isCollapsed ? "justify-center" : "space-x-3"} cursor-pointer px-3 py-2 rounded-md text-left transition-colors ${
                   currentView === item.value
                     ? "bg-slate-800 text-white"
                     : "text-gray-700 bg-gray-50 hover:bg-gray-100"
@@ -212,7 +212,7 @@ export default function SharedSidebar({
         {onSettings && (
           <button
             onClick={onSettings}
-            className={`w-full flex items-center ${isCollapsed ? "justify-center" : "space-x-3"} px-3 py-2 rounded-md text-left transition-colors ${
+            className={`w-full flex bg-gray-100 items-center ${isCollapsed ? "justify-center" : "space-x-3"} px-3 py-2 rounded-md text-left transition-colors ${
               currentView === "settings"
                 ? "bg-slate-800 text-white"
                 : "text-gray-700 bg-gray-50 hover:bg-gray-100"

@@ -1,6 +1,12 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -10,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { BulkActionsToolbar } from "@/components/ui/pagination";
-import { Edit, FolderTree, Plus, Trash2 } from "lucide-react";
+import { Edit, Filter, FolderTree, Plus, Trash2 } from "lucide-react";
 import AdminViewControls from "./AdminViewControls";
 import AdminSectionHeader from "./AdminSectionHeader";
 import AdminActionIconButton from "./AdminActionIconButton";
@@ -27,6 +33,8 @@ interface CategoriesViewProps {
   onInfoToast: (description: string) => void;
   handleEditCategory: (category: Category) => void;
   handleDeleteCategory: (category: Category) => void;
+  categoryFilter: string;
+  setCategoryFilter: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function CategoriesView({
@@ -40,7 +48,23 @@ export default function CategoriesView({
   onInfoToast,
   handleEditCategory,
   handleDeleteCategory,
+  categoryFilter,
+  setCategoryFilter,
 }: CategoriesViewProps) {
+  const actualFilteredCategories = React.useMemo(() => {
+    let filtered = filteredCategories.filter((category) =>
+      category.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (categoryFilter === "parent") {
+      filtered = filtered.filter((category) => !category.parentId);
+    } else if (categoryFilter === "sub") {
+      filtered = filtered.filter((category) => category.parentId);
+    }
+
+    return filtered;
+  }, [filteredCategories, searchTerm, categoryFilter]);
+
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <AdminSectionHeader
@@ -50,6 +74,25 @@ export default function CategoriesView({
 
       <AdminViewControls
         actions={
+          <>
+          <Select
+            value={categoryFilter}
+            onValueChange={(value) => {
+              setCategoryFilter(value);
+            }}
+          >
+            <SelectTrigger className="rounded-xl bg-white border-gray-200">
+              <Filter className="h-4 w-4 text-gray-500 mr-2" />
+              <span className="hidden sm:inline">Filter</span>
+              <span className="sm:hidden">Type</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({safeCategories.length})</SelectItem>
+              <SelectItem value="parent">Parent Categories ({safeCategories.filter((c) => !c.parentId).length})</SelectItem>
+              <SelectItem value="sub">Sub Categories ({safeCategories.filter((c) => c.parentId).length})</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Button
             onClick={onOpenAddCategory}
             className="rounded-xl bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white hover:opacity-90 transition-opacity"
@@ -58,6 +101,7 @@ export default function CategoriesView({
             <span className="hidden sm:inline">Add Category</span>
             <span className="sm:hidden">Add</span>
           </Button>
+          </>
         }
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
@@ -70,7 +114,7 @@ export default function CategoriesView({
             selectedCount={selectedCategories.size}
             totalCount={safeCategories.length}
             onSelectAll={() => {
-              const allIds = filteredCategories.map((c) => c.id);
+              const allIds = actualFilteredCategories.map((c) => c.id);
               setSelectedCategories(new Set(allIds));
             }}
             onDeselectAll={() => setSelectedCategories(new Set())}
@@ -102,16 +146,16 @@ export default function CategoriesView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCategories.length === 0 ? (
+                {actualFilteredCategories.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-12">
                       <div className="flex flex-col items-center justify-center text-gray-500">
                         <FolderTree className="h-12 w-12 mb-3 opacity-30" />
                         <p className="text-base font-medium">No categories found</p>
                         <p className="text-sm text-gray-400 mt-1">
-                          {searchTerm ? "Try adjusting your search" : "Get started by adding your first category"}
+                          {searchTerm || categoryFilter !== "all" ? "Try adjusting your search or filters" : "Get started by adding your first category"}
                         </p>
-                        {!searchTerm && (
+                        {!searchTerm && categoryFilter === "all" && (
                           <Button
                             onClick={onOpenAddCategory}
                             className="mt-4 bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white rounded-xl hover:opacity-90 transition-opacity"
@@ -124,7 +168,7 @@ export default function CategoriesView({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredCategories.map((category, index) => {
+                  actualFilteredCategories.map((category, index) => {
                     const parentCategory = category.parentId
                       ? safeCategories.find((c) => c.id === category.parentId)
                       : null;

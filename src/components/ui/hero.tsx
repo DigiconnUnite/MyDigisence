@@ -44,7 +44,7 @@ export default function HeroSectionOne() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-12 items-center w-full py-20 lg:py-0">
 
           {/* Left Side - Text Content */}
-          <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center">
+          <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-center">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -172,7 +172,7 @@ export default function HeroSectionOne() {
           </div>
 
           {/* Right Side - Visual Content */}
-          <div className="lg:col-span-6 xl:col-span-5 flex items-center justify-center lg:justify-end">
+          <div className="lg:col-span-6 xl:col-span-6 flex items-center justify-center lg:justify-end">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 30 }}
               animate={isClient ? { opacity: 1, scale: 1, y: 0 } : {}}
@@ -191,10 +191,10 @@ export default function HeroSectionOne() {
                   {/* Robot Image */}
                   <div className="relative rounded-xl sm:rounded-2xl overflow-hidden ">
                     <Image
-                      src="/hero-img.png"
+                      src="/hero-card.png"
                       alt="Digital Profile Preview"
-                      width={700}
-                      height={700}
+                      width={900}
+                      height={900}
                       className="object-contain w-full h-auto"
                       priority
                     />

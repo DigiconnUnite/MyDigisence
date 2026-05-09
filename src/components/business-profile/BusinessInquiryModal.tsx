@@ -9,8 +9,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Send, X } from "lucide-react";
 import { InquiryFormData, Product } from "@/components/business-profile/BusinessProfile.types";
+import { Country } from "@/components/ui/country-code-selector";
 
 interface BusinessInquiryModalProps {
   open: boolean;
@@ -31,6 +33,9 @@ export default function BusinessInquiryModal({
   isSubmitting,
   onSubmit,
 }: BusinessInquiryModalProps) {
+  const handlePhoneChange = (value: string, country: Country) => {
+    setInquiryData((prev) => ({ ...prev, phone: value }))
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -68,13 +73,11 @@ export default function BusinessInquiryModal({
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
-            <Input
+            <PhoneInput
               id="phone"
-              type="tel"
               value={inquiryData.phone}
-              onChange={(e) =>
-                setInquiryData((prev) => ({ ...prev, phone: e.target.value }))
-              }
+              onChange={handlePhoneChange}
+              placeholder="Enter phone number"
             />
           </div>
           <div className="space-y-2">

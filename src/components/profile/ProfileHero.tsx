@@ -16,6 +16,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  Mail,
 } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import Link from "next/link"
@@ -76,6 +77,7 @@ interface ProfileHeroProps {
     label: string
     href?: string
   }>
+  adminName?: string
 }
 
 export default function ProfileHero({
@@ -104,6 +106,7 @@ export default function ProfileHero({
   onDownloadVCard,
   onSaveContact,
   breadcrumbs = [],
+  adminName,
 }: ProfileHeroProps) {
   const [imageError, setImageError] = useState({ banner: false, avatar: false })
   
@@ -345,7 +348,7 @@ export default function ProfileHero({
         )}
 
         {/* Top Bar - Share & Like */}
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-40">
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
           <button
             onClick={onShare}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-md text-white rounded-full text-sm hover:bg-white/30 transition-colors border border-white/20 shadow-lg"
@@ -379,15 +382,16 @@ export default function ProfileHero({
           </div>
         )}
       </div>
-
       {/* Profile Info Container - Stacked Layout Like Reference Image */}
-      <div className="bg-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-white relative rounded-t-4xl border">
+        <div className="absolute top-0 left-0 z-20 right-0 h-10 bg-white dark:bg-gray-950 -translate-y-4 rounded-t-3xl"></div>
+        
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative -mt-14 sm:-mt-16 md:-mt-18 pb-6">
             {/* Top Row: Avatar + Quick Actions */}
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between items-center gap-4">
               {/* Avatar - Positioned to overlap banner */}
-              <div className="relative z-20 border-2 border-slate-200 shadow-sm rounded-xl overflow-hidden">
+              <div className="relative z-20 border-4 border-white shadow-md rounded-full bg-white  overflow-hidden sm:mx-0 mx-auto">
                 <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full border-4 border-white bg-white shadow-xl overflow-hidden">
                   {avatar && !imageError.avatar ? (
                     <Image
@@ -425,7 +429,7 @@ export default function ProfileHero({
                       <Button
                         variant="outline"
                         size="lg"
-                        className="border-green-500 text-green-600 hover:bg-green-50 font-medium"
+                        className="border-green-500 text-green-600 hover:bg-green-50 font-medium rounded-full"
                         asChild
                       >
                         <a
@@ -441,7 +445,7 @@ export default function ProfileHero({
                     <Button
                       size="lg"
                       onClick={onMessage}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 rounded-full"
                     >
                       <MessageCircle className="w-5 h-5 mr-2" />
                       Message
@@ -454,7 +458,7 @@ export default function ProfileHero({
                         <Button
                           variant="outline"
                           size="lg"
-                          className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium"
+                          className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-full"
                           asChild
                         >
                           <a href={`tel:${phone}`}>
@@ -464,7 +468,7 @@ export default function ProfileHero({
                         </Button>
                         <Button
                           size="lg"
-                          className="bg-green-600 hover:bg-green-700 text-white font-medium px-6"
+                          className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 rounded-full"
                           asChild
                         >
                           <a
@@ -478,15 +482,39 @@ export default function ProfileHero({
                         </Button>
                       </>
                     )}
+                    {email && (
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-full"
+                        asChild
+                      >
+                        <a href={`mailto:${email}`}>
+                          <Mail className="w-5 h-5 mr-2" />
+                          Email
+                        </a>
+                      </Button>
+                    )}
+                    {onDownloadVCard && (
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-full"
+                        onClick={onDownloadVCard}
+                      >
+                        <Download className="w-5 h-5 mr-2" />
+                        Download
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
             </div>
 
             {/* Profile Info - BELOW the avatar */}
-            <div className="mt-4 md:mt-5">
+            <div className="mt-4 md:mt-5 text-center sm:text-left">
               {/* Name Row with Verification */}
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
                   {name}
                 </h1>
@@ -506,7 +534,7 @@ export default function ProfileHero({
               )}
 
               {/* Rating & Review Count */}
-              <div className="flex items-center gap-2 mt-2.5">
+              <div className="flex items-center gap-2 mt-2.5 justify-center sm:justify-start">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   <span className="text-sm font-semibold text-slate-800">
@@ -516,6 +544,12 @@ export default function ProfileHero({
                 <span className="text-sm text-slate-500">
                   ({displayReviewCount} Reviews)
                 </span>
+                {type === "business" && adminName && (
+                  <>
+                    <span className="text-slate-300">|</span>
+                    <span className="text-sm text-slate-600">{adminName}</span>
+                  </>
+                )}
                 {subtitle && (
                   <>
                     <span className="text-slate-300">|</span>
@@ -526,20 +560,19 @@ export default function ProfileHero({
 
               {/* Location */}
               {location && (
-                <div className="flex items-center gap-1.5 mt-2 text-slate-500">
-                  <MapPin className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 mt-2 text-slate-500 justify-center sm:justify-start">
                   <span className="text-sm">{location}</span>
                 </div>
               )}
 
               {/* Tags Row */}
               {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="flex flex-wrap gap-1.5 mt-4 justify-center sm:justify-start">
                   {tags.map((tag, index) => (
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1 text-sm font-medium rounded-full"
+                      className="bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-full"
                     >
                       {tag}
                     </Badge>
@@ -549,17 +582,17 @@ export default function ProfileHero({
 
               {/* Tech Stack - Only for Professionals */}
               {type === "professional" && techStack.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-1.5 mt-3 justify-center sm:justify-start">
                   {techStack.slice(0, 8).map((tech, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-100"
+                      className="px-2 py-0.5 text-xs bg-gray-50 text-gray-600 border border-gray-300 sm:px-3 sm:py-1 sm:text-xs font-medium rounded-full"
                     >
                       {tech}
                     </span>
                   ))}
                   {techStack.length > 8 && (
-                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                    <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 border border-gray-300 sm:px-3 sm:py-1 sm:text-xs font-medium rounded-full">
                       +{techStack.length - 8}
                     </span>
                   )}
@@ -567,23 +600,23 @@ export default function ProfileHero({
               )}
 
               {/* Business Tags */}
-              <div className="flex flex-wrap gap-2 mt-4 pt-3">
-                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 px-3 py-1 text-sm font-medium rounded-full">
+              <div className="flex flex-wrap gap-1.5 mt-4 pt-3 justify-center sm:justify-start">
+                <Badge className="bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-full">
                   Professional Services
                 </Badge>
-                <Badge className="bg-green-100 text-green-800 hover:bg-green-200 px-3 py-1 text-sm font-medium rounded-full">
+                <Badge className="bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-full">
                   Quality Assured
                 </Badge>
-                <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 px-3 py-1 text-sm font-medium rounded-full">
+                <Badge className="bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-full">
                   Expert Team
                 </Badge>
-                <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200 px-3 py-1 text-sm font-medium rounded-full">
+                <Badge className="bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-full">
                   Fast Delivery
                 </Badge>
-                <Badge className="bg-pink-100 text-pink-800 hover:bg-pink-200 px-3 py-1 text-sm font-medium rounded-full">
+                <Badge className="bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-full">
                   Customer Support
                 </Badge>
-                <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-200 px-3 py-1 text-sm font-medium rounded-full">
+                <Badge className="bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200 px-2 py-0.5 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-full">
                   Best Price
                 </Badge>
               </div>
@@ -595,7 +628,7 @@ export default function ProfileHero({
                     {phone && (
                       <Button
                         variant="outline"
-                        className="flex-1 border-green-500 text-green-600 hover:bg-green-50"
+                        className="flex-1 border-green-500 text-green-600 hover:bg-green-50 rounded-full"
                         asChild
                       >
                         <a
@@ -608,13 +641,35 @@ export default function ProfileHero({
                         </a>
                       </Button>
                     )}
+                    {email && (
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-full"
+                        asChild
+                      >
+                        <a href={`mailto:${email}`}>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Email
+                        </a>
+                      </Button>
+                    )}
                     <Button
                       onClick={onMessage}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full"
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
                       Message
                     </Button>
+                    {onDownloadVCard && (
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-full"
+                        onClick={onDownloadVCard}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    )}
                   </>
                 ) : (
                   <>
@@ -622,7 +677,7 @@ export default function ProfileHero({
                       <>
                         <Button
                           variant="outline"
-                          className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
+                          className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-full"
                           asChild
                         >
                           <a href={`tel:${phone}`}>
@@ -631,7 +686,7 @@ export default function ProfileHero({
                           </a>
                         </Button>
                         <Button
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-full"
                           asChild
                         >
                           <a
@@ -644,6 +699,28 @@ export default function ProfileHero({
                           </a>
                         </Button>
                       </>
+                    )}
+                    {email && (
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-full"
+                        asChild
+                      >
+                        <a href={`mailto:${email}`}>
+                          <Mail className="w-4 h-4 mr-2" />
+                          Email
+                        </a>
+                      </Button>
+                    )}
+                    {onDownloadVCard && (
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-full"
+                        onClick={onDownloadVCard}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
                     )}
                   </>
                 )}

@@ -18,6 +18,8 @@ export interface AuthUser {
   role: UserRole
   businessId?: string
   createdAt?: string
+  onboardingCompleted?: boolean
+  userPath?: string
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -120,6 +122,9 @@ export async function getUserById(id: string): Promise<AuthUser | null> {
     name: user.name || undefined,
     role: user.role as UserRole,
     businessId: (user as any).business?.id,
+    createdAt: user.createdAt?.toISOString(),
+    onboardingCompleted: user.onboardingCompleted,
+    userPath: user.userPath,
   }
 }
 

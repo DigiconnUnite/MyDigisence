@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { displayPhoneNumber } from "@/lib/phone-utils"
 import {
   MapPin,
   Phone,
@@ -76,7 +77,7 @@ export default function ContactCard({
                 href={`tel:${phone}`}
                 className="text-sm text-slate-600 hover:text-blue-600"
               >
-                {phone}
+                {displayPhoneNumber(phone)}
               </a>
             </div>
           </div>

@@ -39,11 +39,13 @@ import {
   Package,
   BarChart3,
   Building,
+  Building2,
   FileText,
   Mail,
   Phone,
   Calendar,
   Image as ImageIcon,
+  LayoutDashboard,
   X,
   Plus,
   Settings,
@@ -69,6 +71,7 @@ import HeroBannerManager from "@/components/ui/hero-banner-manager";
 import BusinessBannerUploader from "@/components/ui/business-banner-uploader";
 import SharedSidebar from "../../components/SharedSidebar";
 import SharedDashboardHeader from "../../components/SharedDashboardHeader";
+import DashboardLoading from "../../components/DashboardLoading";
 import type {
   BrandContent,
   Business,
@@ -1412,123 +1415,25 @@ export default function BusinessAdminDashboard() {
     }
   };
 
-  if (loading || isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col relative">
-        <div className="fixed inset-0  bg-slate-200  bg-center blur-lg  -z-10"></div>
-        {/* Top Header Bar */}
-        <div className="bg-white border-gray-200 shadow-sm">
-          <div className="flex justify-between items-center px-4 sm:px-6 py-2">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 rounded-2xl">
-                <Skeleton className="h-8 w-8" />
-              </div>
-              <div>
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Skeleton className="h-8 w-24 rounded-2xl hidden sm:flex" />
-              <Skeleton className="h-8 w-20 rounded-2xl hidden sm:flex" />
-              <Skeleton className="h-8 w-20 rounded-2xl hidden sm:flex" />
-              <div className="text-right hidden sm:block">
-                <Skeleton className="h-4 w-32 mb-1" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-              <Skeleton className="h-8 w-8 sm:h-12 sm:w-12 rounded-2xl" />
-            </div>
-          </div>
-        </div>
-
-        {/* Main Layout */}
-        <div className="flex flex-1 h-fit overflow-hidden">
-          {/* Left Sidebar - Desktop Only */}
-          {!isMobile && (
-            <div className="w-64  bg-white border-r border-gray-200 flex flex-col shadow-sm">
-              <div className="p-4 border-b border-gray-200 rounded-t-3xl">
-                <div className="flex items-center space-x-2">
-                  <Skeleton className="h-6 w-6" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              </div>
-              <nav className="flex-1 p-4">
-                <ul className="space-y-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <li key={i}>
-                      <div className="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl">
-                        <Skeleton className="h-5 w-5" />
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-              <div className="p-4 border-t border-gray-200 mb-5 mt-auto">
-                <div className="w-full flex items-center space-x-3 px-3 py-2 rounded-2xl">
-                  <Skeleton className="h-5 w-5" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Middle Content */}
-          <div
-            className={`flex-1  bg-white/50 backdrop-blur-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 ease-in-out pb-20 md:pb-0`}
-          >
-            <div className="flex-1 p-4 max-w-7xl mx-auto sm:p-6 overflow-auto hide-scrollbar">
-              {renderSkeletonContent()}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Bottom Navigation */}
-        {isMobile && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl border-t border-gray-200 z-40">
-            <div className="flex justify-around items-center py-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center justify-center py-2 px-3 rounded-xl"
-                >
-                  <Skeleton className="h-5 w-5 mb-1" />
-                  <Skeleton className="h-3 w-12" />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (!user || user.role !== "BUSINESS_ADMIN" || !business) {
-    return null;
-  }
-
-  const heroSlides = business.heroContent?.slides || [];
-
-  // Menu items for navigation
   const menuItems = [
     {
       title: "Dashboard",
-      icon: BarChart3,
-      mobileIcon: Home,
+      icon: LayoutDashboard,
+      mobileIcon: LayoutDashboard,
       value: "dashboard",
       mobileTitle: "Home",
     },
     {
       title: "Business Info",
-      icon: Building,
-      mobileIcon: Building,
+      icon: Building2,
+      mobileIcon: Building2,
       value: "info",
       mobileTitle: "Info",
     },
     {
-      title: "Hero Banner",
-      icon: ImageIcon,
-      mobileIcon: ImageIcon,
+      title: "Hero Section",
+      icon: Image,
+      mobileIcon: Image,
       value: "hero",
       mobileTitle: "Hero",
     },
@@ -1579,9 +1484,13 @@ export default function BusinessAdminDashboard() {
     }
   };
 
+  if (loading || isLoading) {
+    return <DashboardLoading title={business?.name || "Business Dashboard"} navItemCount={menuItems.length} showSearch={true} />;
+  }
+
   return (
-    <div className="min-h-screen flex h-screen  relative">
-      <div className="fixed inset-0  bg-slate-200  bg-center blur-lg  -z-10"></div>
+    <div className="min-h-screen flex h-screen relative">
+      <div className="fixed inset-0 bg-zinc-100 -z-10"></div>
 
       {/* Main Layout: Sidebar + Content */}
       <div className="flex flex-1 overflow-hidden">
@@ -1651,11 +1560,11 @@ export default function BusinessAdminDashboard() {
           <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0">
             <div className="p-4 max-w-7xl mx-auto sm:p-6">
               {/* Main Content based on activeSection */}
-              {activeSection === "dashboard" && (
+              {activeSection === "dashboard" && business && (
                 <BusinessDashboardOverview
                   stats={stats}
                   business={business}
-                  heroSlidesCount={heroSlides.length}
+                  heroSlidesCount={heroContent.slides.length}
                   inquiries={inquiries}
                   formatDate={formatDate}
                   onNavigateToProducts={handleNavigateToProducts}

@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Eye, EyeOff, User, Shield, Lock, Mail, Phone } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, User, Shield, Lock, Mail } from 'lucide-react'
+import { PhoneInput } from '@/components/ui/phone-input'
+import { Country } from '@/components/ui/country-code-selector'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -13,6 +15,7 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: ''
   })
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -29,6 +32,17 @@ export default function RegisterPage() {
     }
   }
 
+  const handlePhoneChange = (value: string, country: Country) => {
+    setFormData(prev => ({ ...prev, mobile: value }))
+    setSelectedCountry(country)
+    if (errors.mobile) {
+      setErrors(prev => ({ ...prev, mobile: '' }))
+    }
+    if (errors.general) {
+      setErrors(prev => ({ ...prev, general: '' }))
+    }
+  }
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
@@ -38,8 +52,8 @@ export default function RegisterPage() {
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
     }
-    if (!formData.mobile || formData.mobile.length < 10) {
-      newErrors.mobile = 'Mobile number must be at least 10 digits'
+    if (!formData.mobile || formData.mobile.replace(/\D/g, '').length < 6) {
+      newErrors.mobile = 'Please enter a valid mobile number'
     }
     if (!formData.password || formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters'
@@ -84,17 +98,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-stretch">
+    <div className="min-h-screen  dark:bg-gray-950 flex items-center justify-center lg:p-4">
 
       {/* ═══════════════════════════════════════════════ */}
       {/* MAIN CONTAINER — 1440px with side borders      */}
       {/* ═══════════════════════════════════════════════ */}
-      <div className="w-full  mx-auto  border-gray-200 dark:border-gray-800 flex min-h-screen flex-col lg:flex-row">
+      <div className="w-full container mx-auto   lg:border-2 lg:overflow-hidden lg:border-slate-800 dark:lg:border-slate-800 lg:rounded-4xl flex h-fit flex-col lg:flex-row">
 
         {/* ───────────────────────────────────────────── */}
         {/* MOBILE HEADER SECTION (shown on mobile only) */}
         {/* ───────────────────────────────────────────── */}
-        <div className="lg:hidden w-full relative overflow-hidden bg-slate-950">
+        <div className="lg:hidden w-full relative  bg-slate-950">
           {/* Mobile decorative blurs - matching desktop */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute -top-12 -right-12 w-[200px] h-[200px] bg-white/[0.08] rounded-full blur-[60px]" />
@@ -197,7 +211,7 @@ export default function RegisterPage() {
         {/* ───────────────────────────────────────────── */}
         {/* LEFT COLUMN — FORM SIDE                      */}
         {/* ───────────────────────────────────────────── */}
-        <div className="w-full w-auto  dark:bg-gray-900 flex flex-col min-h-screen lg:min-h-0 relative z-20 lg:z-auto">
+        <div className="w-full w-auto bg-slate-50 dark:bg-gray-900 flex flex-col min-h-screen lg:min-h-0 relative z-20 lg:z-auto">
           {/* Mobile rounded corners */}
           <div className="lg:hidden absolute top-0 left-0 right-0 h-8 bg-slate-50 dark:bg-gray-950 -translate-y-4 rounded-t-3xl"></div>
 
@@ -294,28 +308,17 @@ export default function RegisterPage() {
                   <label htmlFor="mobile" className="block text-sm font-medium text-foreground">
                     Mobile Number
                   </label>
-                  <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <Phone className="h-4 w-4 text-muted-foreground/70" />
-                    </div>
-                    <input
-                      id="mobile"
-                      type="tel"
-                      autoComplete="tel"
-                      value={formData.mobile}
-                      onChange={(e) => handleChange('mobile', e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                      className={
-                        'w-full h-[44px] pl-10 pr-3.5 rounded-lg border border-slate-800/20 bg-white dark:bg-gray-900 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none transition-all duration-150 ' +
-                        (errors.mobile
-                          ? 'border-red-300 dark:border-red-800 focus:border-red-400 focus:ring-2 focus:ring-red-100 dark:focus:ring-red-900/40'
-                          : 'border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/10'
-                        )
-                      }
-                    />
-                  </div>
+                  <PhoneInput
+                    id="mobile"
+                    value={formData.mobile}
+                    onChange={handlePhoneChange}
+                    placeholder="Enter phone number"
+                    error={errors.mobile}
+                    className='shadow-none'
+                    required
+                  />
                   {errors.mobile && (
-                    <p className="text-xs text-red-600 dark:text-red-400 pl-0.5">{errors.mobile}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 pl-0.5 mt-1">{errors.mobile}</p>
                   )}
                 </div>
 

@@ -3,11 +3,12 @@ import { z } from "zod";
 import { createUser } from "@/lib/auth";
 import { sendOTP } from "@/lib/otp";
 import { db } from "@/lib/db";
+import { validatePhoneNumber, formatToE164 } from "@/lib/phone-utils";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
+  mobile: z.string().min(6, "Please enter a valid mobile number"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -20,13 +21,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, mobile, password } = registerSchema.parse(body);
 
+    // Normalize phone number to E.164 format
+    const normalizedMobile = formatToE164(mobile, 'US'); // Default to US if no country detected
+
     // Check if user already exists
     const existingUser = await db.user.findFirst({
       where: {
         OR: [
           { email: { equals: email.toLowerCase(), mode: 'insensitive' } },
           { username: { equals: email.toLowerCase(), mode: 'insensitive' } },
-          { mobile: mobile }
+          { mobile: normalizedMobile }
         ]
       }
     } as any);
@@ -45,7 +49,7 @@ export async function POST(request: Request) {
       name,
       'USER' as any,
       undefined, // username
-      mobile
+      normalizedMobile
     );
 
     // Send verification email

@@ -162,7 +162,7 @@ export default function SharedDashboardHeader({
   let resultCursor = -1;
 
   return (
-    <div className="bg-white border-b border-gray-200 shadow-sm shrink-0 h-13">
+    <div className="bg-zinc-50 border-b border-gray-200 shadow-sm shrink-0 h-14">
       <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2">
         <div className="flex items-center md:hidden shrink-0 min-w-0">
           <img src="/logo.png" alt="DigiSense" className="h-8 w-8 object-contain rounded-md" />
@@ -185,7 +185,7 @@ export default function SharedDashboardHeader({
                   }
                 }}
                 placeholder={searchPlaceholder}
-                className="h-9 w-full rounded-md border-gray-200 bg-gray-50 pl-9 pr-3 text-sm focus-visible:ring-1 focus-visible:ring-gray-300"
+                className="h-9 w-full rounded-md bg-white shadow-none border-gray-200 bg-gray-50 pl-9 pr-3 text-sm focus-visible:ring-1 focus-visible:ring-gray-300"
               />
 
               {showDropdown && (
@@ -251,7 +251,7 @@ export default function SharedDashboardHeader({
 
       {/* Mobile search overlay */}
       {mobileSearchOpen && (
-        <div className="fixed inset-0 z-60 flex items-start pt-16 md:hidden">
+        <div className="fixed inset-0 z-50 flex items-start pt-16 md:hidden">
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
             onClick={() => setMobileSearchOpen(false)}

@@ -10,7 +10,6 @@ import ReviewCard from "./ReviewCard"
 import QRCodeSection from "./QRCodeSection"
 import ContactCard from "./ContactCard"
 import SocialLinks from "./SocialLinks"
-import StickyCTA from "./StickyCTA"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -122,8 +121,220 @@ export default function BusinessProfilePage({
             <div className="grid lg:grid-cols-3 gap-6">
               {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Contact & About Combined */}
+                {/* About Card */}
                 <Card className="border-slate-200">
+                  <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                    <CardTitle className="text-lg">About {business.name}</CardTitle>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-blue-600 hover:text-blue-700"
+                      onClick={() => setActiveTab("about")}
+                    >
+                      View All
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-slate-600 leading-relaxed line-clamp-3">
+                      {business.about || business.description || "No description available."}
+                    </p>
+                    {(business.about || business.description) && ((business.about?.length ?? 0) > 200 || (business.description?.length ?? 0) > 200) && (
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="text-blue-600 p-0 h-auto mt-2"
+                        onClick={() => setActiveTab("about")}
+                      >
+                        Read more
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Services Card */}
+                {services.length > 0 && (
+                  <Card className="border-slate-200">
+                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                      <CardTitle className="text-lg">Our Services</CardTitle>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => setActiveTab("services")}
+                      >
+                        View All ({services.length})
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        {services.slice(0, 4).map((service, index) => (
+                          <ServiceCard key={index} {...service} />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Products/Menu Card */}
+                {products.length > 0 && (
+                  <Card className="border-slate-200">
+                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                      <CardTitle className="text-lg">Menu & Products</CardTitle>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => setActiveTab("menu")}
+                      >
+                        View All ({products.length})
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {products.slice(0, 4).map((product) => (
+                          <div
+                            key={product.id}
+                            className="group cursor-pointer"
+                            onClick={() => setActiveTab("menu")}
+                          >
+                            <div className="aspect-square rounded-xl bg-slate-100 overflow-hidden mb-2">
+                              {product.image ? (
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ImageIcon className="w-8 h-8 text-slate-300" />
+                                </div>
+                              )}
+                            </div>
+                            <h4 className="font-medium text-slate-900 text-sm line-clamp-1">
+                              {product.name}
+                            </h4>
+                            {product.price && (
+                              <p className="text-sm text-slate-500">
+                                ₹{product.price}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Photo Gallery Card */}
+                {portfolio.length > 0 && (
+                  <Card className="border-slate-200">
+                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                      <CardTitle className="text-lg">Photo Gallery</CardTitle>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => setActiveTab("photos")}
+                      >
+                        View All ({portfolio.length})
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {portfolio.slice(0, 4).map((item, index) => (
+                          <div
+                            key={index}
+                            className="aspect-square rounded-lg bg-slate-100 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setActiveTab("photos")}
+                          >
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.title || "Gallery image"}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ImageIcon className="w-6 h-6 text-slate-300" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Portfolio/Projects Card */}
+                {highlights.length > 0 && (
+                  <Card className="border-slate-200">
+                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                      <CardTitle className="text-lg">Projects & Highlights</CardTitle>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => setActiveTab("highlights")}
+                      >
+                        View All ({highlights.length})
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        {highlights.slice(0, 4).map((highlight, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors"
+                            onClick={() => setActiveTab("highlights")}
+                          >
+                            <div className="w-12 h-12 rounded-lg bg-white shadow-sm flex items-center justify-center text-2xl">
+                              {highlight.icon || "🏆"}
+                            </div>
+                            <div>
+                              <p className="text-lg font-bold text-slate-900">
+                                {highlight.value}
+                              </p>
+                              <p className="text-sm text-slate-500">{highlight.title}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {stats.map((stat, index) => (
+                    <StatCard key={index} {...stat} />
+                  ))}
+                </div>
+
+                {/* Trust Badges */}
+                <Card className="border-slate-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Why Choose Us</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      {trustBadges.map((badge, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 text-sm text-slate-600"
+                        >
+                          <span className="text-blue-600">{badge.icon}</span>
+                          <span>{badge.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Contact Information */}
+                <Card className="border-slate-800 bg-zinc-50 border-2">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg">Contact Information</CardTitle>
                   </CardHeader>
@@ -173,150 +384,25 @@ export default function BusinessProfilePage({
                         </a>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-
-                {/* About */}
-                <Card className="border-slate-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">About {business.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600 leading-relaxed">
-                      {business.about || business.description || "No description available."}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {stats.map((stat, index) => (
-                    <StatCard key={index} {...stat} />
-                  ))}
-                </div>
-
-                {/* Services */}
-                {services.length > 0 && (
-                  <Card className="border-slate-200">
-                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                      <CardTitle className="text-lg">Our Services</CardTitle>
-                      <Button variant="ghost" size="sm" className="text-blue-600">
-                        View All
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {services.slice(0, 6).map((service, index) => (
-                          <ServiceCard key={index} {...service} />
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Trust Badges */}
-                <Card className="border-slate-200">
-                  <CardContent className="p-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      {trustBadges.map((badge, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 text-sm text-slate-600"
-                        >
-                          <span className="text-blue-600">{badge.icon}</span>
-                          <span>{badge.label}</span>
+                    
+                    {/* Social Links - Integrated into Contact Card */}
+                    {(business.facebook || business.twitter || business.instagram || business.linkedin) && (
+                      <div className="pt-4 border-t border-slate-500">
+                        <p className="text-sm font-medium text-slate-700 mb-3">Follow Us</p>
+                        <div className="flex flex-wrap gap-2">
+                          <SocialLinks
+                            facebook={business.facebook}
+                            twitter={business.twitter}
+                            instagram={business.instagram}
+                            linkedin={business.linkedin}
+                            className="gap-2"
+                          />
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                {/* Featured Menu/Products */}
-                {products.length > 0 && (
-                  <Card className="border-slate-200">
-                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                      <CardTitle className="text-lg">Featured Menu</CardTitle>
-                      <Button variant="ghost" size="sm" className="text-blue-600">
-                        View Full Menu
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {products.slice(0, 4).map((product) => (
-                          <div
-                            key={product.id}
-                            className="group cursor-pointer"
-                          >
-                            <div className="aspect-square rounded-xl bg-slate-100 overflow-hidden mb-2">
-                              {product.image ? (
-                                <img
-                                  src={product.image}
-                                  alt={product.name}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <ImageIcon className="w-8 h-8 text-slate-300" />
-                                </div>
-                              )}
-                            </div>
-                            <h4 className="font-medium text-slate-900 text-sm line-clamp-1">
-                              {product.name}
-                            </h4>
-                            {product.price && (
-                              <p className="text-sm text-slate-500">
-                                ₹{product.price}
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Photo Gallery Preview */}
-                {portfolio.length > 0 && (
-                  <Card className="border-slate-200">
-                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                      <CardTitle className="text-lg">Photo Gallery</CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600"
-                        onClick={() => setActiveTab("photos")}
-                      >
-                        View All Photos
-                      </Button>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                        {portfolio.slice(0, 8).map((item, index) => (
-                          <div
-                            key={index}
-                            className="aspect-square rounded-lg bg-slate-100 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-                          >
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.title || "Gallery image"}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <ImageIcon className="w-6 h-6 text-slate-300" />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
                 {/* Business Hours */}
                 {hours.length > 0 && (
                   <Card className="border-slate-200">
@@ -355,28 +441,48 @@ export default function BusinessProfilePage({
                   description="Visit this business instantly by scanning"
                 />
 
-                {/* Social Connect */}
-                <Card className="border-slate-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Connect With Us</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SocialLinks
-                      facebook={business.facebook}
-                      twitter={business.twitter}
-                      instagram={business.instagram}
-                      linkedin={business.linkedin}
-                    />
-                  </CardContent>
-                </Card>
-
                 {/* Share Profile */}
                 <Card className="border-slate-200">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Share This Profile</CardTitle>
+                    <CardTitle className="text-lg">Share & Hours</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-2">
+                  <CardContent className="space-y-4">
+                    {/* Business Hours */}
+                    {hours.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-slate-700 mb-2">Business Hours</p>
+                        {hours.slice(0, 3).map((hour, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="text-slate-600">{hour.day}</span>
+                            <span
+                              className={
+                                hour.isClosed
+                                  ? "text-red-500"
+                                  : "text-slate-900"
+                              }
+                            >
+                              {hour.isClosed ? "Closed" : `${hour.open} - ${hour.close}`}
+                            </span>
+                          </div>
+                        ))}
+                        {hours.length > 3 && (
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="text-blue-600 p-0 h-auto"
+                            onClick={() => setActiveTab("about")}
+                          >
+                            View All Hours
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Share Options */}
+                    <div className="flex gap-2 pt-2 border-t border-slate-100">
                       <Button variant="outline" className="flex-1" onClick={handleShare}>
                         Copy Link
                       </Button>
@@ -509,6 +615,11 @@ export default function BusinessProfilePage({
                     {business.averageRating.toFixed(1)} average
                   </span>
                 )}
+                {business.admin?.name && (
+                  <span className="ml-2 text-sm font-normal text-slate-500">
+                    | Admin: {business.admin.name}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -624,6 +735,7 @@ export default function BusinessProfilePage({
             label: s.label,
           }))}
           onShare={handleShare}
+          adminName={business.admin?.name}
         />
       </div>
 
@@ -635,13 +747,10 @@ export default function BusinessProfilePage({
         </div>
 
         {/* Tab Content */}
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+        <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 bg-gray-100 py-8 pb-24 md:pb-8">
           {renderTabContent()}
         </main>
       </div>
-
-      {/* Mobile Sticky CTA */}
-      <StickyCTA type="business" phone={business.phone} />
 
       {/* Footer */}
       <Footer />

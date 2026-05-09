@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pagination } from "@/components/ui/pagination";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Activity, AlertTriangle, Building, Eye, FolderTree, User, UserCheck, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, Building, Eye, Filter, FolderTree, User, UserCheck, XCircle } from "lucide-react";
 import AdminViewControls from "./AdminViewControls";
 import AdminSectionHeader from "./AdminSectionHeader";
 import AdminErrorAlert from "./AdminErrorAlert";
@@ -25,7 +31,7 @@ interface RegistrationRequestsViewProps {
   setSelectedRegistrationInquiry: React.Dispatch<React.SetStateAction<any>>;
   showRegistrationInquiryDialog: boolean;
   setShowRegistrationInquiryDialog: React.Dispatch<React.SetStateAction<boolean>>;
-  registrationQuery: { page: number; limit: number };
+  registrationQuery: { page: number; limit: number; status: string };
   setRegistrationQuery: React.Dispatch<React.SetStateAction<any>>;
   registrationPagination: { page: number; limit: number; totalItems: number; totalPages: number } | null;
   setRegistrationPagination: React.Dispatch<React.SetStateAction<any>>;
@@ -75,9 +81,10 @@ export default function RegistrationRequestsView({
         inquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inquiry.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inquiry.location?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch;
+      const matchesStatus = registrationQuery.status === "all" || inquiry.status === registrationQuery.status;
+      return matchesSearch && matchesStatus;
     });
-  }, [registrationInquiries, searchTerm]);
+  }, [registrationInquiries, searchTerm, registrationQuery.status]);
 
   useEffect(() => {
     const totalItems = filteredRegistrationInquiries.length;
@@ -110,6 +117,30 @@ export default function RegistrationRequestsView({
       />
 
       <AdminViewControls
+        actions={
+          <Select
+            value={registrationQuery.status}
+            onValueChange={(value) => {
+              setRegistrationQuery((prev: any) => ({
+                ...prev,
+                status: value,
+                page: 1,
+              }));
+            }}
+          >
+            <SelectTrigger className="rounded-xl bg-white border-gray-200">
+              <Filter className="h-4 w-4 text-gray-500 mr-2" />
+              <span className="hidden sm:inline">Filter</span>
+              <span className="sm:hidden">Status</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({registrationInquiries.length})</SelectItem>
+              <SelectItem value="PENDING">Pending ({registrationInquiries.filter((i) => i.status === "PENDING").length})</SelectItem>
+              <SelectItem value="APPROVED">Approved ({registrationInquiries.filter((i) => i.status === "APPROVED").length})</SelectItem>
+              <SelectItem value="REJECTED">Rejected ({registrationInquiries.filter((i) => i.status === "REJECTED").length})</SelectItem>
+            </SelectContent>
+          </Select>
+        }
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search registration requests..."

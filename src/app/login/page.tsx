@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Eye, EyeOff, User, Shield, Lock } from 'lucide-react'
+import { Country } from '@/components/ui/country-code-selector'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -83,17 +84,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 flex items-stretch">
+    <div className="min-h-screen  dark:bg-gray-950 flex items-center justify-center lg:p-4">
 
       {/* ═══════════════════════════════════════════════ */}
       {/* MAIN CONTAINER — 1440px with side borders      */}
       {/* ═══════════════════════════════════════════════ */}
-      <div className="w-full  mx-auto  border-gray-200 dark:border-gray-800 flex min-h-screen flex-col lg:flex-row">
+      <div className="w-full container mx-auto   lg:border-2 lg:overflow-hidden lg:border-slate-800 dark:lg:border-slate-800 lg:rounded-4xl flex h-fit flex-col lg:flex-row">
 
         {/* ───────────────────────────────────────────── */}
         {/* MOBILE HEADER SECTION (shown on mobile only) */}
         {/* ───────────────────────────────────────────── */}
-        <div className="lg:hidden w-full relative overflow-hidden bg-slate-950">
+        <div className="lg:hidden w-full relative  bg-slate-950">
           {/* Mobile decorative blurs - matching desktop */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute -top-12 -right-12 w-[200px] h-[200px] bg-white/[0.08] rounded-full blur-[60px]" />
@@ -374,7 +375,7 @@ export default function LoginPage() {
           </div>
 
           {/* ── Bottom Bar ── */}
-          <div className="shrink-0 px-6 sm:px-10 lg:px-16 xl:px-24 pb-6 pt-2">
+          <div className="shrink-0 px-6 text-center sm:px-10 lg:px-16 xl:px-24 pb-6 pt-2">
             <p className="text-xs text-muted-foreground/40">
               &copy; {new Date().getFullYear()} MyDigiSense. All rights reserved.
             </p>

@@ -114,7 +114,7 @@ export default function DashboardOverview({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-8 gap-6">
-        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+        <Card className="bg-white border border-gray-300 shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-900">Active Businesses</CardTitle>
             <Building className="h-4 w-4 text-gray-400" />
@@ -125,7 +125,7 @@ export default function DashboardOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+        <Card className="bg-white border border-gray-300 shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-900">Active Professionals</CardTitle>
             <UserCheck className="h-4 w-4 text-gray-400" />
@@ -136,7 +136,7 @@ export default function DashboardOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+        <Card className="bg-white border border-gray-300 shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-900">Registration Requests</CardTitle>
             <UserCheck className="h-4 w-4 text-gray-400" />
@@ -147,7 +147,7 @@ export default function DashboardOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+        <Card className="bg-white border border-gray-300 shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-900">System Status</CardTitle>
             <Activity className="h-4 w-4 text-gray-400" />
@@ -160,21 +160,22 @@ export default function DashboardOverview({
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-4 min-h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">New Businesses</CardTitle>
-            <Building className="h-4 w-4 text-white" />
-          </CardHeader>
+        <div className="flex flex-col xl:col-span-4">
+          <div className="flex flex-row items-center gap-2 pb-2 pt-2">
+            <Building className="h-4 w-4 text-gray-500" />
+            <h3 className="text-sm font-medium text-gray-900">New Businesses</h3>
+          </div>
+          <Card className="flex flex-col overflow-hidden bg-white border border-gray-300 shadow-none rounded-xl p-0 transition-all duration-300 hover:shadow-lg min-h-full">
           <CardContent className="flex-1 px-0 bg-white flex flex-col">
             <div className="overflow-x-auto flex-1">
               {filteredBusinesses.length > 0 ? (
                 <Table>
-                  <TableHeader className="bg-slate-800">
+                  <TableHeader className="bg-gray-50 border-b border-gray-200">
                     <TableRow>
-                      <TableHead className="text-xs text-white flex-1">Name</TableHead>
-                      <TableHead className="text-xs text-white w-auto">Category</TableHead>
-                      <TableHead className="text-xs text-white w-auto">Status</TableHead>
-                      <TableHead className="text-xs text-white w-auto">Date</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold flex-1">Name</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold w-auto">Category</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold w-auto">Status</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold w-auto">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -230,22 +231,24 @@ export default function DashboardOverview({
             </div>
           </CardContent>
         </Card>
+        </div>
 
-        <Card className="flex flex-col bg-linear-90 overflow-hidden text-black bg-[#080322] px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-4 min-h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">New Professionals</CardTitle>
-            <User className="h-4 w-4 text-white" />
-          </CardHeader>
+        <div className="flex flex-col xl:col-span-4">
+          <div className="flex flex-row items-center gap-2  pb-2 pt-2">
+            <User className="h-4 w-4 text-gray-500" />
+            <h3 className="text-sm font-medium text-gray-900">New Professionals</h3>
+          </div>
+          <Card className="flex flex-col overflow-hidden bg-white border border-gray-300 shadow-none rounded-xl p-0 transition-all duration-300 hover:shadow-lg min-h-full">
           <CardContent className="flex-1 px-0 bg-white flex flex-col">
             <div className="overflow-x-auto flex-1">
               {filteredProfessionals.length > 0 ? (
                 <Table>
-                  <TableHeader className="bg-slate-800">
+                  <TableHeader className="bg-gray-50 border-b border-gray-200">
                     <TableRow>
-                      <TableHead className="text-xs text-white flex-1">Name</TableHead>
-                      <TableHead className="text-xs text-white w-auto">Profession</TableHead>
-                      <TableHead className="text-xs text-white w-auto">Status</TableHead>
-                      <TableHead className="text-xs text-white w-auto">Date</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold flex-1">Name</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold w-auto">Profession</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold w-auto">Experience</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold w-auto">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -305,24 +308,25 @@ export default function DashboardOverview({
             </div>
           </CardContent>
         </Card>
+        </div>
 
-        <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-6 min-h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">Latest Registration Requests</CardTitle>
-            <UserCheck className="h-4 w-4 text-white" />
-          </CardHeader>
+        <div className="flex flex-col mt-6 xl:col-span-6">
+          <div className="flex flex-row items-center gap-2 pb-2 pt-2">
+            <UserCheck className="h-4 w-4 text-gray-500" />
+            <h3 className="text-sm font-medium text-gray-900">Latest Registration Requests</h3>
+          </div>
+          <Card className="flex flex-col overflow-hidden bg-white border border-gray-300 shadow-none rounded-xl p-0 transition-all duration-300 hover:shadow-lg min-h-full">
           <CardContent className="flex-1 px-0 bg-white flex flex-col">
             <div className="overflow-x-auto flex-1">
               {filteredRegistrationInquiries.length > 0 ? (
                 <Table>
-                  <TableHeader className="bg-slate-800">
+                  <TableHeader className="bg-gray-50 border-b border-gray-200">
                     <TableRow>
-                      <TableHead className="text-xs text-white">Type</TableHead>
-                      <TableHead className="text-xs text-white">Name</TableHead>
-                      <TableHead className="text-xs text-white">Business/Profession</TableHead>
-                      <TableHead className="text-xs text-white">Email</TableHead>
-                      <TableHead className="text-xs text-white">Status</TableHead>
-                      <TableHead className="text-xs text-white">Date</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold">Type</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold">Name</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold">Email</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold">Status</TableHead>
+                      <TableHead className="text-xs text-gray-700 font-semibold">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -348,10 +352,9 @@ export default function DashboardOverview({
                             </div>
                           </TableCell>
                           <TableCell className="text-xs font-medium truncate">{highlightText(inquiry.name)}</TableCell>
-                          <TableCell className="text-xs truncate">{highlightText(inquiry.businessName)}</TableCell>
                           <TableCell className="text-xs">{highlightText(inquiry.email)}</TableCell>
                           <TableCell>
-                            <div className="flex justify-center">
+                            <div className="flex ">
                               <StatusBadge
                                 status={inquiry.status}
                                 variant={
@@ -378,31 +381,33 @@ export default function DashboardOverview({
             </div>
           </CardContent>
         </Card>
+        </div>
 
-        <Card className="flex flex-col  overflow-hidden text-black bg-[#080322]  px-0 pb-0 border-none shadow-sm rounded-xl transition-all duration-300 hover:shadow-lg xl:col-span-2 min-h-full">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white">Quick Actions</CardTitle>
-            <Zap className="h-4 w-4 text-white" />
-          </CardHeader>
-          <CardContent className="flex-1 px-0  flex flex-col">
+        <div className="flex flex-col mt-6 xl:col-span-2">
+          <div className="flex flex-row items-center gap-2 pb-2 pt-2">
+            <Zap className="h-4 w-4 text-gray-500" />
+            <h3 className="text-sm font-medium text-gray-900">Quick Actions</h3>
+          </div>
+          <Card className="flex flex-col overflow-hidden bg-white border border-gray-300 shadow-none rounded-xl p-0 transition-all duration-300 hover:shadow-lg min-h-full">
+          <CardContent className="flex-1 px-0 flex flex-col">
             <div className="space-y-3 p-4">
               <button
                 onClick={onAddBusiness}
-                className="w-full py-2.5 cursor-pointer px-4 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium hover:bg-white/30 transition-all duration-300 flex items-center justify-center shadow-lg"
+                className="w-full py-2.5 cursor-pointer px-4 rounded-full bg-gray-100 border border-gray-300 text-gray-900 text-sm font-medium hover:bg-gray-200 transition-all duration-300 flex items-center justify-center"
               >
                 <Building className="h-4 w-4 mr-2" />
                 Create Business
               </button>
               <button
                 onClick={onAddProfessional}
-                className="w-full py-2.5 px-4  cursor-pointer rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium hover:bg-white/30 transition-all duration-300 flex items-center justify-center shadow-lg"
+                className="w-full py-2.5 px-4 cursor-pointer rounded-full bg-gray-100 border border-gray-300 text-gray-900 text-sm font-medium hover:bg-gray-200 transition-all duration-300 flex items-center justify-center"
               >
                 <User className="h-4 w-4 mr-2" />
                 Create Professional
               </button>
               <button
                 onClick={onAddCategory}
-                className="w-full py-2.5 px-4 cursor-pointer rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium hover:bg-white/30 transition-all duration-300 flex items-center justify-center shadow-lg"
+                className="w-full py-2.5 px-4 cursor-pointer rounded-full bg-gray-100 border border-gray-300 text-gray-900 text-sm font-medium hover:bg-gray-200 transition-all duration-300 flex items-center justify-center"
               >
                 <FolderTree className="h-4 w-4 mr-2" />
                 Create Category
@@ -410,6 +415,7 @@ export default function DashboardOverview({
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,12 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -62,15 +68,28 @@ export default function InquiriesView({
 
       <AdminViewControls
         actions={
-          <Button
-            variant="outline"
-            onClick={() => setInquiryQuery((prev) => ({ ...prev, page: 1 }))}
-            className="rounded-xl border-gray-200"
+          <Select
+            value={inquiryQuery.status}
+            onValueChange={(value) => {
+              setInquiryQuery((prev) => ({
+                ...prev,
+                status: value,
+                page: 1,
+              }));
+            }}
           >
-            <Filter className="h-4 w-4 text-gray-500 mr-2" />
-            <span className="hidden sm:inline">Filter</span>
-            <span className="sm:hidden">Status</span>
-          </Button>
+            <SelectTrigger className="rounded-xl bg-white border-gray-200">
+              <Filter className="h-4 w-4 text-gray-500 mr-2" />
+              <span className="hidden sm:inline">Filter</span>
+              <span className="sm:hidden">Status</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({inquiries.length})</SelectItem>
+              <SelectItem value="PENDING">Pending ({inquiries.filter((i) => i.status === "PENDING").length})</SelectItem>
+              <SelectItem value="REPLIED">Replied ({inquiries.filter((i) => i.status === "REPLIED").length})</SelectItem>
+              <SelectItem value="CLOSED">Closed ({inquiries.filter((i) => i.status === "CLOSED").length})</SelectItem>
+            </SelectContent>
+          </Select>
         }
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
@@ -112,7 +131,8 @@ export default function InquiriesView({
                     inquiry.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     inquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     inquiry.message?.toLowerCase().includes(searchTerm.toLowerCase());
-                  return matchesSearch;
+                  const matchesStatus = inquiryQuery.status === "all" || inquiry.status === inquiryQuery.status;
+                  return matchesSearch && matchesStatus;
                 })
                 .map((inquiry, index) => (
                   <TableRow key={inquiry.id} className="hover:bg-gray-50">

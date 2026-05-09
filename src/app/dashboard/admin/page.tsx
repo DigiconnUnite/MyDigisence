@@ -49,7 +49,6 @@ import {
 } from "./components/AdminRightPanelForms";
 import { AdminDialogs, BusinessListingInquiryDialog } from "./components/AdminDialogs";
 import { AdminDashboardLayout, AdminLoadingLayout } from "./components/AdminLayouts";
-import AdminSkeletonContent from "./components/AdminSkeletonContent";
 import type { AdminStats, Business, Category, Professional } from "./types";
 import { ADMIN_SEARCH_INDEX, type AdminView, type SettingsTabId } from "./config/searchIndex";
 
@@ -147,6 +146,7 @@ export default function SuperAdminDashboard() {
   const [commandSearchTerm, setCommandSearchTerm] = useState("");
   const [recentSearches, setRecentSearches] = useState<HeaderSearchResult[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
   const [currentView, setCurrentView] = useState<AdminView>("dashboard");
   const [settingsTab, setSettingsTab] = useState<SettingsTabId>("general");
@@ -452,12 +452,21 @@ export default function SuperAdminDashboard() {
   const filteredCategories = useMemo(() => {
     // Ensure categories is an array before filtering
     const categoriesArray = Array.isArray(categories) ? categories : [];
-    return categoriesArray.filter(
+    let filtered = categoriesArray.filter(
       (category) =>
         category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         category.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [categories, searchTerm]);
+
+    // Apply category filter
+    if (categoryFilter === "parent") {
+      filtered = filtered.filter((category) => !category.parentId);
+    } else if (categoryFilter === "sub") {
+      filtered = filtered.filter((category) => category.parentId);
+    }
+
+    return filtered;
+  }, [categories, searchTerm, categoryFilter]);
 
   const filteredStats = useMemo(() => {
     return {
@@ -1503,6 +1512,8 @@ export default function SuperAdminDashboard() {
       setSelectedCategories={setSelectedCategories}
       categories={categories}
       filteredCategories={filteredCategories}
+      categoryFilter={categoryFilter}
+      setCategoryFilter={setCategoryFilter}
       toast={toast}
       inquiries={inquiries}
       selectedInquiries={selectedInquiries}
@@ -1651,12 +1662,7 @@ const renderRightPanel = () => {
 
 
   if (loading || isLoading) {
-    return (
-      <AdminLoadingLayout
-        isMobile={isMobile}
-        skeletonContent={<AdminSkeletonContent currentView={currentView} />}
-      />
-    );
+    return <AdminLoadingLayout navItemCount={menuItems.length} />;
   }
 
   if (!user || user.role !== "SUPER_ADMIN") {

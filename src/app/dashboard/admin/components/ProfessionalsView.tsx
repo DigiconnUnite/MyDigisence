@@ -194,12 +194,12 @@ export default function ProfessionalsView({
         </div>
       )}
 
-      <div className="bg-white rounded-md   overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-300 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-slate-800">
+            <TableHeader className="bg-gray-50 border-b border-gray-200">
               <TableRow>
-                <TableHead className="w-12 text-white font-medium">
+                <TableHead className="w-12 text-gray-700 font-medium">
                   <Checkbox
                     checked={
                       professionalData?.professionals.every((p) => selectedProfessionalIds.has(p.id)) || false
@@ -211,22 +211,21 @@ export default function ProfessionalsView({
                     className="border-gray-400"
                   />
                 </TableHead>
-                <TableHead className="w-14 text-white font-medium">SN.</TableHead>
-                <TableHead className="text-white font-medium cursor-pointer" onClick={() => handleProfessionalSort("name")}>
+                <TableHead className="w-14 text-gray-700 font-medium">SN.</TableHead>
+                <TableHead className="text-gray-700 font-medium cursor-pointer" onClick={() => handleProfessionalSort("name")}>
                   <div className="flex items-center gap-1">Professional {getProfessionalSortIcon("name")}</div>
                 </TableHead>
-                <TableHead className="text-white font-medium cursor-pointer" onClick={() => handleProfessionalSort("email")}>
+                <TableHead className="text-gray-700 font-medium cursor-pointer" onClick={() => handleProfessionalSort("email")}>
                   <div className="flex items-center gap-1">Email {getProfessionalSortIcon("email")}</div>
                 </TableHead>
-                <TableHead className="text-white font-medium cursor-pointer" onClick={() => handleProfessionalSort("professionalHeadline")}>
+                <TableHead className="text-gray-700 font-medium cursor-pointer" onClick={() => handleProfessionalSort("professionalHeadline")}>
                   <div className="flex items-center gap-1">Headline {getProfessionalSortIcon("professionalHeadline")}</div>
                 </TableHead>
-                <TableHead className="text-white  truncate font-medium">Location</TableHead>
-                <TableHead className="text-center text-white font-medium">Status</TableHead>
-                <TableHead className="text-white font-medium cursor-pointer" onClick={() => handleProfessionalSort("createdAt")}>
+                <TableHead className="text-center text-gray-700 font-medium">Status</TableHead>
+                <TableHead className="text-gray-700 font-medium cursor-pointer" onClick={() => handleProfessionalSort("createdAt")}>
                   <div className="flex items-center gap-1">Date {getProfessionalSortIcon("createdAt")}</div>
                 </TableHead>
-                <TableHead className="text-center text-white font-medium w-32">Actions</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium w-32">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -296,20 +295,16 @@ export default function ProfessionalsView({
                               <User className="h-5 w-5 text-gray-400" />
                             </div>
                           )}
-                          <span className="text-gray-900 font-medium truncate max-w-[200px]">{professional.name}</span>
+                          <span className="text-gray-600">{professional.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-gray-600 truncate">{professional.email || "N/A"}</TableCell>
-                      <TableCell className="text-gray-600 truncate max-w-[150px]">
+                      <TableCell className="text-gray-600 truncate">
+                        {professional.email}
+                      </TableCell>
+                      <TableCell className="text-gray-600 truncate">
                         {professional.professionalHeadline || "No headline"}
                       </TableCell>
                       <TableCell className="text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 text-gray-400" />
-                          {professional.location || "Not specified"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
                         <div className="flex justify-center">
                           <StatusBadge
                             status={professional.isActive ? "ACTIVE" : "SUSPENDED"}

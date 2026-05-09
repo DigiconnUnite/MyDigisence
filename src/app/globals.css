@@ -232,13 +232,12 @@ html {
 
 /* Hide scrollbar */
 .hide-scrollbar {
--ms-overflow-style: none;
-scrollbar-width: none;
-
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-.hide-scrollbar::-webkit-scrollbar {
-display: none;
 
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Shimmer animation for skeleton loading */
@@ -265,4 +264,20 @@ display: none;
 /* Secondary light gradient */
 .secondary-light-gradient {
   @apply bg-gradient-to-r from-blue-50 via-sky-50 to-cyan-50;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
 }

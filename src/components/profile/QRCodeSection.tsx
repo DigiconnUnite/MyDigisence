@@ -26,17 +26,17 @@ export default function QRCodeSection({
   className,
 }: QRCodeSectionProps) {
   return (
-    <Card className={cn("border-slate-200", className)}>
+    <Card className={cn("bg-linear-0 from-slate-900 to-slate-950 border-slate-800", className)}>
       <CardContent className="p-6">
-        <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <QrCode className="w-5 h-5 text-blue-600" />
-          {title}
-        </h3>
+        <div className="text-center space-y-4">
+          <h3 className="font-semibold text-white mb-4 flex items-center justify-center gap-2">
+            <QrCode className="w-5 h-5 text-blue-400" />
+            {title}
+          </h3>
 
-        <div className="flex flex-col sm:flex-row gap-6 items-start">
-          {/* QR Code */}
-          <div className="flex-shrink-0">
-            <div className="w-32 h-32 sm:w-40 sm:h-40 bg-white p-2 rounded-xl border-2 border-slate-100 shadow-sm">
+          {/* QR Code - Centered */}
+          <div className="flex justify-center">
+            <div className="w-32 h-32 sm:w-40 sm:h-40 bg-white p-3 rounded-xl shadow-lg border-2 border-slate-700">
               {qrCodeUrl ? (
                 <Image
                   src={qrCodeUrl}
@@ -53,20 +53,20 @@ export default function QRCodeSection({
             </div>
           </div>
 
-          {/* Info */}
-          <div className="flex-1 space-y-3">
-            <p className="text-sm text-slate-600">{description}</p>
-            <p className="text-xs text-slate-400 break-all">{profileUrl}</p>
+          {/* Info - Centered */}
+          <div className="space-y-3">
+            <p className="text-sm text-slate-300">{description}</p>
+            <p className="text-xs text-slate-400 break-all px-4">{profileUrl}</p>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex justify-center gap-2">
               {onDownload && (
-                <Button variant="outline" size="sm" onClick={onDownload}>
+                <Button variant="outline" size="sm" onClick={onDownload} className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white">
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
               )}
               {onShare && (
-                <Button variant="outline" size="sm" onClick={onShare}>
+                <Button variant="outline" size="sm" onClick={onShare} className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>

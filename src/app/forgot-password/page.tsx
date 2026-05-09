@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md flex items-center justify-center">
 
         {/* Forgot Password Card */}
-        <div className="bg-card backdrop-blur-sm rounded-2xl border p-8 w-full flex flex-col items-center justify-center">
+        <div className="bg-card backdrop-blur-sm rounded-2xl border-2 border-slate-800 p-8 w-full flex flex-col items-center justify-center">
           {/* Email Display */}
           <div className="text-center mb-6">
            

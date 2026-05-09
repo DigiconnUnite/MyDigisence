@@ -24,17 +24,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if email is verified
+    // Check if email is verified (TEMPORARILY DISABLED FOR TESTING)
     const dbUser = await (await import("@/lib/db")).db.user.findUnique({
       where: { id: user.id }
     } as any);
 
-    if (!dbUser || !dbUser.emailVerified) {
-      return NextResponse.json(
-        { error: "Please verify your email first" },
-        { status: 403 }
-      );
-    }
+    // Email verification temporarily disabled for v2 dashboard testing
+    // if (!dbUser || !dbUser.emailVerified) {
+    //   return NextResponse.json(
+    //     { error: "Please verify your email first" },
+    //     { status: 403 }
+    //   );
+    // }
 
     // Handle session management
     if (force) {
@@ -56,23 +57,12 @@ export async function POST(request: Request) {
     // Determine redirect path based on user role and onboarding status
     let redirectPath = "/dashboard";
     
-    if (!dbUser!.onboardingCompleted) {
+    // Only redirect to onboarding if user is truly new (no userPath set and onboarding not completed)
+    if (!dbUser!.onboardingCompleted && !dbUser!.userPath) {
       redirectPath = "/onboarding";
     } else {
-      switch (user.role) {
-        case 'SUPER_ADMIN':
-          redirectPath = "/admin/dashboard";
-          break;
-        case 'BUSINESS_ADMIN':
-          redirectPath = `/dashboard/business/${user.businessId}`;
-          break;
-        case 'PROFESSIONAL_ADMIN':
-          redirectPath = `/dashboard/professional/${user.id}`;
-          break;
-        case 'USER':
-          redirectPath = "/dashboard/user";
-          break;
-      }
+      // All users now redirect to dashboard - role-based routing handled there
+      redirectPath = "/dashboard";
     }
 
     const response = NextResponse.json({
@@ -85,6 +75,7 @@ export async function POST(request: Request) {
         role: user.role,
         emailVerified: dbUser!.emailVerified,
         onboardingCompleted: dbUser!.onboardingCompleted,
+        userPath: dbUser!.userPath || undefined,
       },
       redirectPath,
     });
