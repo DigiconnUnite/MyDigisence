@@ -54,8 +54,6 @@ export interface PublicPageHeaderProps {
 const defaultNavItems = [
   { name: "Home", link: "/", icon: Home },
   { name: "Marketplace", link: "/marketplace", icon: ShoppingBag },
-  { name: "Businesses", link: "/businesses", icon: Building2 },
-  { name: "Professionals", link: "/professionals", icon: Users },
   { name: "Blog", link: "/blog", icon: BookOpen },
   { name: "Pricing", link: "/pricing", icon: Calculator },
   { name: "Contact Us", link: "/contact", icon: Mail },

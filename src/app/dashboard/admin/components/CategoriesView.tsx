@@ -15,11 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { BulkActionsToolbar } from "@/components/ui/pagination";
-import { Edit, Filter, FolderTree, Plus, Trash2 } from "lucide-react";
+import { Edit, FolderTree, Plus, SlidersHorizontal, Trash2 } from "lucide-react";
 import AdminViewControls from "./AdminViewControls";
 import AdminSectionHeader from "./AdminSectionHeader";
 import AdminActionIconButton from "./AdminActionIconButton";
+import AdminEmptyState from "./AdminEmptyState";
 import type { Category } from "../types";
 
 interface CategoriesViewProps {
@@ -74,25 +76,6 @@ export default function CategoriesView({
 
       <AdminViewControls
         actions={
-          <>
-          <Select
-            value={categoryFilter}
-            onValueChange={(value) => {
-              setCategoryFilter(value);
-            }}
-          >
-            <SelectTrigger className="rounded-xl bg-white border-gray-200">
-              <Filter className="h-4 w-4 text-gray-500 mr-2" />
-              <span className="hidden sm:inline">Filter</span>
-              <span className="sm:hidden">Type</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All ({safeCategories.length})</SelectItem>
-              <SelectItem value="parent">Parent Categories ({safeCategories.filter((c) => !c.parentId).length})</SelectItem>
-              <SelectItem value="sub">Sub Categories ({safeCategories.filter((c) => c.parentId).length})</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button
             onClick={onOpenAddCategory}
             className="rounded-xl bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white hover:opacity-90 transition-opacity"
@@ -101,11 +84,29 @@ export default function CategoriesView({
             <span className="hidden sm:inline">Add Category</span>
             <span className="sm:hidden">Add</span>
           </Button>
-          </>
         }
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search categories..."
+        filterContent={
+          <Select
+            value={categoryFilter}
+            onValueChange={(value) => {
+              setCategoryFilter(value);
+            }}
+          >
+            <SelectTrigger className="rounded-none rounded-r-xl border-0 border-l border-gray-200 bg-transparent shadow-none hover:bg-gray-100 h-[42px] w-[42px] px-0 flex items-center justify-center cursor-pointer [&>svg]:hidden">
+              <span className="flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({safeCategories.length})</SelectItem>
+              <SelectItem value="parent">Parent Categories ({safeCategories.filter((c) => !c.parentId).length})</SelectItem>
+              <SelectItem value="sub">Sub Categories ({safeCategories.filter((c) => c.parentId).length})</SelectItem>
+            </SelectContent>
+          </Select>
+        }
       />
 
       {selectedCategories.size > 0 && (
@@ -131,104 +132,137 @@ export default function CategoriesView({
         </div>
       )}
 
-      <div className="bg-white rounded-md  overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-300 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <Table>
-              <TableHeader className="bg-slate-800">
+            <TableHeader className="bg-gray-50 border-b border-gray-200">
+              <TableRow>
+                <TableHead className="w-12 text-gray-700 font-medium">
+                  <Checkbox
+                    checked={actualFilteredCategories.length > 0 && actualFilteredCategories.every((c) => selectedCategories.has(c.id))}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const allIds = actualFilteredCategories.map((c) => c.id);
+                        setSelectedCategories(new Set(allIds));
+                      } else {
+                        setSelectedCategories(new Set());
+                      }
+                    }}
+                    className="border-gray-400"
+                  />
+                </TableHead>
+                <TableHead className="w-14 text-gray-700 font-medium">SN.</TableHead>
+                <TableHead className="text-gray-700 font-medium">Category Name</TableHead>
+                <TableHead className="text-gray-700 font-medium">Slug</TableHead>
+                <TableHead className="text-gray-700 font-medium">Parent Category</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium">Item Count</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {actualFilteredCategories.length === 0 ? (
                 <TableRow>
-                  <TableHead className="w-14 text-white font-medium">SN.</TableHead>
-                  <TableHead className="text-white font-medium">Category Name</TableHead>
-                  <TableHead className="text-white font-medium">Slug</TableHead>
-                  <TableHead className="text-white font-medium">Parent Category</TableHead>
-                  <TableHead className="text-center text-white font-medium">Item Count</TableHead>
-                  <TableHead className="text-center text-white font-medium ">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {actualFilteredCategories.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12">
-                      <div className="flex flex-col items-center justify-center text-gray-500">
-                        <FolderTree className="h-12 w-12 mb-3 opacity-30" />
-                        <p className="text-base font-medium">No categories found</p>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {searchTerm || categoryFilter !== "all" ? "Try adjusting your search or filters" : "Get started by adding your first category"}
-                        </p>
-                        {!searchTerm && categoryFilter === "all" && (
+                  <TableCell colSpan={8} className="text-center py-12">
+                    <AdminEmptyState
+                      icon={<FolderTree className="h-8 w-8 text-gray-400" />}
+                      title="No categories found"
+                      description={
+                        searchTerm || categoryFilter !== "all"
+                          ? "Try adjusting your search or filters"
+                          : "Get started by adding your first category"
+                      }
+                      action={
+                        !searchTerm && categoryFilter === "all" ? (
                           <Button
                             onClick={onOpenAddCategory}
-                            className="mt-4 bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white rounded-xl hover:opacity-90 transition-opacity"
+                            className="bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white rounded-xl hover:opacity-90 transition-opacity"
                           >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Category
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  actualFilteredCategories.map((category, index) => {
-                    const parentCategory = category.parentId
-                      ? safeCategories.find((c) => c.id === category.parentId)
-                      : null;
+                        ) : undefined
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                actualFilteredCategories.map((category, index) => {
+                  const parentCategory = category.parentId
+                    ? safeCategories.find((c) => c.id === category.parentId)
+                    : null;
 
-                    return (
-                      <TableRow
-                        key={category.id}
-                        className={`hover:bg-gray-50 ${category.parentId ? "bg-gray-50/50" : ""}`}
-                      >
-                        <TableCell className="text-gray-500 font-medium">{index + 1}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className={category.parentId ? "text-sm" : "font-medium"}>{category.name}</span>
-                            {category.parentId && (
-                              <Badge variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
-                                Sub
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-gray-600 text-sm">
-                          <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">{category.slug}</code>
-                        </TableCell>
-                        <TableCell className="text-gray-600">
-                          {parentCategory ? (
-                            <span className="text-sm">{parentCategory.name}</span>
-                          ) : (
-                            <span className="text-gray-400 text-sm">—</span>
+                  return (
+                    <TableRow
+                      key={category.id}
+                      className={`hover:bg-gray-50 ${category.parentId ? "bg-gray-50/50" : ""}`}
+                    >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedCategories.has(category.id)}
+                          onCheckedChange={() => {
+                            setSelectedCategories((prev) => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(category.id)) {
+                                newSet.delete(category.id);
+                              } else {
+                                newSet.add(category.id);
+                              }
+                              return newSet;
+                            });
+                          }}
+                          className="border-gray-400"
+                        />
+                      </TableCell>
+                      <TableCell className="text-gray-500 font-medium">{index + 1}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className={category.parentId ? "text-sm" : "font-medium"}>{category.name}</span>
+                          {category.parentId && (
+                            <Badge variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
+                              Sub
+                            </Badge>
                           )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="secondary" className="rounded-full">
-                            {category._count?.businesses || 0}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-end space-x-1">
-                            <AdminActionIconButton
-                              onClick={() => handleEditCategory(category)}
-                              title="Edit Category"
-                              rounded="md"
-                            >
-                              <Edit className="h-4 w-4 text-gray-500" />
-                            </AdminActionIconButton>
-                            <AdminActionIconButton
-                              onClick={() => handleDeleteCategory(category)}
-                              title="Delete Category"
-                              tone="danger"
-                              rounded="md"
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </AdminActionIconButton>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-600 text-sm">
+                        <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">{category.slug}</code>
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {parentCategory ? (
+                          <span className="text-sm">{parentCategory.name}</span>
+                        ) : (
+                          <span className="text-gray-400 text-sm">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary" className="rounded-full">
+                          {category._count?.businesses || 0}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end space-x-1">
+                          <AdminActionIconButton
+                            onClick={() => handleEditCategory(category)}
+                            title="Edit Category"
+                            rounded="md"
+                          >
+                            <Edit className="h-4 w-4 text-gray-500" />
+                          </AdminActionIconButton>
+                          <AdminActionIconButton
+                            onClick={() => handleDeleteCategory(category)}
+                            title="Delete Category"
+                            tone="danger"
+                            rounded="md"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </AdminActionIconButton>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
           </Table>
         </div>
       </div>

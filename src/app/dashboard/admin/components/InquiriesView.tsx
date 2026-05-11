@@ -17,7 +17,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { BulkActionsToolbar, Pagination } from "@/components/ui/pagination";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Eye, Filter, Mail, Trash2, User, MessageSquare } from "lucide-react";
+import { Eye, Mail, SlidersHorizontal, Trash2, User, MessageSquare } from "lucide-react";
 import AdminViewControls from "./AdminViewControls";
 import AdminSectionHeader from "./AdminSectionHeader";
 import AdminActionIconButton from "./AdminActionIconButton";
@@ -67,7 +67,10 @@ export default function InquiriesView({
       />
 
       <AdminViewControls
-        actions={
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search inquiries..."
+        filterContent={
           <Select
             value={inquiryQuery.status}
             onValueChange={(value) => {
@@ -78,10 +81,10 @@ export default function InquiriesView({
               }));
             }}
           >
-            <SelectTrigger className="rounded-xl bg-white border-gray-200">
-              <Filter className="h-4 w-4 text-gray-500 mr-2" />
-              <span className="hidden sm:inline">Filter</span>
-              <span className="sm:hidden">Status</span>
+            <SelectTrigger className="rounded-none rounded-r-xl border-0 border-l border-gray-200 bg-transparent shadow-none hover:bg-gray-100 h-[42px] w-[42px] px-0 flex items-center justify-center cursor-pointer [&>svg]:hidden">
+              <span className="flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All ({inquiries.length})</SelectItem>
@@ -91,9 +94,6 @@ export default function InquiriesView({
             </SelectContent>
           </Select>
         }
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search inquiries..."
       />
 
       {selectedInquiries.size > 0 && (
@@ -110,18 +110,36 @@ export default function InquiriesView({
         </div>
       )}
 
-      <div className="bg-white rounded-md  overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-300 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-slate-800">
+            <TableHeader className="bg-gray-50 border-b border-gray-200">
               <TableRow>
-                <TableHead className="w-14 text-white font-medium">SN.</TableHead>
-                <TableHead className="text-white font-medium">Customer</TableHead>
-                <TableHead className="text-white font-medium">Business</TableHead>
-                <TableHead className="text-white font-medium">Message</TableHead>
-                <TableHead className="text-center text-white font-medium">Status</TableHead>
-                <TableHead className="text-white font-medium">Date</TableHead>
-                <TableHead className="text-center text-white font-medium ">Actions</TableHead>
+                <TableHead className="w-12 text-gray-700 font-medium">
+                  <Checkbox
+                    checked={inquiries.filter((inquiry) => {
+                      const matchesSearch = inquiry.name?.toLowerCase().includes(searchTerm.toLowerCase()) || inquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) || inquiry.message?.toLowerCase().includes(searchTerm.toLowerCase());
+                      const matchesStatus = inquiryQuery.status === "all" || inquiry.status === inquiryQuery.status;
+                      return matchesSearch && matchesStatus;
+                    }).length > 0 && inquiries.filter((inquiry) => {
+                      const matchesSearch = inquiry.name?.toLowerCase().includes(searchTerm.toLowerCase()) || inquiry.email?.toLowerCase().includes(searchTerm.toLowerCase()) || inquiry.message?.toLowerCase().includes(searchTerm.toLowerCase());
+                      const matchesStatus = inquiryQuery.status === "all" || inquiry.status === inquiryQuery.status;
+                      return matchesSearch && matchesStatus;
+                    }).every((i) => selectedInquiries.has(i.id))}
+                    onCheckedChange={(checked) => {
+                      if (checked) handleSelectAllInquiries();
+                      else handleDeselectAllInquiries();
+                    }}
+                    className="border-gray-400"
+                  />
+                </TableHead>
+                <TableHead className="w-14 text-gray-700 font-medium">SN.</TableHead>
+                <TableHead className="text-gray-700 font-medium">Customer</TableHead>
+                <TableHead className="text-gray-700 font-medium">Business</TableHead>
+                <TableHead className="text-gray-700 font-medium">Message</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium">Status</TableHead>
+                <TableHead className="text-gray-700 font-medium">Date</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -136,6 +154,20 @@ export default function InquiriesView({
                 })
                 .map((inquiry, index) => (
                   <TableRow key={inquiry.id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedInquiries.has(inquiry.id)}
+                        onCheckedChange={() => {
+                          const newSet = new Set(selectedInquiries);
+                          if (newSet.has(inquiry.id)) {
+                            newSet.delete(inquiry.id);
+                          } else {
+                            newSet.add(inquiry.id);
+                          }
+                        }}
+                        className="border-gray-400"
+                      />
+                    </TableCell>
                     <TableCell className="text-gray-500 font-medium">{index + 1}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">

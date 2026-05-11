@@ -1,19 +1,41 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   CheckSquare,
+  Edit,
+  Eye,
   Loader2,
   Plus,
+  Power,
   RefreshCw,
+  SlidersHorizontal,
   Square,
   Trash2,
   Upload,
 } from "lucide-react";
 import AdminSectionHeader from "./AdminSectionHeader";
 import AdminViewControls from "./AdminViewControls";
+import AdminActionIconButton from "./AdminActionIconButton";
+import AdminEmptyState from "./AdminEmptyState";
 
 interface BlogPostItem {
   id: string;
@@ -441,95 +463,91 @@ export default function BlogsView() {
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search blogs by title, category, or author..."
         actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={fetchBlogs}
-              className="rounded-xl"
-              disabled={isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            </Button>
-            <Button
-              onClick={openCreateForm}
-              className="rounded-xl bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white hover:opacity-90 transition-opacity"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {showCreateForm && !isEditing ? "Close" : "New Blog"}
-            </Button>
-          </div>
+          <>
+          <Button
+            variant="outline"
+            onClick={fetchBlogs}
+            className="rounded-xl border-gray-200"
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+          </Button>
+
+          <Button
+            onClick={openCreateForm}
+            className="rounded-xl bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white hover:opacity-90 transition-opacity"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {showCreateForm && !isEditing ? "Close" : "New Blog"}
+          </Button>
+          </>
+        }
+        filterContent={
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value as "all" | "published" | "draft")}
+          >
+            <SelectTrigger className="rounded-none rounded-r-xl border-0 border-l border-gray-200 bg-transparent shadow-none hover:bg-gray-100 h-[42px] w-[42px] px-0 flex items-center justify-center cursor-pointer [&>svg]:hidden">
+              <span className="flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({blogs.length})</SelectItem>
+              <SelectItem value="published">Published ({blogs.filter((b) => b.isPublished).length})</SelectItem>
+              <SelectItem value="draft">Draft ({blogs.filter((b) => !b.isPublished).length})</SelectItem>
+            </SelectContent>
+          </Select>
         }
       />
 
       {selectedBlogIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-4 py-3">
-          <div className="text-sm font-medium text-gray-700">
-            {selectedBlogIds.size} selected
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handleBulkPublish(true)}
-              disabled={bulkActionLoading !== null}
-              className="rounded-xl"
-            >
-              {bulkActionLoading === "publish" ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Publish
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => handleBulkPublish(false)}
-              disabled={bulkActionLoading !== null}
-              className="rounded-xl"
-            >
-              {bulkActionLoading === "unpublish" ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Unpublish
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleBulkDelete}
-              disabled={bulkActionLoading !== null}
-              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
-            >
-              {bulkActionLoading === "delete" ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Delete
-            </Button>
-            <Button variant="ghost" onClick={clearSelection} className="rounded-xl">
-              Clear
-            </Button>
+        <div className="pt-2 border-t border-gray-100">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-4 py-3">
+            <div className="text-sm font-medium text-gray-700">
+              {selectedBlogIds.size} selected
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleBulkPublish(true)}
+                disabled={bulkActionLoading !== null}
+                className="rounded-xl border-gray-200"
+              >
+                {bulkActionLoading === "publish" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Publish
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleBulkPublish(false)}
+                disabled={bulkActionLoading !== null}
+                className="rounded-xl border-gray-200"
+              >
+                {bulkActionLoading === "unpublish" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Unpublish
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleBulkDelete}
+                disabled={bulkActionLoading !== null}
+                className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+              >
+                {bulkActionLoading === "delete" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Delete
+              </Button>
+              <Button variant="ghost" onClick={clearSelection} className="rounded-xl">
+                Clear
+              </Button>
+            </div>
           </div>
         </div>
       )}
-
-      <div className="flex items-center gap-2">
-        <Button
-          variant={statusFilter === "all" ? "default" : "outline"}
-          onClick={() => setStatusFilter("all")}
-          className="rounded-full"
-        >
-          All
-        </Button>
-        <Button
-          variant={statusFilter === "published" ? "default" : "outline"}
-          onClick={() => setStatusFilter("published")}
-          className="rounded-full"
-        >
-          Published
-        </Button>
-        <Button
-          variant={statusFilter === "draft" ? "default" : "outline"}
-          onClick={() => setStatusFilter("draft")}
-          className="rounded-full"
-        >
-          Draft
-        </Button>
-      </div>
 
       {showCreateForm && (
         <form onSubmit={handleSubmitBlog} className="rounded-2xl border bg-white p-4 space-y-3">
@@ -713,94 +731,167 @@ export default function BlogsView() {
         </form>
       )}
 
-      <div className="rounded-2xl border bg-white overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-300 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-800 text-white">
-              <tr>
-                <th className="px-4 py-3 text-left font-medium">
-                  <button type="button" onClick={selectVisibleBlogs} className="inline-flex items-center">
-                    {filteredBlogs.length > 0 && filteredBlogs.every((blog) => selectedBlogIds.has(blog.id)) ? (
-                      <CheckSquare className="h-4 w-4" />
-                    ) : (
-                      <Square className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-left font-medium">Title</th>
-                <th className="px-4 py-3 text-left font-medium">Category</th>
-                <th className="px-4 py-3 text-left font-medium">Author</th>
-                <th className="px-4 py-3 text-left font-medium">Status</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBlogs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
-                    {isLoading ? "Loading blogs..." : "No blogs found"}
-                  </td>
-                </tr>
-              ) : (
-                filteredBlogs.map((blog) => (
-                  <tr key={blog.id} className="border-t">
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => toggleBlogSelection(blog.id)}
-                        className="inline-flex items-center text-gray-600"
-                      >
-                        {selectedBlogIds.has(blog.id) ? (
-                          <CheckSquare className="h-4 w-4 text-orange-600" />
-                        ) : (
-                          <Square className="h-4 w-4" />
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-gray-900">{blog.title}</p>
-                      <p className="text-xs text-gray-500">/{blog.slug}</p>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{blog.category}</td>
-                    <td className="px-4 py-3 text-gray-700">{blog.author}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={blog.isPublished ? "default" : "secondary"}>
-                        {blog.isPublished ? "Published" : "Draft"}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditForm(blog)}
-                          className="rounded-md"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleTogglePublish(blog)}
-                          className="rounded-md"
-                        >
-                          {blog.isPublished ? "Unpublish" : "Publish"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteBlog(blog.id)}
-                          className="rounded-md border-red-200 text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+          <Table>
+            <TableHeader className="bg-gray-50 border-b border-gray-200">
+              <TableRow>
+                <TableHead className="w-12 text-gray-700 font-medium">
+                  <Checkbox
+                    checked={filteredBlogs.length > 0 && filteredBlogs.every((blog) => selectedBlogIds.has(blog.id))}
+                    onCheckedChange={(checked) => {
+                      if (checked) selectVisibleBlogs();
+                      else clearSelection();
+                    }}
+                    className="border-gray-400"
+                  />
+                </TableHead>
+                <TableHead className="w-14 text-gray-700 font-medium">SN.</TableHead>
+                <TableHead className="text-gray-700 font-medium">Title</TableHead>
+                <TableHead className="text-gray-700 font-medium">Category</TableHead>
+                <TableHead className="text-gray-700 font-medium">Author</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium">Status</TableHead>
+                <TableHead className="text-gray-700 font-medium">Date</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium w-32">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 10 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-4" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-8" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-center">
+                        <Skeleton className="h-6 w-16 rounded-full" />
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end space-x-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredBlogs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-12">
+                    <AdminEmptyState
+                      icon={<Edit className="h-8 w-8 text-gray-400" />}
+                      title="No blogs found"
+                      description={
+                        searchTerm || statusFilter !== "all"
+                          ? "Try adjusting your search or filters"
+                          : "Get started by creating your first blog post"
+                      }
+                      action={
+                        !searchTerm && statusFilter === "all" ? (
+                          <Button
+                            onClick={openCreateForm}
+                            className="bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white rounded-xl hover:opacity-90 transition-opacity"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Blog
+                          </Button>
+                        ) : undefined
+                      }
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredBlogs.map((blog, index) => (
+                  <TableRow key={blog.id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedBlogIds.has(blog.id)}
+                        onCheckedChange={() => toggleBlogSelection(blog.id)}
+                        className="border-gray-400"
+                      />
+                    </TableCell>
+                    <TableCell className="text-gray-500 font-medium">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="text-gray-600">
+                      <div>
+                        <p className="font-medium text-gray-900">{blog.title}</p>
+                        <p className="text-xs text-gray-500">/{blog.slug}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-gray-600">{blog.category}</TableCell>
+                    <TableCell className="text-gray-600">{blog.author}</TableCell>
+                    <TableCell className="text-gray-600">
+                      <div className="flex justify-center">
+                        <Badge
+                          variant="secondary"
+                          className={blog.isPublished ? "bg-lime-500/10 border-lime-500/30 text-lime-700" : ""}
+                        >
+                          {blog.isPublished ? "Published" : "Draft"}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-gray-600">
+                      {new Date(blog.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end space-x-1">
+                        <AdminActionIconButton
+                          onClick={() => window.open(`/blog/${blog.slug}`, "_blank")}
+                          title="View Blog"
+                        >
+                          <Eye className="h-4 w-4 text-gray-500" />
+                        </AdminActionIconButton>
+                        <AdminActionIconButton
+                          onClick={() => openEditForm(blog)}
+                          title="Edit Blog"
+                        >
+                          <Edit className="h-4 w-4 text-gray-500" />
+                        </AdminActionIconButton>
+                        <AdminActionIconButton
+                          onClick={() => handleTogglePublish(blog)}
+                          title={blog.isPublished ? "Unpublish Blog" : "Publish Blog"}
+                        >
+                          <Power
+                            className={`h-4 w-4 ${
+                              blog.isPublished ? "text-orange-500" : "text-green-500"
+                            }`}
+                          />
+                        </AdminActionIconButton>
+                        <AdminActionIconButton
+                          onClick={() => handleDeleteBlog(blog.id)}
+                          title="Delete Blog"
+                          tone="danger"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </AdminActionIconButton>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
     </div>

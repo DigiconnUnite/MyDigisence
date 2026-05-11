@@ -21,7 +21,7 @@ export default function HeroSectionOne() {
   }, []);
 
   return (
-    <div className="relative min-h-[80vh] overflow-hidden bg-slate-950">
+    <div className="relative min-h-screen overflow-hidden bg-slate-950">
       {/* Background Layer */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -40,8 +40,8 @@ export default function HeroSectionOne() {
       />
 
       {/* Main Content */}
-      <div className="relative mx-auto max-w-[1440px] border-r border-l border-white/20 px-4 sm:px-6 lg:px-8 z-20 min-h-[90vh] flex items-center">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-12 items-center w-full py-20 lg:py-0">
+      <div className="relative mx-auto max-w-[1440px] border-r border-l border-white/20 px-4 sm:px-6 lg:px-8 z-20 min-h-screen flex items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-12 items-center w-full py-16 sm:py-20 lg:py-24">
 
           {/* Left Side - Text Content */}
           <div className="lg:col-span-6 xl:col-span-6 flex flex-col justify-center">
@@ -94,7 +94,7 @@ export default function HeroSectionOne() {
                         delay: 0.5 + index * 0.07,
                         ease: [0.25, 0.46, 0.45, 0.94],
                       }}
-                      className={`mr-[0.3em] inline-block ${index === 0 ? "text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-orange-400" : ""}`}
+                      className={`mr-[0.3em] inline-block ${index === 0 ? "text-transparent bg-clip-text bg-gradient-to-r from-cyan-50 via-cyan-100 to-cyan-200" : ""}`}
                     >
                       {word}
                     </motion.span>
@@ -242,9 +242,6 @@ export default function HeroSectionOne() {
           </div>
         </div>
       </div>
-
-      {/* Bottom Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none z-20" />
     </div>
   );
 }

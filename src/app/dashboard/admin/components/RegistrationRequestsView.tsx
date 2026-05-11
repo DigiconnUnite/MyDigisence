@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pagination } from "@/components/ui/pagination";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { Activity, AlertTriangle, Building, Eye, Filter, FolderTree, User, UserCheck, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, Building, Eye, FolderTree, SlidersHorizontal, User, UserCheck, XCircle } from "lucide-react";
 import AdminViewControls from "./AdminViewControls";
 import AdminSectionHeader from "./AdminSectionHeader";
 import AdminErrorAlert from "./AdminErrorAlert";
@@ -117,7 +117,10 @@ export default function RegistrationRequestsView({
       />
 
       <AdminViewControls
-        actions={
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search registration requests..."
+        filterContent={
           <Select
             value={registrationQuery.status}
             onValueChange={(value) => {
@@ -128,10 +131,10 @@ export default function RegistrationRequestsView({
               }));
             }}
           >
-            <SelectTrigger className="rounded-xl bg-white border-gray-200">
-              <Filter className="h-4 w-4 text-gray-500 mr-2" />
-              <span className="hidden sm:inline">Filter</span>
-              <span className="sm:hidden">Status</span>
+            <SelectTrigger className="rounded-none rounded-r-xl border-0 border-l border-gray-200 bg-transparent shadow-none hover:bg-gray-100 h-[42px] w-[42px] px-0 flex items-center justify-center cursor-pointer [&>svg]:hidden">
+              <span className="flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All ({registrationInquiries.length})</SelectItem>
@@ -141,9 +144,6 @@ export default function RegistrationRequestsView({
             </SelectContent>
           </Select>
         }
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search registration requests..."
       />
 
       {dataFetchError && (
@@ -159,25 +159,31 @@ export default function RegistrationRequestsView({
       )}
 
       {registrationInquiries.length > 0 && (
-        <div className="bg-white rounded-md overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-300 overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-800">
+              <TableHeader className="bg-gray-50 border-b border-gray-200">
                 <TableRow>
-                  <TableHead className="w-14 text-white font-medium">SN.</TableHead>
-                  <TableHead className="text-white font-medium">Type</TableHead>
-                  <TableHead className="text-white font-medium">Name</TableHead>
-                  <TableHead className="text-white font-medium">Business Name</TableHead>
-                  <TableHead className="text-white font-medium">Contact</TableHead>
-                  <TableHead className="text-white    font-medium">Location</TableHead>
-                  <TableHead className="text-center text-white font-medium">Status</TableHead>
-                  <TableHead className="text-white font-medium">Date</TableHead>
-                  <TableHead className="text-center text-white font-medium ">Actions</TableHead>
+                  <TableHead className="w-12 text-gray-700 font-medium">
+                    <Checkbox className="border-gray-400" />
+                  </TableHead>
+                  <TableHead className="w-14 text-gray-700 font-medium">SN.</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Type</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Name</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Business Name</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Contact</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Location</TableHead>
+                  <TableHead className="text-center text-gray-700 font-medium">Status</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Date</TableHead>
+                  <TableHead className="text-center text-gray-700 font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedRegistrationInquiries.map((inquiry, index) => (
                   <TableRow key={inquiry.id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <Checkbox className="border-gray-400" />
+                    </TableCell>
                     <TableCell className="text-gray-500 font-medium">
                       {(registrationQuery.page - 1) * registrationQuery.limit + index + 1}
                     </TableCell>

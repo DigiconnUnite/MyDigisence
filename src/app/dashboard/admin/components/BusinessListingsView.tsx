@@ -67,12 +67,12 @@ export default function BusinessListingsView({
       )}
 
       {businessListingInquiries.length > 0 ? (
-        <div className="bg-white rounded-md overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-300 overflow-hidden">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-800">
+              <TableHeader className="bg-gray-50 border-b border-gray-200">
                 <TableRow>
-                  <TableHead className="w-12 text-white font-medium">
+                  <TableHead className="w-12 text-gray-700 font-medium">
                     <Checkbox
                       checked={businessListingInquiries.length > 0 && selectedBusinessListings.size === businessListingInquiries.length}
                       onCheckedChange={(checked) => {
@@ -85,15 +85,15 @@ export default function BusinessListingsView({
                       className="border-gray-400"
                     />
                   </TableHead>
-                  <TableHead className="w-14 text-white font-medium">SN.</TableHead>
-                  <TableHead className="text-white font-medium">Business</TableHead>
-                  <TableHead className="text-white font-medium">Contact</TableHead>
-                  <TableHead className="text-white font-medium">Requirements</TableHead>
-                  <TableHead className="text-white font-medium">Inquiry Type</TableHead>
-                  <TableHead className="text-center text-white font-medium">Status</TableHead>
-                  <TableHead className="text-white font-medium">Assigned To</TableHead>
-                  <TableHead className="text-white font-medium">Date</TableHead>
-                  <TableHead className="text-center text-white font-medium ">Actions</TableHead>
+                  <TableHead className="w-14 text-gray-700 font-medium">SN.</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Business</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Contact</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Requirements</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Inquiry Type</TableHead>
+                  <TableHead className="text-center text-gray-700 font-medium">Status</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Assigned To</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Date</TableHead>
+                  <TableHead className="text-center text-gray-700 font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

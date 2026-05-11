@@ -23,9 +23,9 @@ import {
   Download,
   Edit,
   Eye,
-  Filter,
   Plus,
   Power,
+  SlidersHorizontal,
   Trash2,
 } from "lucide-react";
 import AdminViewControls from "./AdminViewControls";
@@ -114,28 +114,6 @@ export default function BusinessesView({
       <AdminViewControls
         actions={
           <>
-          <Select
-            value={businessQuery.status}
-            onValueChange={(value) => {
-              setBusinessQuery((prev) => ({
-                ...prev,
-                status: value,
-                page: 1,
-              }));
-            }}
-          >
-            <SelectTrigger className=" rounded-xl bg-white border-gray-200">
-              <Filter className="h-4 w-4 text-gray-500 mr-2" />
-              <span className="hidden sm:inline">Filter</span>
-              <span className="sm:hidden">Status</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All ({businessData?.pagination.totalItems || filteredBusinesses.length})</SelectItem>
-              <SelectItem value="active">Active ({filteredBusinesses.filter((b) => b.isActive).length})</SelectItem>
-              <SelectItem value="inactive">Inactive ({filteredBusinesses.filter((b) => !b.isActive).length})</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button
             variant="outline"
             onClick={handleExport}
@@ -169,6 +147,29 @@ export default function BusinessesView({
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search businesses..."
+        filterContent={
+          <Select
+            value={businessQuery.status}
+            onValueChange={(value) => {
+              setBusinessQuery((prev) => ({
+                ...prev,
+                status: value,
+                page: 1,
+              }));
+            }}
+          >
+            <SelectTrigger className="rounded-none rounded-r-xl border-0 border-l border-gray-200 bg-transparent shadow-none hover:bg-gray-100 h-[42px] w-[42px] px-0 flex items-center justify-center cursor-pointer [&>svg]:hidden">
+              <span className="flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({businessData?.pagination.totalItems || filteredBusinesses.length})</SelectItem>
+              <SelectItem value="active">Active ({filteredBusinesses.filter((b) => b.isActive).length})</SelectItem>
+              <SelectItem value="inactive">Inactive ({filteredBusinesses.filter((b) => !b.isActive).length})</SelectItem>
+            </SelectContent>
+          </Select>
+        }
       />
 
       {selectedBusinessIds.size > 0 && (

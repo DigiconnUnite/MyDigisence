@@ -41,36 +41,18 @@ export default function HomePage() {
       <UnifiedPublicLayout variant="transparent" sidebarVariant="home">
         <div className=" pt-0  md:pb-0">
         <HeroSectionOne />
-        <MarqueeSection />
+        {/* <MarqueeSection /> */}
 
         {/* feature Section */}
-        <section className="bg-slate-800 ">
-          <div className="max-w-[1440px] border-r border-l border-white/20 mx-auto px-4">
-            <div className="grid grid-cols-1 divide divide-x divide-slate-700 md:grid-cols-3 gap-8">
+        <section className="bg-zinc-100">
+          <div className="max-w-[1440px] border-r border-l  mx-auto px-4">
+            <div className="grid grid-cols-1 divide divide-x divide-slate-300 md:grid-cols-3 gap-8">
               {/* Column 1 */}
+             
               <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <div className="relative overflow-hidden  p-4 flex-shrink-0">
-                    <Image
-                      src="/robo-hero.png"
-                      alt="Inquiry Management"
-                      width={120}
-                      height={120}
-                      className="object-contain w-full h-auto"
-                    />
-                </div>
-                <div className="text-left px-4">
-                  <h3 className="text-xl font-bold text-white mb-2">Digital Profile Builder</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    Create stunning landing pages with hero sliders, product catalogs, and brand showcases.
-                  </p>
-                </div>
-              </div>
-
-              {/* Column 2 */}
-              <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <div className="relative overflow-hidden  p-4 flex-shrink-0">
+                <div className="relative overflow-hidden w-40 h-40  p-4 flex-shrink-0">
                   <Image
-                    src="/robo-hero.png"
+                    src="/h-discover.svg"
                     alt="Inquiry Management"
                     width={120}
                     height={120}
@@ -78,18 +60,38 @@ export default function HomePage() {
                   />
                 </div>
                 <div className="text-left px-4">
-                  <h3 className="text-xl font-bold text-white mb-2">Inquiry Management</h3>
+                  <h3 className="text-xl font-bold  mb-2">Discover</h3>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                    Capture customer interest with inquiry forms. Track leads with automated notifications and status updates.
+                    Discover local businesses and services. Browse professional profiles, compare offerings, and find trusted providers.
                   </p>
                 </div>
-              </div>
+                </div>
+
+
+                {/* Column 2 */}
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="relative overflow-hidden h-40 w-40  p-4 flex-shrink-0">
+                    <Image
+                      src="/h-connection.svg"
+                      alt="Inquiry Management"
+                      width={120}
+                      height={120}
+                      className="object-contain w-full h-auto"
+                    />
+                  </div>
+                  <div className="text-left px-4">
+                    <h3 className="text-xl font-bold  mb-2">Connect</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed">
+                      Create professional digital profiles with custom landing pages, service showcases, and brand storytelling tools.
+                    </p>
+                  </div>
+                </div>
 
               {/* Column 3 */}
               <div className="flex flex-col sm:flex-row gap-4 items-center">
-                <div className="relative overflow-hidden  p-4 flex-shrink-0">
+                <div className="relative overflow-hidden h-40 w-40  p-4 flex-shrink-0">
                     <Image
-                      src="/robo-hero.png"
+                      src="/h-growth.svg"
                       alt="Inquiry Management"
                       width={120}
                       height={120}
@@ -97,9 +99,9 @@ export default function HomePage() {
                     />
                 </div>
                 <div className="text-left px-4">
-                  <h3 className="text-xl font-bold text-white mb-2">Professional Networking</h3>
+                  <h3 className="text-xl font-bold  mb-2">Growth</h3>
                   <p className="text-gray-400 text-sm leading-relaxed">
-                    Connect with skilled professionals. Showcase portfolios and services to find the perfect talent.
+                    Track profile views, customer inquiries, and engagement metrics. Optimize your digital presence with data insights.
                   </p>
                 </div>
               </div>
@@ -124,7 +126,7 @@ export default function HomePage() {
                   offers to enhance your digital presence.
                 </p>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <CheckCircle className="h-5 w-5 text-white" />
                     </div>
@@ -137,7 +139,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <Users className="h-5 w-5 text-white" />
                     </div>
@@ -150,7 +152,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <Shield className="h-5 w-5 text-white" />
                     </div>
@@ -163,7 +165,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <Zap className="h-5 w-5 text-white" />
                     </div>
@@ -179,7 +181,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex flex-col overflow-hidden  h-full ">
-                <div className="h-full mt-auto  relative bg-slate-900 rounded-4xl  p-8 flex flex-col justify-between items-end text-center bg-cover bg-center">
+                <div className="h-full mt-auto  relative bg-zinc-200 rounded-4xl  p-8 flex flex-col justify-between items-end text-center bg-cover bg-center">
                   
                 </div>
               </div>
@@ -192,7 +194,7 @@ export default function HomePage() {
             <div className="max-w-[1440px] py-10 md:py-20 border-r border-l border-gray-200 mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div className="flex flex-col overflow-hidden  h-full ">
-                <div className="h-full mt-auto  relative bg-slate-900 rounded-4xl  p-8 flex flex-col justify-between items-end text-center bg-cover bg-center">
+                <div className="h-full mt-auto  relative bg-zinc-200 rounded-4xl  p-8 flex flex-col justify-between items-end text-center bg-cover bg-center">
                 </div>
               </div>
               <div className="text-left flex flex-col h-full    ml-8">
@@ -208,7 +210,7 @@ export default function HomePage() {
                   offers to enhance your digital presence.
                 </p>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <CheckCircle className="h-5 w-5 text-white" />
                     </div>
@@ -221,7 +223,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <Users className="h-5 w-5 text-white" />
                     </div>
@@ -234,7 +236,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <Shield className="h-5 w-5 text-white" />
                     </div>
@@ -247,7 +249,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3.5 bg-[#E5F6FF] rounded-[14px] px-[18px] py-3.5">
+                  <div className="flex items-center gap-3.5 bg-zinc-100 rounded-[14px] px-[18px] py-3.5">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
                       <Zap className="h-5 w-5 text-white" />
                     </div>

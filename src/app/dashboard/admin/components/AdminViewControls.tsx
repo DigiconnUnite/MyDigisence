@@ -6,6 +6,7 @@ interface AdminViewControlsProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder: string;
+  filterContent?: ReactNode;
 }
 
 export default function AdminViewControls({
@@ -13,6 +14,7 @@ export default function AdminViewControls({
   searchValue,
   onSearchChange,
   searchPlaceholder,
+  filterContent,
 }: AdminViewControlsProps) {
   return (
     <div className="space-y-3">
@@ -21,6 +23,7 @@ export default function AdminViewControls({
         value={searchValue}
         onChange={onSearchChange}
         placeholder={searchPlaceholder}
+        filterContent={filterContent}
       />
     </div>
   );

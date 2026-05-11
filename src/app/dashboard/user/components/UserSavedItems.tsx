@@ -19,7 +19,7 @@ interface SavedProfessional {
   id: string
   name: string
   slug: string
-  professionName: string
+  professionalHeadline: string
   profilePicture?: string
   headline?: string
   rating: number
@@ -230,7 +230,7 @@ export default function UserSavedItems() {
                   </div>
 
                   <h3 className="font-semibold text-gray-900 mb-1">{professional.name}</h3>
-                  <p className="text-sm text-blue-600 mb-2">{professional.professionName}</p>
+                  <p className="text-sm text-blue-600 mb-2">{professional.professionalHeadline}</p>
                   {professional.headline && (
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                       {professional.headline}

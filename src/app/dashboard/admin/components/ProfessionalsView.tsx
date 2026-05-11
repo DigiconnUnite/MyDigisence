@@ -22,10 +22,10 @@ import {
   Download,
   Edit,
   Eye,
-  Filter,
   MapPin,
   Plus,
   Power,
+  SlidersHorizontal,
   Trash2,
   User,
 } from "lucide-react";
@@ -119,28 +119,6 @@ export default function ProfessionalsView({
       <AdminViewControls
         actions={
           <>
-          <Select
-            value={professionalQuery.status}
-            onValueChange={(value) => {
-              setProfessionalQuery((prev) => ({
-                ...prev,
-                status: value,
-                page: 1,
-              }));
-            }}
-          >
-            <SelectTrigger className=" rounded-xl bg-white border-gray-200">
-              <Filter className="h-4 w-4 text-gray-500 mr-2" />
-              <span className="hidden sm:inline">Filter</span>
-              <span className="sm:hidden">Status</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All ({professionalData?.pagination.totalItems || professionals.length})</SelectItem>
-              <SelectItem value="active">Active ({professionals.filter((p) => p.isActive).length})</SelectItem>
-              <SelectItem value="inactive">Inactive ({professionals.filter((p) => !p.isActive).length})</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Button
             variant="outline"
             onClick={handleProfessionalExport}
@@ -178,6 +156,29 @@ export default function ProfessionalsView({
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search professionals..."
+        filterContent={
+          <Select
+            value={professionalQuery.status}
+            onValueChange={(value) => {
+              setProfessionalQuery((prev) => ({
+                ...prev,
+                status: value,
+                page: 1,
+              }));
+            }}
+          >
+            <SelectTrigger className="rounded-none rounded-r-xl border-0 border-l border-gray-200 bg-transparent shadow-none hover:bg-gray-100 h-[42px] w-[42px] px-0 flex items-center justify-center cursor-pointer [&>svg]:hidden">
+              <span className="flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({professionalData?.pagination.totalItems || professionals.length})</SelectItem>
+              <SelectItem value="active">Active ({professionals.filter((p) => p.isActive).length})</SelectItem>
+              <SelectItem value="inactive">Inactive ({professionals.filter((p) => !p.isActive).length})</SelectItem>
+            </SelectContent>
+          </Select>
+        }
       />
 
       {selectedProfessionalIds.size > 0 && (

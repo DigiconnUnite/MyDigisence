@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, type ComponentProps } from "react";
+import { useState, useEffect, useCallback, useMemo, type ComponentProps } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -72,6 +72,16 @@ import BusinessBannerUploader from "@/components/ui/business-banner-uploader";
 import SharedSidebar from "../../components/SharedSidebar";
 import SharedDashboardHeader from "../../components/SharedDashboardHeader";
 import DashboardLoading from "../../components/DashboardLoading";
+import {
+  BusinessDashboardLayout,
+  BusinessLoadingLayout,
+} from "../components/BusinessLayouts";
+import {
+  BUSINESS_SEARCH_INDEX,
+  VALID_BUSINESS_VIEWS,
+  type BusinessView,
+} from "../config/searchIndex";
+import type { HeaderSearchResult } from "../../components/SharedDashboardHeader";
 import type {
   BrandContent,
   Business,
@@ -134,7 +144,16 @@ export default function BusinessAdminDashboard() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<string>("dashboard");
+  const [activeSection, setActiveSection] = useState<BusinessView>("dashboard");
+  const [commandSearchTerm, setCommandSearchTerm] = useState("");
+  const [recentSearches, setRecentSearches] = useState<HeaderSearchResult[]>([]);
+
+  const RECENT_SEARCHES_STORAGE_KEY = "digisence-business-recent-searches";
+  const MAX_RECENT_SEARCHES = 8;
+
+  const isBusinessView = (view: string): view is BusinessView => {
+    return VALID_BUSINESS_VIEWS.includes(view as BusinessView);
+  };
 
   // Dialog states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -362,6 +381,127 @@ export default function BusinessAdminDashboard() {
 
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as HeaderSearchResult[];
+      if (Array.isArray(parsed)) {
+        setRecentSearches(parsed.slice(0, MAX_RECENT_SEARCHES));
+      }
+    } catch {
+      setRecentSearches([]);
+    }
+  }, []);
+
+  // Levenshtein distance for fuzzy search
+  const levenshteinDistance = (a: string, b: string): number => {
+    const m = a.length;
+    const n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+
+    const matrix: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) matrix[i][0] = i;
+    for (let j = 0; j <= n; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + cost
+        );
+      }
+    }
+
+    return matrix[m][n];
+  };
+
+  // Compute search results for command palette
+  const headerSearchResults = useMemo<HeaderSearchResult[]>(() => {
+    const query = commandSearchTerm.trim().toLowerCase();
+    if (!query) return [];
+
+    const queryTokens = query.split(/\s+/).filter(Boolean);
+
+    return BUSINESS_SEARCH_INDEX
+      .map((item) => {
+        let score = 0;
+        const label = item.label.toLowerCase();
+        const description = item.description.toLowerCase();
+        const keywordHaystack = item.keywords.join(" ").toLowerCase();
+
+        if (label.startsWith(query)) score += 120;
+        else if (label.includes(query)) score += 80;
+
+        if (description.includes(query)) score += 35;
+        if (keywordHaystack.includes(query)) score += 50;
+
+        const matchedKeywords = item.keywords.filter((keyword) =>
+          keyword.toLowerCase().includes(query)
+        ).length;
+        score += matchedKeywords * 20;
+
+        for (const token of queryTokens) {
+          if (label.includes(token)) score += 22;
+          if (description.includes(token)) score += 12;
+          if (keywordHaystack.includes(token)) score += 16;
+        }
+
+        const compactLabel = label.replace(/[^a-z0-9]/g, "");
+        const compactQuery = query.replace(/[^a-z0-9]/g, "");
+        if (compactQuery.length >= 3) {
+          const dist = levenshteinDistance(compactQuery, compactLabel.slice(0, Math.max(compactQuery.length, 1)));
+          if (dist <= 1) score += 32;
+          else if (dist <= 2) score += 20;
+          else if (dist <= 3) score += 8;
+        }
+
+        return {
+          score,
+          result: {
+            id: item.id,
+            label: item.label,
+            description: item.description,
+            routeLabel:
+              item.view === "settings"
+                ? `Settings${item.tab ? ` / ${item.tab}` : ""}`
+                : `Page / ${item.view}`,
+            view: item.view,
+            tab: item.tab,
+            sectionId: item.sectionId,
+          } as HeaderSearchResult,
+        };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map((item) => item.result);
+  }, [commandSearchTerm]);
+
+  // Handle search result selection
+  const handleSearchResultSelect = (result: HeaderSearchResult) => {
+    if (!result.view || !isBusinessView(result.view)) {
+      return;
+    }
+
+    setRecentSearches((prev) => {
+      const next = [result, ...prev.filter((item) => item.id !== result.id)].slice(0, MAX_RECENT_SEARCHES);
+      try {
+        window.localStorage.setItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore storage failures
+      }
+      return next;
+    });
+
+    setActiveSection(result.view);
+    setCommandSearchTerm("");
+  };
 
   useEffect(() => {
     console.log("[DEBUG] Business Dashboard - Auth Check:", {
@@ -1484,300 +1624,258 @@ export default function BusinessAdminDashboard() {
     }
   };
 
-  if (loading || isLoading) {
-    return <DashboardLoading title={business?.name || "Business Dashboard"} navItemCount={menuItems.length} showSearch={true} />;
+  const renderMiddleContent = () => {
+    if (isLoading) {
+      return renderSkeletonContent();
+    }
+
+    return (
+      <>
+        {/* Main Content based on activeSection */}
+        {activeSection === "dashboard" && business && (
+          <BusinessDashboardOverview
+            stats={stats}
+            business={business}
+            heroSlidesCount={heroContent.slides.length}
+            inquiries={inquiries}
+            formatDate={formatDate}
+            onNavigateToProducts={handleNavigateToProducts}
+            onNavigateToInfo={() => setActiveSection("info")}
+            onNavigateToInquiries={() => setActiveSection("inquiries")}
+          />
+        )}
+
+        {activeSection === "info" && (
+          <BusinessInfoSection
+            formData={businessInfoFormData}
+            fallbackAdminName={user?.name || "Admin"}
+            onEdit={() => {
+              setBusinessInfoFormData((prev) => ({ ...prev }));
+            }}
+            onLogoUpload={(url) => {
+              setBusinessInfoFormData((prev) => ({
+                ...prev,
+                logo: url,
+              }));
+            }}
+          />
+        )}
+
+        {activeSection === "hero" && (
+          <BusinessHeroSection
+            heroContent={heroContent}
+            onChange={handleHeroContentChange}
+          />
+        )}
+
+        {activeSection === "brands" && (
+          <BusinessBrandsSection
+            sectionTitle={sectionTitles.brands}
+            onSectionTitleChange={(value) =>
+              setSectionTitles((prev) => ({ ...prev, brands: value }))
+            }
+            brandContent={brandContent}
+            savingBrand={savingBrand}
+            onBrandNameChange={(value) =>
+              setBrandContent((prev) => ({ ...prev, newBrandName: value }))
+            }
+            onBrandLogoChange={(value) =>
+              setBrandContent((prev) => ({ ...prev, newBrandLogo: value }))
+            }
+            onBrandLogoUpload={(url) =>
+              setBrandContent((prev) => ({ ...prev, newBrandLogo: url }))
+            }
+            onAddBrand={handleAddBrand}
+            onEditBrand={handleEditBrandName}
+            onDeleteBrand={(index, name) => {
+              setBrandToDeleteIndex(index);
+              setBrandToDeleteName(name);
+              setShowDeleteBrandDialog(true);
+            }}
+          />
+        )}
+
+        {activeSection === "portfolio" && (
+          <BusinessPortfolioSection
+            images={portfolioContent.images || []}
+            onSaveImages={handleSavePortfolioImages}
+            onDeleteImageRequest={(index) => {
+              setPortfolioToDeleteIndex(index);
+              setShowDeletePortfolioDialog(true);
+            }}
+          />
+        )}
+
+        {activeSection === "categories" && (
+          <BusinessCategoriesSection
+            sectionTitle={sectionTitles.categories}
+            onSectionTitleChange={(value) =>
+              setSectionTitles((prev) => ({ ...prev, categories: value }))
+            }
+            categoryFormData={categoryFormData}
+            onCategoryFormChange={setCategoryFormData}
+            categories={categories}
+            savingCategory={savingCategory}
+            onCreateCategory={handleCreateCategory}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
+          />
+        )}
+
+        {activeSection === "products" && (
+          <BusinessProductsSection
+            products={products}
+            categories={categories}
+            searchTerm={searchTerm}
+            selectedCategory={selectedCategory}
+            selectedProducts={selectedProducts}
+            mounted={mounted}
+            productCurrentPage={productCurrentPage}
+            productItemsPerPage={productItemsPerPage}
+            onSelectedCategoryChange={setSelectedCategory}
+            onSelectedProductsChange={setSelectedProducts}
+            onProductCurrentPageChange={setProductCurrentPage}
+            onProductItemsPerPageChange={setProductItemsPerPage}
+            onOpenBulkActivate={() => setShowBulkActivateDialog(true)}
+            onOpenBulkDeactivate={() => setShowBulkDeactivateDialog(true)}
+            onOpenBulkDelete={() => setShowBulkDeleteDialog(true)}
+            onAddProduct={handleOpenProductDialog}
+            onEditProduct={(product) => {
+              handleProductEdit(product);
+              setShowProductDialog(true);
+            }}
+            onShareProduct={handleShare}
+            onDeleteProduct={handleProductDelete}
+          />
+        )}
+
+        {activeSection === "inquiries" && (
+          <BusinessInquiriesSection
+            inquiries={inquiries}
+            stats={stats}
+            formatDate={formatDate}
+            onStatusUpdate={handleInquiryStatusUpdate}
+          />
+        )}
+
+        {activeSection === "analytics" && (
+          <BusinessPlaceholderSection
+            heading="Analytics"
+            subtitle="Track your business performance"
+            cardTitle="Analytics Coming Soon"
+            cardDescription="Detailed analytics and insights will be available here"
+            icon={BarChart3}
+          />
+        )}
+
+        {activeSection === "settings" && (
+          <BusinessPlaceholderSection
+            heading="Settings"
+            subtitle="Manage your account and preferences"
+            cardTitle="Settings Coming Soon"
+            cardDescription="Account settings and preferences will be available here"
+            icon={Settings}
+          />
+        )}
+      </>
+    );
+  };
+
+  const renderOverlayContent = () => (
+    <>
+      <BusinessCategoryModal
+        isOpen={showCategoryModal}
+        editingCategory={editingCategory}
+        categoryFormData={categoryFormData}
+        setCategoryFormData={setCategoryFormData}
+        categories={categories}
+        sectionTitle={sectionTitles.categories}
+        onSectionTitleChange={(value) =>
+          setSectionTitles((prev) => ({
+            ...prev,
+            categories: value,
+          }))
+        }
+        savingCategory={savingCategory}
+        onClose={handleCloseCategoryModal}
+        onSave={handleSaveCategoryFromModal}
+      />
+
+      <BusinessProductModal
+        isOpen={showProductDialog}
+        editingProduct={editingProduct}
+        productFormData={productFormData}
+        setProductFormData={setProductFormData}
+        categories={categories}
+        brandContent={brandContent}
+        images={images}
+        mounted={mounted}
+        savingProduct={savingProduct}
+        newInfoKey={newInfoKey}
+        newInfoValue={newInfoValue}
+        onNewInfoKeyChange={setNewInfoKey}
+        onNewInfoValueChange={setNewInfoValue}
+        onAddInfo={handleAddInfo}
+        onRemoveInfo={handleRemoveInfo}
+        onClose={handleCloseProductDialog}
+        onSave={handleSaveProduct}
+      />
+
+      <BusinessConfirmationDialogs
+        showDeleteProductDialog={showDeleteProductDialog}
+        setShowDeleteProductDialog={setShowDeleteProductDialog}
+        productToDelete={productToDelete}
+        onConfirmDeleteProduct={confirmDeleteProduct}
+        showDeleteCategoryDialog={showDeleteCategoryDialog}
+        setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
+        categoryToDelete={categoryToDelete}
+        onConfirmDeleteCategory={confirmDeleteCategory}
+        showDeleteBrandDialog={showDeleteBrandDialog}
+        setShowDeleteBrandDialog={setShowDeleteBrandDialog}
+        brandToDeleteName={brandToDeleteName}
+        onConfirmDeleteBrand={confirmDeleteBrand}
+        showDeletePortfolioDialog={showDeletePortfolioDialog}
+        setShowDeletePortfolioDialog={setShowDeletePortfolioDialog}
+        onConfirmDeletePortfolio={confirmDeletePortfolio}
+        showBulkActivateDialog={showBulkActivateDialog}
+        setShowBulkActivateDialog={setShowBulkActivateDialog}
+        showBulkDeactivateDialog={showBulkDeactivateDialog}
+        setShowBulkDeactivateDialog={setShowBulkDeactivateDialog}
+        showBulkDeleteDialog={showBulkDeleteDialog}
+        setShowBulkDeleteDialog={setShowBulkDeleteDialog}
+        selectedProductsCount={selectedProducts.length}
+        onConfirmBulkActivate={confirmBulkActivate}
+        onConfirmBulkDeactivate={confirmBulkDeactivate}
+        onConfirmBulkDelete={confirmBulkDelete}
+      />
+    </>
+  );
+
+  if (loading) {
+    return <BusinessLoadingLayout navItemCount={menuItems.length} />;
   }
 
   return (
-    <div className="min-h-screen flex h-screen relative">
-      <div className="fixed inset-0 bg-zinc-100 -z-10"></div>
-
-      {/* Main Layout: Sidebar + Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Desktop / Mobile Bottom Nav */}
-        <SharedSidebar
-          navLinks={menuItems}
-          currentView={activeSection}
-          onViewChange={setActiveSection}
-          onLogout={async () => {
-            await logout();
-            router.push("/login");
-          }}
-          onSettings={() => setActiveSection("settings")}
-          onCollapsedChange={setSidebarCollapsed}
-          isMobile={isMobile}
-          headerTitle={business?.name || "Business Admin"}
-          headerIcon={Building}
-        />
-
-        {/* Middle Content with Header */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <SharedDashboardHeader
-            title={business?.name || "Business Admin"}
-            userName={user?.name || "Business Admin"}
-            userEmail={user?.email}
-            searchValue={searchTerm}
-            onSearchChange={(value) => {
-              setSearchTerm(value);
-              setProductCurrentPage(1);
-            }}
-            searchPlaceholder={getBusinessSearchPlaceholder()}
-            rightActions={
-              <>
-                <div className="hidden md:flex">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleOpenCatalogPreview}
-                    className="rounded-full px-4 py-0.2  bg-slate-900 hover:bg-slate-800  text-white hover:text-white  border-0 hover:opacity-90 transition-opacity"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                </div>
-                <div className="flex md:hidden">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleOpenCatalogPreview}
-                    className="rounded-full p-2 bg-slate-800 text-white border-0 hover:text-white hover:opacity-90 transition-opacity"
-                    aria-label="View"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              </>
-            }
-            avatar={
-              <BusinessHeaderAvatar
-                businessName={business?.name || "Business Admin"}
-                logoUrl={business?.logo || null}
-              />
-            }
-          />
-
-          {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-auto hide-scrollbar pb-20 md:pb-0">
-            <div className="p-4 max-w-7xl mx-auto sm:p-6">
-              {/* Main Content based on activeSection */}
-              {activeSection === "dashboard" && business && (
-                <BusinessDashboardOverview
-                  stats={stats}
-                  business={business}
-                  heroSlidesCount={heroContent.slides.length}
-                  inquiries={inquiries}
-                  formatDate={formatDate}
-                  onNavigateToProducts={handleNavigateToProducts}
-                  onNavigateToInfo={() => setActiveSection("info")}
-                  onNavigateToInquiries={() => setActiveSection("inquiries")}
-                />
-              )}
-
-              {activeSection === "info" && (
-                <BusinessInfoSection
-                  formData={businessInfoFormData}
-                  fallbackAdminName={user?.name || "Admin"}
-                  onEdit={() => {
-                    // Force refresh when edit state changes
-                    setBusinessInfoFormData((prev) => ({ ...prev }));
-                  }}
-                  onLogoUpload={(url) => {
-                    setBusinessInfoFormData((prev) => ({
-                      ...prev,
-                      logo: url,
-                    }));
-                  }}
-                />
-              )}
-
-              {activeSection === "hero" && (
-                <BusinessHeroSection
-                  heroContent={heroContent}
-                  onChange={handleHeroContentChange}
-                />
-              )}
-
-              {activeSection === "brands" && (
-                <BusinessBrandsSection
-                  sectionTitle={sectionTitles.brands}
-                  onSectionTitleChange={(value) =>
-                    setSectionTitles((prev) => ({ ...prev, brands: value }))
-                  }
-                  brandContent={brandContent}
-                  savingBrand={savingBrand}
-                  onBrandNameChange={(value) =>
-                    setBrandContent((prev) => ({ ...prev, newBrandName: value }))
-                  }
-                  onBrandLogoChange={(value) =>
-                    setBrandContent((prev) => ({ ...prev, newBrandLogo: value }))
-                  }
-                  onBrandLogoUpload={(url) =>
-                    setBrandContent((prev) => ({ ...prev, newBrandLogo: url }))
-                  }
-                  onAddBrand={handleAddBrand}
-                  onEditBrand={handleEditBrandName}
-                  onDeleteBrand={(index, name) => {
-                    setBrandToDeleteIndex(index);
-                    setBrandToDeleteName(name);
-                    setShowDeleteBrandDialog(true);
-                  }}
-                />
-              )}
-
-              {activeSection === "portfolio" && (
-                <BusinessPortfolioSection
-                  images={portfolioContent.images || []}
-                  onSaveImages={handleSavePortfolioImages}
-                  onDeleteImageRequest={(index) => {
-                    setPortfolioToDeleteIndex(index);
-                    setShowDeletePortfolioDialog(true);
-                  }}
-                />
-              )}
-
-              {activeSection === "categories" && (
-                <BusinessCategoriesSection
-                  sectionTitle={sectionTitles.categories}
-                  onSectionTitleChange={(value) =>
-                    setSectionTitles((prev) => ({ ...prev, categories: value }))
-                  }
-                  categoryFormData={categoryFormData}
-                  onCategoryFormChange={setCategoryFormData}
-                  categories={categories}
-                  savingCategory={savingCategory}
-                  onCreateCategory={handleCreateCategory}
-                  onEditCategory={handleEditCategory}
-                  onDeleteCategory={handleDeleteCategory}
-                />
-              )}
-
-              {activeSection === "products" && (
-                <BusinessProductsSection
-                  products={products}
-                  categories={categories}
-                  searchTerm={searchTerm}
-                  selectedCategory={selectedCategory}
-                  selectedProducts={selectedProducts}
-                  mounted={mounted}
-                  productCurrentPage={productCurrentPage}
-                  productItemsPerPage={productItemsPerPage}
-                  onSelectedCategoryChange={setSelectedCategory}
-                  onSelectedProductsChange={setSelectedProducts}
-                  onProductCurrentPageChange={setProductCurrentPage}
-                  onProductItemsPerPageChange={setProductItemsPerPage}
-                  onOpenBulkActivate={() => setShowBulkActivateDialog(true)}
-                  onOpenBulkDeactivate={() => setShowBulkDeactivateDialog(true)}
-                  onOpenBulkDelete={() => setShowBulkDeleteDialog(true)}
-                  onAddProduct={handleOpenProductDialog}
-                  onEditProduct={(product) => {
-                    handleProductEdit(product);
-                    setShowProductDialog(true);
-                  }}
-                  onShareProduct={handleShare}
-                  onDeleteProduct={handleProductDelete}
-                />
-              )}
-
-              {activeSection === "inquiries" && (
-                <BusinessInquiriesSection
-                  inquiries={inquiries}
-                  stats={stats}
-                  formatDate={formatDate}
-                  onStatusUpdate={handleInquiryStatusUpdate}
-                />
-              )}
-
-              {activeSection === "analytics" && (
-                <BusinessPlaceholderSection
-                  heading="Analytics"
-                  subtitle="Track your business performance"
-                  cardTitle="Analytics Coming Soon"
-                  cardDescription="Detailed analytics and insights will be available here"
-                  icon={BarChart3}
-                />
-              )}
-
-              {activeSection === "settings" && (
-                <BusinessPlaceholderSection
-                  heading="Settings"
-                  subtitle="Manage your account and preferences"
-                  cardTitle="Settings Coming Soon"
-                  cardDescription="Account settings and preferences will be available here"
-                  icon={Settings}
-                />
-              )}
-            </div>
-          </div>
-
-          <BusinessCategoryModal
-            isOpen={showCategoryModal}
-            editingCategory={editingCategory}
-            categoryFormData={categoryFormData}
-            setCategoryFormData={setCategoryFormData}
-            categories={categories}
-            sectionTitle={sectionTitles.categories}
-            onSectionTitleChange={(value) =>
-              setSectionTitles((prev) => ({
-                ...prev,
-                categories: value,
-              }))
-            }
-            savingCategory={savingCategory}
-            onClose={handleCloseCategoryModal}
-            onSave={handleSaveCategoryFromModal}
-          />
-        </div>
-
-        {/* Product Management Modal */}
-        <BusinessProductModal
-          isOpen={showProductDialog}
-          editingProduct={editingProduct}
-          productFormData={productFormData}
-          setProductFormData={setProductFormData}
-          categories={categories}
-          brandContent={brandContent}
-          images={images}
-          mounted={mounted}
-          savingProduct={savingProduct}
-          newInfoKey={newInfoKey}
-          newInfoValue={newInfoValue}
-          onNewInfoKeyChange={setNewInfoKey}
-          onNewInfoValueChange={setNewInfoValue}
-          onAddInfo={handleAddInfo}
-          onRemoveInfo={handleRemoveInfo}
-          onClose={handleCloseProductDialog}
-          onSave={handleSaveProduct}
-        />
-
-        <BusinessConfirmationDialogs
-          showDeleteProductDialog={showDeleteProductDialog}
-          setShowDeleteProductDialog={setShowDeleteProductDialog}
-          productToDelete={productToDelete}
-          onConfirmDeleteProduct={confirmDeleteProduct}
-          showDeleteCategoryDialog={showDeleteCategoryDialog}
-          setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
-          categoryToDelete={categoryToDelete}
-          onConfirmDeleteCategory={confirmDeleteCategory}
-          showDeleteBrandDialog={showDeleteBrandDialog}
-          setShowDeleteBrandDialog={setShowDeleteBrandDialog}
-          brandToDeleteName={brandToDeleteName}
-          onConfirmDeleteBrand={confirmDeleteBrand}
-          showDeletePortfolioDialog={showDeletePortfolioDialog}
-          setShowDeletePortfolioDialog={setShowDeletePortfolioDialog}
-          onConfirmDeletePortfolio={confirmDeletePortfolio}
-          showBulkActivateDialog={showBulkActivateDialog}
-          setShowBulkActivateDialog={setShowBulkActivateDialog}
-          showBulkDeactivateDialog={showBulkDeactivateDialog}
-          setShowBulkDeactivateDialog={setShowBulkDeactivateDialog}
-          showBulkDeleteDialog={showBulkDeleteDialog}
-          setShowBulkDeleteDialog={setShowBulkDeleteDialog}
-          selectedProductsCount={selectedProducts.length}
-          onConfirmBulkActivate={confirmBulkActivate}
-          onConfirmBulkDeactivate={confirmBulkDeactivate}
-          onConfirmBulkDelete={confirmBulkDelete}
-        />
-      </div>
-    </div>
+    <BusinessDashboardLayout
+      isMobile={isMobile}
+      navLinks={menuItems}
+      currentView={activeSection}
+      onViewChange={(view) => setActiveSection(view as BusinessView)}
+      onLogout={async () => {
+        await logout();
+        router.push("/login");
+      }}
+      onSettings={() => setActiveSection("settings")}
+      userName={user?.name || "Business Admin"}
+      userEmail={user?.email}
+      searchValue={commandSearchTerm}
+      onSearchChange={setCommandSearchTerm}
+      searchPlaceholder={getBusinessSearchPlaceholder()}
+      searchResults={headerSearchResults}
+      recentSearches={recentSearches}
+      onSearchResultSelect={handleSearchResultSelect}
+      middleContent={renderMiddleContent()}
+      overlayContent={renderOverlayContent()}
+    />
   );
 }
-

@@ -9,7 +9,6 @@ interface Professional {
   id: string;
   name: string;
   slug: string;
-  professionName: string | null;
   professionalHeadline: string | null;
   aboutMe: string | null;
   profilePicture: string | null;
@@ -69,9 +68,9 @@ export default function OverviewView({
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
+        <StatCard 
           title="Profile Views"
-          value="0"
+          value={stats?.profileViews?.toString() || "0"}
           subtitle="This month"
           icon={<Eye className="h-4 w-4 text-gray-400" />}
         />

@@ -668,8 +668,8 @@ function MarketplaceContent() {
               <div className="grid grid-cols-1 md:grid-cols-5">
                 {/* Card 1 */}
                 <div className="flex items-start gap-4 p-4 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-200">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Shield className="h-6 w-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield className="h-6 w-6 text-slate-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Create Your Profile</h3>
@@ -679,8 +679,8 @@ function MarketplaceContent() {
                 </div>
                 {/* Card 2 */}
                 <div className="flex items-start gap-4 p-4 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-200">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Users className="h-6 w-6 text-green-600" />
+                  <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Users className="h-6 w-6 text-slate-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Share & Connect</h3>
@@ -689,8 +689,8 @@ function MarketplaceContent() {
                 </div>
                 {/* Card 3 */}
                 <div className="flex items-start gap-4 p-4 bg-slate-50 border-b md:border-b-0 md:border-r border-gray-200">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Zap className="h-6 w-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Zap className="h-6 w-6 text-slate-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Get Discovered</h3>
@@ -698,12 +698,12 @@ function MarketplaceContent() {
                   </div>
                 </div>
                 {/* Join Card - Larger (spans 2 columns) */}
-                <div className="md:col-span-2 bg-gradient-to-r rounded-xl from-blue-600 to-blue-800 p-3 sm:p-4 flex items-center justify-between gap-2 sm:gap-4">
+                <div className="md:col-span-2 bg-linear-to-r from-slate-700 to-slate-800 rounded-xl  p-3 sm:p-4 flex items-center justify-between gap-2 sm:gap-4">
                   <div>
                     <h3 className="text-base sm:text-xl font-bold text-white mb-0.5 sm:mb-1">Join Mydigisence Today</h3>
                     <p className="text-blue-100 text-xs sm:text-sm">Create your profile and start your digital presence journey.</p>
                   </div>
-                  <Button className="bg-white text-blue-600 hover:bg-blue-50 px-3 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm flex-shrink-0" asChild>
+                  <Button className="bg-white rounded-full hover:bg-blue-50 px-3 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm flex-shrink-0" asChild>
                     <Link href="/register">Get Started Now</Link>
                   </Button>
                 </div>

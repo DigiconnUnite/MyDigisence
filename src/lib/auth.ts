@@ -153,3 +153,10 @@ export function generateToken(user: AuthUser): string {
 
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
 }
+
+// Session-based auth function for API routes
+export async function auth(): Promise<{ user: AuthUser | null }> {
+  // For now, return null - this should be implemented with proper session management
+  // In a real app, this would use NextAuth.js or similar session management
+  return { user: null }
+}
