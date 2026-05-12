@@ -51,7 +51,7 @@ export function BusinessCategoriesSection({
             value={sectionTitle}
             onChange={(e) => onSectionTitleChange(e.target.value)}
             placeholder="Enter section title"
-            className="bg-white rounded-2xl"
+            className="bg-white rounded-3xl"
           />
         </div>
 
@@ -72,7 +72,7 @@ export function BusinessCategoriesSection({
                     name: e.target.value,
                   })
                 }
-                className="bg-white rounded-2xl"
+                className="bg-white rounded-3xl"
               />
             </div>
             <div className="space-y-2">
@@ -87,7 +87,7 @@ export function BusinessCategoriesSection({
                   })
                 }
                 rows={3}
-                className="bg-white rounded-2xl"
+                className="bg-white rounded-3xl"
               />
             </div>
             <div className="space-y-2">
@@ -101,7 +101,7 @@ export function BusinessCategoriesSection({
                   })
                 }
               >
-                <SelectTrigger className="bg-white rounded-2xl">
+                <SelectTrigger className="bg-white rounded-3xl">
                   <SelectValue placeholder="Select parent category (optional)" />
                 </SelectTrigger>
                 <SelectContent>

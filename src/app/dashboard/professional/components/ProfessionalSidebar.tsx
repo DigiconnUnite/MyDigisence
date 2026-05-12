@@ -78,14 +78,16 @@ const navigationItems: NavItem[] = [
   { id: "enquiries", label: "Client Inquiries", icon: MessageSquare, section: "CLIENT ENGAGEMENT", badge: 0 },
   { id: "messages", label: "Messages", icon: MessageSquare, section: "CLIENT ENGAGEMENT", badge: 0 },
   { id: "appointments", label: "Appointments", icon: Calendar, section: "CLIENT ENGAGEMENT" },
-  
-  // ACCOUNT MANAGEMENT
+];
+
+// Settings items to be shown at bottom with logout
+const settingsItems: NavItem[] = [
   { id: "account-settings", label: "Account Settings", icon: Settings, section: "ACCOUNT MANAGEMENT" },
   { id: "settings", label: "Preferences", icon: Cog, section: "ACCOUNT MANAGEMENT" },
   { id: "subscription", label: "Subscription", icon: CreditCard, section: "ACCOUNT MANAGEMENT" },
 ];
 
-const sections: NavSection[] = ["DASHBOARD & OVERVIEW", "PROFILE MANAGEMENT", "SERVICES & BUSINESS", "CLIENT ENGAGEMENT", "ACCOUNT MANAGEMENT"];
+const sections: NavSection[] = ["DASHBOARD & OVERVIEW", "PROFILE MANAGEMENT", "SERVICES & BUSINESS", "CLIENT ENGAGEMENT"];
 
 export default function ProfessionalSidebar({
   currentView,
@@ -109,7 +111,12 @@ export default function ProfessionalSidebar({
   };
 
   const handleNavigate = (item: NavItem) => {
-    onNavigate(item.id);
+    // Update URL with view parameter
+    const params = new URLSearchParams(window.location.search);
+    params.set("view", item.id);
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+    router.push(newUrl);
+    
     if (isMobile && onMobileClose) {
       onMobileClose();
     }
@@ -238,8 +245,9 @@ export default function ProfessionalSidebar({
               </div>
             </div>
             
-            {/* Logout */}
-            <div className="p-4 border-t border-slate-800">
+            {/* Settings & Logout */}
+            <div className="p-4 border-t border-slate-800 space-y-2">
+              {settingsItems.map(renderNavItem)}
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
@@ -285,8 +293,9 @@ export default function ProfessionalSidebar({
         </div>
       </div>
       
-      {/* Logout */}
-      <div className="p-3 border-t border-slate-800">
+      {/* Settings & Logout */}
+      <div className="p-3 border-t border-slate-800 space-y-2">
+        {settingsItems.map(renderNavItem)}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"

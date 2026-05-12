@@ -75,6 +75,41 @@ export default function ProfessionalDashboard() {
     }
   }, [user, fetchData]);
 
+  // Hydrate dashboard state from URL query params for deep linking.
+  // We read from window.location so local history.replaceState updates stay in sync.
+  useEffect(() => {
+    const applyUrlState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get("view");
+
+      if (viewParam && isProfessionalView(viewParam)) {
+        setCurrentView(viewParam);
+      }
+    };
+
+    applyUrlState();
+    window.addEventListener("popstate", applyUrlState);
+    return () => {
+      window.removeEventListener("popstate", applyUrlState);
+    };
+  }, []);
+
+  // Keep URL synchronized with current internal view state
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("view", currentView);
+
+    const nextQuery = params.toString();
+    const nextUrl = nextQuery
+      ? `${window.location.pathname}?${nextQuery}`
+      : window.location.pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+  }, [currentView]);
+
   // Handle search
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);

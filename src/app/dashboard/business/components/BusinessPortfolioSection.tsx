@@ -80,7 +80,7 @@ export function BusinessPortfolioSection({
                 return (
                   <div
                     key={index}
-                    className={`relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden group transition-all duration-300 ${
+                    className={`relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-3xl overflow-hidden group transition-all duration-300 ${
                       image ? "border-gray-200 shadow-sm hover:shadow-md" : "hover:border-blue-400 hover:bg-blue-50"
                     } ${aspectRatioClass}`}
                   >

@@ -267,6 +267,77 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Bottom Cards Section */}
+        <section className="">
+            <div className="max-w-[1440px] border-r border-l py-16 mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Card 1 - Background Image */}
+              <div className="relative group cursor-pointer">
+                <div className="relative h-[500px] rounded-xl border border-gray-300 overflow-hidden transition-all duration-300 group-hover:shadow-xl">
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: "url('/bottom-b.png')" }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-xl font-bold mb-2">For Businesses</h3>
+                    <p className="text-sm opacity-90">Showcase services, reach customers, and grow your digital presence</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2 - Background Image */}
+              <div className="relative group cursor-pointer">
+                  <div className="relative h-[500px] rounded-xl border border-gray-300 overflow-hidden transition-all duration-300 group-hover:shadow-xl">
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: "url('/bottom-p.png')" }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-xl font-bold mb-2">For Professionals</h3>
+                    <p className="text-sm opacity-90">Build your brand, connect with clients, and manage services efficiently</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3 - Background Image */}
+              <div className="relative group cursor-pointer">
+                  <div className="relative h-[500px] rounded-xl border border-gray-300 overflow-hidden transition-all duration-300 group-hover:shadow-xl">
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: "url('/bottom-c.png')" }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-xl font-bold mb-2">For Customers</h3>
+                    <p className="text-sm opacity-90">Discover trusted businesses and professionals with reviews</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4 - Solid Color Background */}
+              <div className="relative  group cursor-pointer">
+                  <div className="h-[500px] rounded-xl border-2 border-gray-800 bg-zinc-100 transition-all duration-300 group-hover:shadow-xl p-6 flex flex-col justify-center">
+                  <div className="text-slate-900">
+                    <div className="w-12 h-12 bg-slate-900/20 rounded-lg flex items-center justify-center mb-4">
+                      <Zap className="h-6 w-6 text-slate-900" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">Get Started Today</h3>
+                    <p className="text-sm opacity-90 mb-4">Join thousands connected on our platform</p>
+                    <Button className="bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+                      Join Now
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </UnifiedPublicLayout>
     </>

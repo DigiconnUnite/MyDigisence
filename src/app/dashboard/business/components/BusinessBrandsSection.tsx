@@ -54,7 +54,7 @@ export function BusinessBrandsSection({
             value={sectionTitle}
             onChange={(e) => onSectionTitleChange(e.target.value)}
             placeholder="Enter section title"
-            className="rounded-2xl bg-white"
+            className="rounded-3xl bg-white"
           />
         </div>
 
@@ -70,7 +70,7 @@ export function BusinessBrandsSection({
                 placeholder="Enter brand name"
                 value={brandContent.newBrandName || ""}
                 onChange={(e) => onBrandNameChange(e.target.value)}
-                className="bg-white rounded-2xl"
+                className="bg-white rounded-3xl"
               />
             </div>
             <div className="space-y-2">
@@ -80,7 +80,7 @@ export function BusinessBrandsSection({
                   placeholder="Photo URL or upload below"
                   value={brandContent.newBrandLogo || ""}
                   onChange={(e) => onBrandLogoChange(e.target.value)}
-                  className="bg-white rounded-2xl"
+                  className="bg-white rounded-3xl"
                 />
                 <ImageUpload onUpload={onBrandLogoUpload} />
               </div>
@@ -88,7 +88,7 @@ export function BusinessBrandsSection({
             <Button
               onClick={onAddBrand}
               disabled={savingBrand}
-              className="w-full rounded-2xl"
+              className="w-full rounded-3xl"
             >
               {savingBrand ? (
                 <>
@@ -130,11 +130,11 @@ export function BusinessBrandsSection({
                               format: "auto",
                             })}
                             alt={brand.name}
-                            className="h-8 w-8 object-cover rounded-2xl"
+                            className="h-8 w-8 object-cover rounded-3xl"
                             loading="lazy"
                           />
                         ) : (
-                          <div className="h-8 w-8 bg-gray-200 rounded-2xl flex items-center justify-center">
+                          <div className="h-8 w-8 bg-gray-200 rounded-3xl flex items-center justify-center">
                             <ImageIcon className="h-4 w-4 text-gray-400" />
                           </div>
                         )}

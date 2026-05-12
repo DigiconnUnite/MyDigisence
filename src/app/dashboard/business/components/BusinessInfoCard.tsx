@@ -13,7 +13,7 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  Instagram,
+  Instagram,  
   X,
   Plus,
   Hash,
@@ -210,7 +210,6 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
         });
       }
     } catch (error) {
-      console.error("Error saving business info:", error);
       toast({
         title: "Error",
         description: "An error occurred while saving changes.",
@@ -274,7 +273,6 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
         description: "Catalog PDF uploaded successfully. Click Save to apply changes.",
       });
     } catch (error) {
-      console.error("Error uploading PDF:", error);
       toast({
         title: "Error",
         description:
@@ -299,7 +297,7 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
     <div className="w-full p-0 mx-auto border-none shadow-none bg-transparent">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* --- Profile Information Card --- */}
-        <div className="md:col-span-2 bg-gray-50 rounded-2xl p-6 border border-gray-200 relative">
+        <div className="md:col-span-2 bg-gray-50 rounded-3xl p-6 border border-gray-200 relative transition-all duration-300 hover:shadow-lg">
           <div className="flex justify-between items-start mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
               Profile Information
@@ -472,7 +470,7 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
         </div>
 
         {/* --- About Section Card --- */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200 flex flex-col h-full">
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 flex flex-col h-full transition-all duration-300 hover:shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-gray-400" />
@@ -529,7 +527,7 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
         </div>
 
         {/* --- Legal Info Card --- */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 transition-all duration-300 hover:shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <Hash className="h-5 w-5 text-gray-400" />
@@ -728,7 +726,7 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
         </div>
 
         {/* --- Contact Info Card --- */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 transition-all duration-300 hover:shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-gray-400" />
@@ -836,7 +834,7 @@ export const BusinessInfoCard: React.FC<BusinessInfoCardProps> = ({
         </div>
 
         {/* --- Social Media Card --- */}
-        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+        <div className="bg-white rounded-3xl p-6 border border-gray-200 transition-all duration-300 hover:shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <Twitter className="h-5 w-5 text-gray-400" />

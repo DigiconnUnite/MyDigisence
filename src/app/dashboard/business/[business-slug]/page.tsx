@@ -1,519 +1,239 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, type ComponentProps } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme, ThemeProvider } from "@/contexts/ThemeContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-import { UnifiedModal } from "@/components/ui/UnifiedModal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Pagination } from "@/components/ui/pagination";
-import {
-  Edit,
-  Trash2,
-  Save,
-  Eye,
-  Package,
-  BarChart3,
-  Building,
-  Building2,
-  FileText,
-  Mail,
-  Phone,
-  Calendar,
-  Image as ImageIcon,
   LayoutDashboard,
-  X,
-  Plus,
-  Settings,
-  Palette,
-  ChevronDown,
-  ChevronUp,
-  Pause,
-  CheckCircle,
-  Home,
+  Package,
+  Mail,
   Grid3X3,
-  Share2,
-  Briefcase,
-  ExternalLink,
-  AlertTriangle,
-  FolderTree,
-  Globe,
-  Type,
-  DollarSign,
+  Building,
+  Image,
+  BarChart3,
+  Settings,
+  User,
 } from "lucide-react";
-import ImageUpload from "@/components/ui/image-upload";
+import { BusinessErrorBoundary } from "../components/BusinessErrorBoundary";
+import { useBusinessSearch } from "../hooks/useBusinessSearch";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { useBusinessData } from "../hooks/useBusinessData";
+import { BusinessDashboardLayout, BusinessLoadingLayout } from "../components/BusinessLayouts";
+import type { Product, Inquiry, Business } from "../types";
+import BusinessProfile from "@/components/BusinessProfile";
 
-import HeroBannerManager from "@/components/ui/hero-banner-manager";
-import BusinessBannerUploader from "@/components/ui/business-banner-uploader";
-import SharedSidebar from "../../components/SharedSidebar";
-import SharedDashboardHeader from "../../components/SharedDashboardHeader";
-import DashboardLoading from "../../components/DashboardLoading";
-import {
-  BusinessDashboardLayout,
-  BusinessLoadingLayout,
-} from "../components/BusinessLayouts";
-import {
-  BUSINESS_SEARCH_INDEX,
-  VALID_BUSINESS_VIEWS,
-  type BusinessView,
-} from "../config/searchIndex";
-import type { HeaderSearchResult } from "../../components/SharedDashboardHeader";
-import type {
-  BrandContent,
-  Business,
-  Category,
-  Inquiry,
-  PortfolioContent,
-  Product,
-  BusinessDashboardData,
-} from "../types";
-import {
-  buildBusinessStats,
-  getUniqueProductImages,
-} from "../hooks/businessDataHelpers";
-import { useBusinessDataLoader } from "../hooks/useBusinessDataLoader";
-import { useBusinessMutations } from "../hooks/useBusinessMutations";
-import { useProductMutations } from "../hooks/useProductMutations";
-import { useCategoryMutations } from "../hooks/useCategoryMutations";
-import { useInquiryMutations } from "../hooks/useInquiryMutations";
-import { BusinessDashboardOverview } from "../components/BusinessDashboardOverview";
-import { BusinessProductsSection } from "../components/BusinessProductsSection";
-import { BusinessInquiriesSection } from "../components/BusinessInquiriesSection";
-import { BusinessBrandsSection } from "../components/BusinessBrandsSection";
-import { BusinessPortfolioSection } from "../components/BusinessPortfolioSection";
-import { BusinessCategoriesSection } from "../components/BusinessCategoriesSection";
-import { BusinessConfirmationDialogs } from "../components/BusinessConfirmationDialogs";
-import { BusinessProductModal } from "../components/BusinessProductModal";
-import { BusinessCategoryModal } from "../components/BusinessCategoryModal";
-import { BusinessInfoSection } from "../components/BusinessInfoSection";
-import { BusinessHeroSection } from "../components/BusinessHeroSection";
-import { BusinessPlaceholderSection } from "../components/BusinessPlaceholderSection";
-import { BusinessHeaderAvatar } from "../components/BusinessHeaderAvatar";
+// View Components
+import OverviewView from "../views/OverviewView";
+import ProductsView from "../views/ProductsView";
+import InquiriesView from "../views/InquiriesView";
+import BrandsView from "../views/BrandsView";
+import PortfolioView from "../views/PortfolioView";
+import AnalyticsView from "../views/AnalyticsView";
+import SettingsView from "../views/SettingsView";
 
-const createEmptyProductFormData = () => ({
-  name: "",
-  description: "",
-  price: "",
-  image: "",
-  categoryId: "",
-  brandName: "",
-  additionalInfo: {} as Record<string, string>,
-  inStock: true,
-  isActive: true,
-});
+type BusinessView = "dashboard" | "profile" | "products" | "inquiries" | "categories" | "brands" | "portfolio" | "analytics" | "settings";
 
-const createEmptyCategoryFormData = () => ({
-  name: "",
-  description: "",
-  parentId: "",
-});
+const VALID_BUSINESS_VIEWS: BusinessView[] = [
+  "dashboard",
+  "profile",
+  "products",
+  "inquiries",
+  "categories",
+  "brands",
+  "portfolio",
+  "analytics",
+  "settings",
+];
 
-export default function BusinessAdminDashboard() {
-  type HeroBannerContent = ComponentProps<typeof HeroBannerManager>["heroContent"];
-
+export default function BusinessAdminDashboardRefactored() {
   const { user, loading, logout } = useAuth();
+  const { getBackgroundClass } = useTheme();
   const router = useRouter();
   const { toast } = useToast();
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [images, setImages] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<BusinessView>("dashboard");
-  const [commandSearchTerm, setCommandSearchTerm] = useState("");
-  const [recentSearches, setRecentSearches] = useState<HeaderSearchResult[]>([]);
-
-  const RECENT_SEARCHES_STORAGE_KEY = "digisence-business-recent-searches";
-  const MAX_RECENT_SEARCHES = 8;
-
-  const isBusinessView = (view: string): view is BusinessView => {
-    return VALID_BUSINESS_VIEWS.includes(view as BusinessView);
-  };
-
-  // Dialog states
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showProductDialog, setShowProductDialog] = useState(false);
-
-  // Individual delete dialog states
-  const [showDeleteProductDialog, setShowDeleteProductDialog] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
-  const [showDeleteBrandDialog, setShowDeleteBrandDialog] = useState(false);
-  const [brandToDeleteIndex, setBrandToDeleteIndex] = useState<number | null>(null);
-  const [brandToDeleteName, setBrandToDeleteName] = useState<string>("");
-  const [showDeletePortfolioDialog, setShowDeletePortfolioDialog] = useState(false);
-  const [portfolioToDeleteIndex, setPortfolioToDeleteIndex] = useState<number | null>(null);
-  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
-  const [showBulkActivateDialog, setShowBulkActivateDialog] = useState(false);
-  const [showBulkDeactivateDialog, setShowBulkDeactivateDialog] = useState(false);
-
-  // Form states
-  const [productFormData, setProductFormData] = useState(createEmptyProductFormData());
-  const [businessInfoFormData, setBusinessInfoFormData] = useState<{
-    name: string;
-    description: string;
-    about: string;
-    logo: string;
-    address: string;
-    phone: string;
-    email: string;
-    website: string;
-    ownerName: string;
-    facebook: string;
-    twitter: string;
-    instagram: string;
-    linkedin: string;
-    catalogPdf: string;
-    openingHours: { day: string; open: string; close: string }[];
-    gstNumber: string;
-  }>({
-    name: "",
-    description: "",
-    about: "",
-    logo: "",
-    address: "",
-    phone: "",
-    email: "",
-    website: "",
-    ownerName: "",
-    facebook: "",
-    twitter: "",
-    instagram: "",
-    linkedin: "",
-    catalogPdf: "",
-    openingHours: [],
-    gstNumber: "",
-  });
-  const [brandContent, setBrandContent] = useState<BrandContent>({ brands: [] });
-  const [portfolioContent, setPortfolioContent] = useState<PortfolioContent>({ images: [] });
-  const [footerContent, setFooterContent] = useState<Record<string, unknown>>({});
-  const [heroContent, setHeroContent] = useState<HeroBannerContent>({
-    slides: [],
-    autoPlay: true,
-    transitionSpeed: 5,
-  });
-  const [sectionTitles, setSectionTitles] = useState({
-    full: "Full Preview",
-    hero: "Hero",
-    info: "Business Info",
-    brands: "Brand Slider",
-    categories: "Categories",
-    portfolio: "Portfolio",
-    footer: "Footer",
-  });
-  const [selectedSlideIndex, setSelectedSlideIndex] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<"content" | "style" | "settings">(
-    "content",
-  );
-  const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [activeSection, setActiveSection] = useState<BusinessView>("dashboard");
+
+  // Use the business data hook
+  const {
+    business,
+    categories,
+    products,
+    inquiries,
+    brands,
+    images,
+    isLoading,
+    error,
+    fetchData,
+    cancelLoad,
+  } = useBusinessData();
+
+  // State management for views
+  const [viewSearchTerm, setViewSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [newInfoKey, setNewInfoKey] = useState("");
-  const [newInfoValue, setNewInfoValue] = useState("");
-  const [savingProduct, setSavingProduct] = useState(false);
-  const [savingCategory, setSavingCategory] = useState(false);
-  const [savingBrand, setSavingBrand] = useState(false);
-  const [savingPortfolio, setSavingPortfolio] = useState(false);
-  const [updatingInquiry, setUpdatingInquiry] = useState<string | null>(null);
-  const [deletingProduct, setDeletingProduct] = useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // Pagination state for products
   const [productCurrentPage, setProductCurrentPage] = useState(1);
   const [productItemsPerPage, setProductItemsPerPage] = useState(10);
+  const [showProductDialog, setShowProductDialog] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productFormData, setProductFormData] = useState<any>({});
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [newInfoKey, setNewInfoKey] = useState("");
+  const [newInfoValue, setNewInfoValue] = useState("");
+  const [updatingInquiry, setUpdatingInquiry] = useState<string | null>(null);
+  const [sectionTitle, setSectionTitle] = useState("");
+  const [savingBrand, setSavingBrand] = useState(false);
+  const [savingPortfolio, setSavingPortfolio] = useState(false);
+  const [portfolioContent, setPortfolioContent] = useState<any>({ images: [] });
 
-  // Categories management state
-  const [categoryFormData, setCategoryFormData] = useState(createEmptyCategoryFormData());
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  // Navigation handlers
+  const handleNavigateToProducts = () => setActiveSection("products");
+  const handleNavigateToInfo = () => setActiveSection("settings");
+  const handleNavigateToInquiries = () => setActiveSection("inquiries");
+  const handleOpenCatalogPreview = () => console.log("Catalog preview");
+  
+  // Form handlers
+  const handleSearchTermChange = (term: string) => setViewSearchTerm(term);
+  const handleSelectedCategoryChange = (category: string) => setSelectedCategory(category);
+  const handleSelectedProductsChange = (products: string[]) => setSelectedProducts(products);
+  const handleProductCurrentPageChange = (page: number) => setProductCurrentPage(page);
+  const handleProductItemsPerPageChange = (limit: number) => setProductItemsPerPage(limit);
+  const handleOpenProductDialog = () => setShowProductDialog(true);
+  const handleCloseProductDialog = () => setShowProductDialog(false);
+  const handleProductEdit = (product: Product) => setEditingProduct(product);
+  const handleProductDelete = (product: Product) => console.log("Delete product:", product);
+  const handleProductSave = async () => console.log("Save product");
+  const handleProductFormDataChange = (data: any) => setProductFormData(data);
+  const handleNewInfoKeyChange = (value: string) => setNewInfoKey(value);
+  const handleNewInfoValueChange = (value: string) => setNewInfoValue(value);
+  const handleAddInfo = () => console.log("Add info");
+  const handleRemoveInfo = (key: string) => console.log("Remove info:", key);
+  const handleShare = (product: Product) => console.log("Share product:", product);
+  const handleBulkActivate = () => console.log("Bulk activate");
+  const handleBulkDeactivate = () => console.log("Bulk deactivate");
+  const handleBulkDelete = () => console.log("Bulk delete");
+  const handleInquiryStatusUpdate = async (id: string, status: string) => console.log("Update inquiry:", id, status);
+  const handleSectionTitleChange = (title: string) => setSectionTitle(title);
+  const handlePortfolioContentChange = (content: any) => setPortfolioContent(content);
+  const handleSavePortfolio = async () => console.log("Save portfolio");
+  const handleBusinessUpdate = async (business: Business) => console.log("Update business:", business);
+  const formatDate = (date: string) => new Date(date).toLocaleDateString();
+  const heroSlidesCount = images.length;
+  
+  // BrandsView handlers
+  const handleBrandNameChange = (value: string) => console.log("Brand name change:", value);
+  const handleBrandLogoChange = (value: string) => console.log("Brand logo change:", value);
+  const handleBrandLogoUpload = (url: string) => console.log("Brand logo upload:", url);
+  const handleAddBrand = () => console.log("Add brand");
+  const handleEditBrand = (index: number) => console.log("Edit brand:", index);
+  const handleDeleteBrand = (index: number, name: string) => console.log("Delete brand:", index, name);
 
-  // Right panel state (for legacy support, now uses UnifiedModal)
-  const [showRightPanel, setShowRightPanel] = useState(false);
-  const [selectedProfileSection, setSelectedProfileSection] = useState<
-    string | null
-  >(null);
-
-  // Mobile responsiveness states
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Stats
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    activeProducts: 0,
-    totalInquiries: 0,
-    newInquiries: 0,
-    readInquiries: 0,
-    repliedInquiries: 0,
-  });
-
-  const { updateBusinessInfo, updateHeroContent, updateBrandContent, updatePortfolioContent } =
-    useBusinessMutations();
+  // Advanced search hook
   const {
-    saveProduct,
-    deleteProduct,
-    bulkSetProductActiveState,
-    bulkDeleteProducts,
-  } = useProductMutations();
-  const { saveCategory, deleteCategory } = useCategoryMutations();
-  const { updateInquiryStatus } = useInquiryMutations();
-
-  const applyBusinessFormState = useCallback((nextBusiness: Business | null) => {
-    if (!nextBusiness) {
-      setBusiness(null);
-      return;
-    }
-
-    setBusiness(nextBusiness);
-    setBrandContent(nextBusiness.brandContent || { brands: [] });
-    setPortfolioContent(nextBusiness.portfolioContent || { images: [] });
-    setFooterContent(nextBusiness.footerContent || {});
-    setHeroContent(
-      nextBusiness.heroContent || {
-        slides: [],
-        autoPlay: true,
-        transitionSpeed: 5,
-      },
-    );
-
-    setBusinessInfoFormData({
-      name: nextBusiness.name || "",
-      description: nextBusiness.description || "",
-      about: nextBusiness.about || "",
-      logo: nextBusiness.logo || "",
-      address: nextBusiness.address || "",
-      ...(nextBusiness.logo && { logo: nextBusiness.logo }),
-      phone: nextBusiness.phone || "",
-      email: nextBusiness.email || "",
-      website: nextBusiness.website || "",
-      ownerName: nextBusiness.admin?.name || "",
-      facebook: nextBusiness.facebook || "",
-      twitter: nextBusiness.twitter || "",
-      instagram: nextBusiness.instagram || "",
-      linkedin: nextBusiness.linkedin || "",
-      catalogPdf: nextBusiness.catalogPdf || "",
-      openingHours: nextBusiness.openingHours || [],
-      gstNumber: nextBusiness.gstNumber || "",
-    });
-  }, []);
-
-  const onSuccess = useCallback(
-    (
-      {
-        data,
-        stats: nextStats,
-        images: nextImages,
-      }: {
-        data: BusinessDashboardData;
-        stats: ReturnType<typeof buildBusinessStats>;
-        images: string[];
-      },
-    ) => {
-      applyBusinessFormState(data.business);
-      setCategories(data.categories);
-      setProducts(data.products);
-      setInquiries(data.inquiries);
-      setImages(nextImages);
-      setStats(nextStats);
-    },
-    [applyBusinessFormState],
-  );
-
-  const onError = useCallback(
-    (message: string) => {
-      toast({
-        title: "Error",
-        description: `${message}. Please refresh the page.`,
-        variant: "destructive",
-      });
-    },
-    [toast],
-  );
-
-  const onFinally = useCallback(() => setIsLoading(false), []);
-
-  const { loadBusinessDashboardData, cancelLoad } = useBusinessDataLoader({
-    onSuccess,
-    onError,
-    onFinally,
+    searchTerm,
+    setSearchTerm,
+    searchResults,
+    recentSearches,
+    addToRecentSearches,
+    clearRecentSearches,
+    handleSearchResultSelect,
+  } = useBusinessSearch({
+    products,
+    inquiries,
+    categories,
+    brands,
+    onNavigateToProducts: () => setActiveSection("products"),
+    onNavigateToInquiries: () => setActiveSection("inquiries"),
+    onNavigateToCategories: () => setActiveSection("categories"),
+    onNavigateToBrands: () => setActiveSection("brands"),
   });
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    await loadBusinessDashboardData();
-  }, [loadBusinessDashboardData]);
+  // Transform search results to match HeaderSearchResult interface
+  const transformedSearchResults = useMemo(() => {
+    return searchResults.map((item: any) => ({
+      id: item.id,
+      label: item.title,
+      description: item.subtitle || '',
+      routeLabel: item.type,
+      view: item.type === 'product' ? 'products' : item.type === 'inquiry' ? 'inquiries' : undefined,
+    }));
+  }, [searchResults]);
 
-  useEffect(() => {
-    // Check if mobile on initial load and on resize
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+  const transformedRecentSearches = useMemo(() => {
+    return recentSearches.map((search: any) => ({
+      id: search,
+      label: search,
+      description: 'Recent search',
+    }));
+  }, [recentSearches]);
 
-    checkIsMobile();
-    window.addEventListener("resize", checkIsMobile);
-
-    return () => window.removeEventListener("resize", checkIsMobile);
-  }, []);
-
-  // Load recent searches from localStorage
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as HeaderSearchResult[];
-      if (Array.isArray(parsed)) {
-        setRecentSearches(parsed.slice(0, MAX_RECENT_SEARCHES));
-      }
-    } catch {
-      setRecentSearches([]);
+  const handleTransformedSearchResultSelect = (result: any) => {
+    if (typeof result === 'string') {
+      // Handle recent search
+      setSearchTerm(result);
+    } else {
+      // Handle search result
+      handleSearchResultSelect(result);
     }
-  }, []);
-
-  // Levenshtein distance for fuzzy search
-  const levenshteinDistance = (a: string, b: string): number => {
-    const m = a.length;
-    const n = b.length;
-    if (m === 0) return n;
-    if (n === 0) return m;
-
-    const matrix: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-    for (let i = 0; i <= m; i++) matrix[i][0] = i;
-    for (let j = 0; j <= n; j++) matrix[0][j] = j;
-
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
-        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j - 1] + cost
-        );
-      }
-    }
-
-    return matrix[m][n];
   };
 
-  // Compute search results for command palette
-  const headerSearchResults = useMemo<HeaderSearchResult[]>(() => {
-    const query = commandSearchTerm.trim().toLowerCase();
-    if (!query) return [];
+  // Keyboard shortcuts
+  const keyboardShortcuts = useMemo(
+    () => [
+      {
+        key: "p",
+        ctrlKey: true,
+        action: () => setActiveSection("products"),
+        description: "Go to Products",
+      },
+      {
+        key: "i",
+        ctrlKey: true,
+        action: () => setActiveSection("inquiries"),
+        description: "Go to Inquiries",
+      },
+      {
+        key: "c",
+        ctrlKey: true,
+        action: () => setActiveSection("categories"),
+        description: "Go to Categories",
+      },
+      {
+        key: "b",
+        ctrlKey: true,
+        action: () => setActiveSection("brands"),
+        description: "Go to Brands",
+      },
+      {
+        key: "d",
+        ctrlKey: true,
+        action: () => setActiveSection("dashboard"),
+        description: "Go to Dashboard",
+      },
+      {
+        key: "s",
+        ctrlKey: true,
+        action: () => setActiveSection("settings"),
+        description: "Go to Settings",
+      },
+      {
+        key: "/",
+        action: () => {
+          const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+          searchInput?.focus();
+        },
+        description: "Focus search",
+      },
+    ],
+    []
+  );
 
-    const queryTokens = query.split(/\s+/).filter(Boolean);
+  useKeyboardShortcuts({ shortcuts: keyboardShortcuts, enabled: mounted });
 
-    return BUSINESS_SEARCH_INDEX
-      .map((item) => {
-        let score = 0;
-        const label = item.label.toLowerCase();
-        const description = item.description.toLowerCase();
-        const keywordHaystack = item.keywords.join(" ").toLowerCase();
-
-        if (label.startsWith(query)) score += 120;
-        else if (label.includes(query)) score += 80;
-
-        if (description.includes(query)) score += 35;
-        if (keywordHaystack.includes(query)) score += 50;
-
-        const matchedKeywords = item.keywords.filter((keyword) =>
-          keyword.toLowerCase().includes(query)
-        ).length;
-        score += matchedKeywords * 20;
-
-        for (const token of queryTokens) {
-          if (label.includes(token)) score += 22;
-          if (description.includes(token)) score += 12;
-          if (keywordHaystack.includes(token)) score += 16;
-        }
-
-        const compactLabel = label.replace(/[^a-z0-9]/g, "");
-        const compactQuery = query.replace(/[^a-z0-9]/g, "");
-        if (compactQuery.length >= 3) {
-          const dist = levenshteinDistance(compactQuery, compactLabel.slice(0, Math.max(compactQuery.length, 1)));
-          if (dist <= 1) score += 32;
-          else if (dist <= 2) score += 20;
-          else if (dist <= 3) score += 8;
-        }
-
-        return {
-          score,
-          result: {
-            id: item.id,
-            label: item.label,
-            description: item.description,
-            routeLabel:
-              item.view === "settings"
-                ? `Settings${item.tab ? ` / ${item.tab}` : ""}`
-                : `Page / ${item.view}`,
-            view: item.view,
-            tab: item.tab,
-            sectionId: item.sectionId,
-          } as HeaderSearchResult,
-        };
-      })
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map((item) => item.result);
-  }, [commandSearchTerm]);
-
-  // Handle search result selection
-  const handleSearchResultSelect = (result: HeaderSearchResult) => {
-    if (!result.view || !isBusinessView(result.view)) {
-      return;
-    }
-
-    setRecentSearches((prev) => {
-      const next = [result, ...prev.filter((item) => item.id !== result.id)].slice(0, MAX_RECENT_SEARCHES);
-      try {
-        window.localStorage.setItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage failures
-      }
-      return next;
-    });
-
-    setActiveSection(result.view);
-    setCommandSearchTerm("");
-  };
-
+  // Authentication check
   useEffect(() => {
-    console.log("[DEBUG] Business Dashboard - Auth Check:", {
-      loading,
-      user: user ? { id: user.id, role: user.role, email: user.email } : null,
-      currentPath: window.location.pathname,
-    });
     if (!loading && (!user || user.role !== "BUSINESS_ADMIN")) {
-      console.log("[DEBUG] Business Dashboard - Redirecting to login:", {
-        reason: !user ? "No user" : `Wrong role: ${user.role}`,
-        redirectingTo: "/login",
-      });
       router.push("/login");
       return;
     }
@@ -525,1357 +245,263 @@ export default function BusinessAdminDashboard() {
     return () => {
       cancelLoad();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, router, fetchData, cancelLoad]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleProductEdit = (product: Product) => {
-    setEditingProduct(product);
-    setProductFormData({
-      name: product.name,
-      description: product.description || "",
-      price: product.price || "",
-      image: product.image || "",
-      categoryId: product.categoryId || "",
-      brandName: product.brandName || "",
-      additionalInfo: product.additionalInfo || {},
-      inStock: product.inStock,
-      isActive: product.isActive,
-    });
-  };
+  // Calculate stats for views
+  const stats = useMemo(() => ({
+    totalProducts: products.length,
+    activeProducts: products.filter((p: Product) => p.isActive).length,
+    totalInquiries: inquiries.length,
+    newInquiries: inquiries.filter((i: Inquiry) => i.status === "NEW").length,
+    profileViews: 0, // This would come from analytics API
+  }), [products, inquiries]);
 
-  const handleProductDelete = (product: Product) => {
-    setProductToDelete(product);
-    setShowDeleteProductDialog(true);
-  };
+  // Navigation menu items
+  const menuItems = useMemo(() => [
+    { 
+      value: "dashboard", 
+      title: "Dashboard", 
+      mobileTitle: "Dashboard",
+      icon: LayoutDashboard,
+      mobileIcon: LayoutDashboard
+    },
+    { 
+      value: "profile", 
+      title: "Business Profile", 
+      mobileTitle: "Profile",
+      icon: User,
+      mobileIcon: User
+    },
+    { 
+      value: "products", 
+      title: "Products", 
+      mobileTitle: "Products",
+      icon: Package,
+      mobileIcon: Package
+    },
+    { 
+      value: "inquiries", 
+      title: "Inquiries", 
+      mobileTitle: "Inquiries",
+      icon: Mail,
+      mobileIcon: Mail
+    },
+    { 
+      value: "categories", 
+      title: "Categories", 
+      mobileTitle: "Categories",
+      icon: Grid3X3,
+      mobileIcon: Grid3X3
+    },
+    { 
+      value: "brands", 
+      title: "Brands", 
+      mobileTitle: "Brands",
+      icon: Building,
+      mobileIcon: Building
+    },
+    { 
+      value: "portfolio", 
+      title: "Portfolio", 
+      mobileTitle: "Portfolio",
+      icon: Image,
+      mobileIcon: Image
+    },
+    { 
+      value: "analytics", 
+      title: "Analytics", 
+      mobileTitle: "Analytics",
+      icon: BarChart3,
+      mobileIcon: BarChart3
+    },
+    { 
+      value: "settings", 
+      title: "Settings", 
+      mobileTitle: "Settings",
+      icon: Settings,
+      mobileIcon: Settings
+    },
+  ], []);
 
-  const confirmDeleteProduct = async () => {
-    if (!productToDelete) return;
-    setDeletingProduct(productToDelete.id);
-    try {
-      const result = await deleteProduct(productToDelete.id);
-
-      if (result.ok) {
-        setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
-        setStats((prev) => ({
-          ...prev,
-          totalProducts: prev.totalProducts - 1,
-          activeProducts: productToDelete.isActive
-            ? prev.activeProducts - 1
-            : prev.activeProducts,
-        }));
-        toast({
-          title: "Success",
-          description: "Product deleted successfully!",
-        });
-        setShowDeleteProductDialog(false);
-        setProductToDelete(null);
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete product. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setDeletingProduct(null);
+  // Render current view
+  const renderCurrentView = () => {
+    if (isLoading) {
+      return <BusinessLoadingLayout navItemCount={menuItems.length} />;
     }
-  };
 
-  const handleInquiryStatusUpdate = async (
-    inquiryId: string,
-    newStatus: string,
-  ) => {
-    setUpdatingInquiry(inquiryId);
-    try {
-      const result = await updateInquiryStatus(
-        inquiryId,
-        newStatus as Inquiry["status"],
+    if (error) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Data</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={fetchData}
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
       );
-
-      if (result.ok) {
-        setInquiries((prev) =>
-          prev.map((i) =>
-            i.id === inquiryId ? { ...i, status: newStatus as any } : i,
-          ),
-        );
-        toast({
-          title: "Success",
-          description: "Inquiry status updated successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update inquiry status. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setUpdatingInquiry(null);
-    }
-  };
-
-  const handleShare = (product: Product) => {
-    const shareUrl = `${window.location.origin}/catalog/${business?.slug}?product=${product.id}&modal=open`;
-    const shareData = {
-      title: product.name,
-      text: `Check out this product: ${product.name}\n\n Description: ${product.description}`,
-      url: shareUrl,
-    };
-    if (navigator.share) {
-      navigator.share(shareData).catch(console.error);
-    } else {
-      navigator.clipboard
-        .writeText(shareUrl)
-        .then(() => {
-          alert("Link copied to clipboard!");
-        })
-        .catch(() => {
-          alert("Failed to copy link");
-        });
-    }
-  };
-
-  const handleAddInfo = () => {
-    const key = newInfoKey.trim();
-    const value = newInfoValue.trim();
-    if (!key || !value) return;
-
-    const normalizedKey = key.toLowerCase();
-    const currentInfo = productFormData.additionalInfo || {};
-
-    if (currentInfo[normalizedKey]) {
-      toast({
-        title: "Error",
-        description: "This key already exists",
-        variant: "destructive",
-      });
-      return;
     }
 
-    setProductFormData((prev) => ({
-      ...prev,
-      additionalInfo: {
-        ...prev.additionalInfo,
-        [key]: value,
-      },
-    }));
-    setNewInfoKey("");
-    setNewInfoValue("");
-  };
-
-  const handleRemoveInfo = (keyToRemove: string) => {
-    setProductFormData((prev) => {
-      const newInfo = { ...prev.additionalInfo };
-      delete newInfo[keyToRemove];
-      return {
-        ...prev,
-        additionalInfo: newInfo,
-      };
-    });
-  };
-
-  const handleCloseProductDialog = () => {
-    setShowProductDialog(false);
-    setEditingProduct(null);
-    setProductFormData(createEmptyProductFormData());
-    setNewInfoKey("");
-    setNewInfoValue("");
-  };
-
-  const handleOpenProductDialog = () => {
-    setEditingProduct(null);
-    setProductFormData(createEmptyProductFormData());
-    setShowProductDialog(true);
-  };
-
-  const handleNavigateToProducts = () => {
-    setActiveSection("products");
-    handleOpenProductDialog();
-  };
-
-  const handleOpenCatalogPreview = () => {
-    if (business?.slug) {
-      window.open(`/catalog/${business.slug}`, "_blank");
-    }
-  };
-
-  const handleSaveProduct = async () => {
-    if (!productFormData.name.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Product name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (productFormData.name.length < 2) {
-      toast({
-        title: "Validation Error",
-        description: "Product name must be at least 2 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSavingProduct(true);
-    try {
-      const result = await saveProduct(productFormData, editingProduct?.id);
-
-      if (result.ok && result.data?.product) {
-        const nextProduct = result.data.product;
-
-        if (editingProduct) {
-          setProducts((prev) =>
-            prev.map((p) => (p.id === editingProduct.id ? nextProduct : p)),
-          );
-
-          if (nextProduct.image && !images.includes(nextProduct.image)) {
-            const imageUrl = nextProduct.image;
-            setImages((prev) => [...new Set([...prev, imageUrl])]);
-          }
-
-          if (editingProduct.isActive !== nextProduct.isActive) {
-            setStats((prev) => ({
-              ...prev,
-              activeProducts: nextProduct.isActive
-                ? prev.activeProducts + 1
-                : prev.activeProducts - 1,
-            }));
-          }
-        } else {
-          setProducts((prev) => [...prev, nextProduct]);
-          if (nextProduct.image) {
-            const imageUrl = nextProduct.image;
-            setImages((prev) => [...new Set([...prev, imageUrl])]);
-          }
-          setStats((prev) => ({
-            ...prev,
-            totalProducts: prev.totalProducts + 1,
-            activeProducts: nextProduct.isActive
-              ? prev.activeProducts + 1
-              : prev.activeProducts,
-          }));
-        }
-
-        handleCloseProductDialog();
-        toast({
-          title: "Success",
-          description: editingProduct
-            ? "Product updated successfully!"
-            : "Product added successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.ok
-            ? `Failed to ${editingProduct ? "update" : "add"} product`
-            : result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: `Failed to ${editingProduct ? "update" : "add"} product. Please try again.`,
-        variant: "destructive",
-      });
-    } finally {
-      setSavingProduct(false);
-    }
-  };
-
-  const handleBasicInfoSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSavingStates((prev) => ({ ...prev, basicInfo: true }));
-
-    const updateData = {
-      name: businessInfoFormData.name,
-      description: businessInfoFormData.description,
-      about: businessInfoFormData.about,
-      logo: businessInfoFormData.logo,
-      address: businessInfoFormData.address,
-      phone: businessInfoFormData.phone,
-      email: businessInfoFormData.email,
-      website: businessInfoFormData.website,
-      ownerName: businessInfoFormData.ownerName,
-      facebook: businessInfoFormData.facebook,
-      twitter: businessInfoFormData.twitter,
-      instagram: businessInfoFormData.instagram,
-      linkedin: businessInfoFormData.linkedin,
-      catalogPdf: businessInfoFormData.catalogPdf,
-      openingHours: businessInfoFormData.openingHours,
-      gstNumber: businessInfoFormData.gstNumber,
+    const viewProps = {
+      business,
+      categories,
+      products,
+      inquiries,
+      brands,
+      images,
+      stats,
+      fetchData,
+      setActiveSection,
+      // OverviewView props
+      heroSlidesCount,
+      onNavigateToProducts: handleNavigateToProducts,
+      onNavigateToInfo: handleNavigateToInfo,
+      onNavigateToInquiries: handleNavigateToInquiries,
+      onOpenCatalogPreview: handleOpenCatalogPreview,
+      // ProductsView props
+      searchTerm: viewSearchTerm,
+      selectedCategory,
+      selectedProducts,
+      mounted,
+      productCurrentPage,
+      productItemsPerPage,
+      showProductDialog,
+      editingProduct,
+      productFormData,
+      savingProduct,
+      newInfoKey,
+      newInfoValue,
+      onSearchTermChange: handleSearchTermChange,
+      onSelectedCategoryChange: handleSelectedCategoryChange,
+      onSelectedProductsChange: handleSelectedProductsChange,
+      onProductCurrentPageChange: handleProductCurrentPageChange,
+      onProductItemsPerPageChange: handleProductItemsPerPageChange,
+      onOpenProductDialog: handleOpenProductDialog,
+      onCloseProductDialog: handleCloseProductDialog,
+      onProductEdit: handleProductEdit,
+      onProductDelete: handleProductDelete,
+      onProductSave: handleProductSave,
+      onProductFormDataChange: handleProductFormDataChange,
+      onNewInfoKeyChange: handleNewInfoKeyChange,
+      onNewInfoValueChange: handleNewInfoValueChange,
+      onAddInfo: handleAddInfo,
+      onRemoveInfo: handleRemoveInfo,
+      onShare: handleShare,
+      onBulkActivate: handleBulkActivate,
+      onBulkDeactivate: handleBulkDeactivate,
+      onBulkDelete: handleBulkDelete,
+      // InquiriesView props
+      updatingInquiry,
+      onInquiryStatusUpdate: handleInquiryStatusUpdate,
+      formatDate,
+      // BrandsView props
+      sectionTitle,
+      brandContent: { brands: brands },
+      savingBrand,
+      onSectionTitleChange: handleSectionTitleChange,
+      onBrandNameChange: handleBrandNameChange,
+      onBrandLogoChange: handleBrandLogoChange,
+      onBrandLogoUpload: handleBrandLogoUpload,
+      onAddBrand: handleAddBrand,
+      onEditBrand: handleEditBrand,
+      onDeleteBrand: handleDeleteBrand,
+      // PortfolioView props
+      portfolioContent,
+      savingPortfolio,
+      onPortfolioContentChange: handlePortfolioContentChange,
+      onSavePortfolio: handleSavePortfolio,
+      // SettingsView props
+      onBusinessUpdate: handleBusinessUpdate,
     };
 
-    console.log("Frontend updateData being sent:", updateData);
-    console.log("Logo URL in updateData:", updateData.logo);
-
-    // Validation
-    if (!updateData.name?.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Business name is required.",
-        variant: "destructive",
-      });
-      setSavingStates((prev) => ({ ...prev, basicInfo: false }));
-      return;
-    }
-
-    if (updateData.name.length < 2) {
-      toast({
-        title: "Validation Error",
-        description: "Business name must be at least 2 characters long.",
-        variant: "destructive",
-      });
-      setSavingStates((prev) => ({ ...prev, basicInfo: false }));
-      return;
-    }
-
-    if (
-      updateData.email &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updateData.email)
-    ) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
-      setSavingStates((prev) => ({ ...prev, basicInfo: false }));
-      return;
-    }
-
-    if (
-      updateData.website &&
-      updateData.website.trim() &&
-      !updateData.website.startsWith("http://") &&
-      !updateData.website.startsWith("https://")
-    ) {
-      updateData.website = `https://${updateData.website}`;
-    }
-
-    if (
-      updateData.logo &&
-      updateData.logo.trim() &&
-      !updateData.logo.startsWith("http://") &&
-      !updateData.logo.startsWith("https://")
-    ) {
-      updateData.logo = `https://${updateData.logo}`;
-    }
-
-    // Social links validation and URL formatting
-    const socialFields = ["facebook", "twitter", "instagram", "linkedin"];
-    socialFields.forEach((field) => {
-      const value = updateData[field as keyof typeof updateData] as string;
-      if (value && value.trim()) {
-        if (!value.startsWith("http")) {
-          (updateData as any)[field] = `https://${value}`;
-        }
-        // Basic URL validation
-        try {
-          new URL((updateData as any)[field]);
-        } catch {
-          toast({
-            title: "Validation Error",
-            description: `Please enter a valid URL for ${field.charAt(0).toUpperCase() + field.slice(1)}.`,
-            variant: "destructive",
-          });
-          setSavingStates((prev) => ({ ...prev, basicInfo: false }));
-          return;
-        }
-      }
-    });
-
-    try {
-      const result = await updateBusinessInfo(updateData);
-
-      if (result.ok && result.data?.business) {
-        console.log("Business update successful. Response:", result);
-        console.log("Updated business logo:", result.data.business.logo);
-        setBusiness(result.data.business);
-        toast({
-          title: "Success",
-          description: "Business information updated successfully!",
-        });
-      } else {
-        console.error("Business update failed:", result);
-        toast({
-          title: "Error",
-          description: result.ok
-            ? "Failed to update business information"
-            : result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Business update error:", error);
-      toast({
-        title: "Error",
-        description:
-          "Failed to update business information. Please check your connection and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSavingStates((prev) => ({ ...prev, basicInfo: false }));
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const handleEditCategory = (category: Category) => {
-    setEditingCategory(category);
-    setCategoryFormData({
-      name: category.name,
-      description: category.description || "",
-      parentId: category.parentId || "",
-    });
-    setShowCategoryModal(true);
-  };
-
-  const handleCloseCategoryModal = () => {
-    setShowCategoryModal(false);
-    setEditingCategory(null);
-    setCategoryFormData(createEmptyCategoryFormData());
-  };
-
-  const handleSaveCategoryFromModal = async () => {
-    if (!categoryFormData.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSavingCategory(true);
-    try {
-      const result = await saveCategory(categoryFormData, editingCategory?.id);
-
-      if (result.ok && result.data?.category) {
-        if (editingCategory) {
-          setCategories((prev) =>
-            prev.map((c) => (c.id === editingCategory.id ? result.data!.category! : c)),
-          );
-        } else {
-          setCategories((prev) => [...prev, result.data!.category!]);
-        }
-
-        handleCloseCategoryModal();
-        await fetchData();
-        toast({
-          title: "Success",
-          description: editingCategory
-            ? "Category updated successfully!"
-            : "Category created successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.ok
-            ? `Failed to ${editingCategory ? "update" : "create"} category`
-            : result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: `Failed to ${editingCategory ? "update" : "create"} category`,
-        variant: "destructive",
-      });
-    } finally {
-      setSavingCategory(false);
-    }
-  };
-
-  const handleHeroContentChange = async (newContent: HeroBannerContent) => {
-    setHeroContent(newContent);
-    if (!business) return;
-    try {
-      const result = await updateHeroContent(newContent);
-      if (result.ok && result.data?.business) {
-        setBusiness(result.data.business);
-        toast({
-          title: "Success",
-          description: "Hero content saved successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.ok
-            ? "Failed to save hero content"
-            : result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save hero content",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteCategory = (category: Category) => {
-    setCategoryToDelete(category);
-    setShowDeleteCategoryDialog(true);
-  };
-
-  const handleCreateCategory = async () => {
-    if (!categoryFormData.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSavingCategory(true);
-    try {
-      const result = await saveCategory(categoryFormData);
-
-      if (result.ok && result.data?.category) {
-        setCategories((prev) => [...prev, result.data!.category!]);
-        setCategoryFormData({
-          name: "",
-          description: "",
-          parentId: "",
-        });
-        await fetchData();
-        toast({
-          title: "Success",
-          description: "Category created successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.ok ? "Failed to create category" : result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create category. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSavingCategory(false);
-    }
-  };
-
-  const handleAddBrand = async () => {
-    if (!brandContent.newBrandName?.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a brand name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSavingBrand(true);
-    const newBrand = {
-      name: brandContent.newBrandName.trim(),
-      logo: brandContent.newBrandLogo || "",
-    };
-
-    const updatedBrands = [...(brandContent.brands || []), newBrand];
-
-    try {
-      const result = await updateBrandContent(updatedBrands);
-
-      if (result.ok) {
-        setBrandContent((prev) => ({
-          ...prev,
-          brands: updatedBrands,
-          newBrandName: "",
-          newBrandLogo: "",
-        }));
-        toast({
-          title: "Success",
-          description: "Brand added successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add brand. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setSavingBrand(false);
-    }
-  };
-
-  const handleEditBrandName = async (index: number) => {
-    const brand = brandContent.brands[index];
-    if (!brand) return;
-
-    const newName = prompt("Edit brand name:", brand.name);
-    if (!newName || !newName.trim()) {
-      return;
-    }
-
-    const updatedBrands = [...brandContent.brands];
-    updatedBrands[index] = {
-      ...brand,
-      name: newName.trim(),
-    };
-
-    try {
-      const result = await updateBrandContent(updatedBrands);
-      if (result.ok) {
-        setBrandContent((prev) => ({
-          ...prev,
-          brands: updatedBrands,
-        }));
-        toast({
-          title: "Success",
-          description: "Brand updated successfully!",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update brand. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSavePortfolioImages = async (images: { url: string; alt?: string }[]) => {
-    // Optimistically update UI so uploaded image appears immediately in the grid
-    const previous = portfolioContent.images || [];
-    setPortfolioContent((prev) => ({ ...prev, images }));
-
-    try {
-      const result = await updatePortfolioContent(images);
-
-      if (result.ok) {
-        toast({
-          title: "Success",
-          description: "Portfolio updated successfully!",
-        });
-      } else {
-        // Revert optimistic update on failure
-        setPortfolioContent((prev) => ({ ...prev, images: previous }));
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      setPortfolioContent((prev) => ({ ...prev, images: previous }));
-      toast({
-        title: "Error",
-        description: "Failed to update portfolio. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmDeleteCategory = async () => {
-    if (!categoryToDelete) return;
-    try {
-      const result = await deleteCategory(categoryToDelete.id);
-
-      if (result.ok) {
-        await fetchData();
-        toast({
-          title: "Success",
-          description: "Category deleted successfully!",
-        });
-        setShowDeleteCategoryDialog(false);
-        setCategoryToDelete(null);
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete category. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmDeleteBrand = async () => {
-    if (brandToDeleteIndex === null) return;
-    const updatedBrands = brandContent.brands.filter(
-      (brand: any, i: number) => i !== brandToDeleteIndex,
-    );
-
-    try {
-      const result = await updateBrandContent(updatedBrands);
-
-      if (result.ok) {
-        setBrandContent((prev: any) => ({
-          ...prev,
-          brands: updatedBrands,
-        }));
-        toast({
-          title: "Success",
-          description: "Brand deleted successfully!",
-        });
-        setShowDeleteBrandDialog(false);
-        setBrandToDeleteIndex(null);
-        setBrandToDeleteName("");
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete brand. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmDeletePortfolio = async () => {
-    if (portfolioToDeleteIndex === null) return;
-    const updatedImages = (portfolioContent.images || []).filter(
-      (img: any, i: number) => i !== portfolioToDeleteIndex,
-    );
-
-    try {
-      const result = await updatePortfolioContent(updatedImages);
-
-      if (result.ok) {
-        setPortfolioContent((prev: any) => ({
-          ...prev,
-          images: updatedImages,
-        }));
-        toast({
-          title: "Success",
-          description: "Portfolio image deleted successfully!",
-        });
-        setShowDeletePortfolioDialog(false);
-        setPortfolioToDeleteIndex(null);
-      } else {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete portfolio image. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmBulkActivate = async () => {
-    try {
-      const results = await bulkSetProductActiveState(selectedProducts, true);
-      const failedResult = results.find((result) => !result.ok);
-      if (failedResult && !failedResult.ok) {
-        throw new Error(failedResult.error);
-      }
-      await fetchData();
-      setSelectedProducts([]);
-      toast({
-        title: "Success",
-        description: "Products activated successfully!",
-      });
-      setShowBulkActivateDialog(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to activate products",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmBulkDeactivate = async () => {
-    try {
-      const results = await bulkSetProductActiveState(selectedProducts, false);
-      const failedResult = results.find((result) => !result.ok);
-      if (failedResult && !failedResult.ok) {
-        throw new Error(failedResult.error);
-      }
-      await fetchData();
-      setSelectedProducts([]);
-      toast({
-        title: "Success",
-        description: "Products deactivated successfully!",
-      });
-      setShowBulkDeactivateDialog(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to deactivate products",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const confirmBulkDelete = async () => {
-    try {
-      const results = await bulkDeleteProducts(selectedProducts);
-      const failedResult = results.find((result) => !result.ok);
-      if (failedResult && !failedResult.ok) {
-        throw new Error(failedResult.error);
-      }
-      await fetchData();
-      setSelectedProducts([]);
-      toast({
-        title: "Success",
-        description: "Products deleted successfully!",
-      });
-      setShowBulkDeleteDialog(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete products",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const renderSkeletonContent = () => {
     switch (activeSection) {
       case "dashboard":
-        return (
-          <div className=" mx-auto">
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Card
-                  key={i}
-                  className="bg-white border border-gray-200 shadow-sm rounded-3xl"
-                >
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-4 rounded" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-8 w-16 mb-1" />
-                    <Skeleton className="h-3 w-32" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="rounded-3xl">
-                <CardHeader>
-                  <Skeleton className="h-6 w-40" />
-                  <Skeleton className="h-4 w-56" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl"
-                      >
-                        <Skeleton className="h-5 w-5 rounded" />
-                        <div className="flex-1">
-                          <Skeleton className="h-4 w-48 mb-1" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
+        return <OverviewView {...viewProps} />;
+      case "profile":
+        if (!business) {
+          return <div className="p-6">Loading business data...</div>;
+        }
+        return <BusinessProfile business={business as any} />;
       case "products":
-        return (
-          <div className=" mx-auto">
-            <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <Skeleton className="h-8 w-48 mb-2" />
-                <Skeleton className="h-6 w-64" />
-              </div>
-              <Skeleton className="h-10 w-32 rounded-2xl" />
-            </div>
-
-            <div className="mb-6 flex flex-col sm:flex-row gap-4">
-              <Skeleton className="h-10 flex-1 rounded-2xl" />
-              <Skeleton className="h-10 w-48 rounded-2xl" />
-            </div>
-
-            <Card className="rounded-3xl">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto border border-gray-200">
-                  <div className="bg-amber-100 p-4">
-                    <div className="flex space-x-4">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  </div>
-                  <div className="space-y-4 p-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex space-x-4">
-                        <Skeleton className="h-4 w-4 rounded" />
-                        <Skeleton className="h-12 w-12 rounded-2xl" />
-                        <Skeleton className="h-4 w-48" />
-                        <Skeleton className="h-6 w-20 rounded-full" />
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                        <div className="flex space-x-2">
-                          <Skeleton className="h-8 w-8 rounded-xl" />
-                          <Skeleton className="h-8 w-8 rounded-xl" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <ProductsView {...viewProps} />;
       case "inquiries":
-        return (
-          <div className=" mx-auto">
-            <div className="mb-8">
-              <Skeleton className="h-8 w-56 mb-2" />
-              <Skeleton className="h-6 w-72" />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Card
-                  key={i}
-                  className="bg-white border border-gray-200 shadow-sm rounded-3xl"
-                >
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-4 w-4 rounded" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-8 w-12 mb-1" />
-                    <Skeleton className="h-3 w-24" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Card
-                  key={i}
-                  className="border-l-4 border-l-blue-500 rounded-3xl"
-                >
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <Skeleton className="h-6 w-32" />
-                          <Skeleton className="h-6 w-16 rounded-full" />
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-4 w-24" />
-                        </div>
-                        <Skeleton className="h-4 w-20" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-16 w-full mb-4" />
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Skeleton className="h-8 w-24 rounded-xl" />
-                      <Skeleton className="h-8 w-28 rounded-xl" />
-                      <Skeleton className="h-8 w-20 rounded-xl" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
+        return <InquiriesView {...viewProps} />;
+      case "categories":
+        return <div className="p-6"><h2 className="text-xl font-bold">Categories View</h2><p className="text-gray-600">Categories management coming soon...</p></div>;
+      case "brands":
+        return <BrandsView {...viewProps} />;
+      case "portfolio":
+        return <PortfolioView {...viewProps} />;
+      case "analytics":
+        return <AnalyticsView {...viewProps} />;
+      case "settings":
+        return <SettingsView {...viewProps} />;
       default:
-        return (
-          <div className=" mx-auto">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-32 w-full" />
-          </div>
-        );
+        return <OverviewView {...viewProps} />;
     }
   };
 
-  const menuItems = [
-    {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      mobileIcon: LayoutDashboard,
-      value: "dashboard",
-      mobileTitle: "Home",
-    },
-    {
-      title: "Business Info",
-      icon: Building2,
-      mobileIcon: Building2,
-      value: "info",
-      mobileTitle: "Info",
-    },
-    {
-      title: "Hero Section",
-      icon: Image,
-      mobileIcon: Image,
-      value: "hero",
-      mobileTitle: "Hero",
-    },
-    {
-      title: "Brand Slider",
-      icon: Palette,
-      mobileIcon: Palette,
-      value: "brands",
-      mobileTitle: "Brands",
-    },
-    {
-      title: "Portfolio",
-      icon: Briefcase,
-      mobileIcon: Briefcase,
-      value: "portfolio",
-      mobileTitle: "Portfolio",
-    },
-    {
-      title: "Category",
-      icon: Grid3X3,
-      mobileIcon: Grid3X3,
-      value: "categories",
-      mobileTitle: "Category",
-    },
-    {
-      title: "Products",
-      icon: Package,
-      mobileIcon: Grid3X3,
-      value: "products",
-      mobileTitle: "Products",
-    },
-  ];
-
+  // Get search placeholder
   const getBusinessSearchPlaceholder = () => {
     switch (activeSection) {
+      case "profile":
+        return "Search profile...";
       case "products":
-        return "Search products and services...";
+        return "Search products...";
       case "inquiries":
-        return "Search customer inquiries...";
+        return "Search inquiries...";
       case "categories":
         return "Search categories...";
       case "brands":
         return "Search brands...";
-      case "portfolio":
-        return "Search portfolio items...";
       default:
-        return "Search business dashboard...";
+        return "Search everything...";
     }
   };
-
-  const renderMiddleContent = () => {
-    if (isLoading) {
-      return renderSkeletonContent();
-    }
-
-    return (
-      <>
-        {/* Main Content based on activeSection */}
-        {activeSection === "dashboard" && business && (
-          <BusinessDashboardOverview
-            stats={stats}
-            business={business}
-            heroSlidesCount={heroContent.slides.length}
-            inquiries={inquiries}
-            formatDate={formatDate}
-            onNavigateToProducts={handleNavigateToProducts}
-            onNavigateToInfo={() => setActiveSection("info")}
-            onNavigateToInquiries={() => setActiveSection("inquiries")}
-          />
-        )}
-
-        {activeSection === "info" && (
-          <BusinessInfoSection
-            formData={businessInfoFormData}
-            fallbackAdminName={user?.name || "Admin"}
-            onEdit={() => {
-              setBusinessInfoFormData((prev) => ({ ...prev }));
-            }}
-            onLogoUpload={(url) => {
-              setBusinessInfoFormData((prev) => ({
-                ...prev,
-                logo: url,
-              }));
-            }}
-          />
-        )}
-
-        {activeSection === "hero" && (
-          <BusinessHeroSection
-            heroContent={heroContent}
-            onChange={handleHeroContentChange}
-          />
-        )}
-
-        {activeSection === "brands" && (
-          <BusinessBrandsSection
-            sectionTitle={sectionTitles.brands}
-            onSectionTitleChange={(value) =>
-              setSectionTitles((prev) => ({ ...prev, brands: value }))
-            }
-            brandContent={brandContent}
-            savingBrand={savingBrand}
-            onBrandNameChange={(value) =>
-              setBrandContent((prev) => ({ ...prev, newBrandName: value }))
-            }
-            onBrandLogoChange={(value) =>
-              setBrandContent((prev) => ({ ...prev, newBrandLogo: value }))
-            }
-            onBrandLogoUpload={(url) =>
-              setBrandContent((prev) => ({ ...prev, newBrandLogo: url }))
-            }
-            onAddBrand={handleAddBrand}
-            onEditBrand={handleEditBrandName}
-            onDeleteBrand={(index, name) => {
-              setBrandToDeleteIndex(index);
-              setBrandToDeleteName(name);
-              setShowDeleteBrandDialog(true);
-            }}
-          />
-        )}
-
-        {activeSection === "portfolio" && (
-          <BusinessPortfolioSection
-            images={portfolioContent.images || []}
-            onSaveImages={handleSavePortfolioImages}
-            onDeleteImageRequest={(index) => {
-              setPortfolioToDeleteIndex(index);
-              setShowDeletePortfolioDialog(true);
-            }}
-          />
-        )}
-
-        {activeSection === "categories" && (
-          <BusinessCategoriesSection
-            sectionTitle={sectionTitles.categories}
-            onSectionTitleChange={(value) =>
-              setSectionTitles((prev) => ({ ...prev, categories: value }))
-            }
-            categoryFormData={categoryFormData}
-            onCategoryFormChange={setCategoryFormData}
-            categories={categories}
-            savingCategory={savingCategory}
-            onCreateCategory={handleCreateCategory}
-            onEditCategory={handleEditCategory}
-            onDeleteCategory={handleDeleteCategory}
-          />
-        )}
-
-        {activeSection === "products" && (
-          <BusinessProductsSection
-            products={products}
-            categories={categories}
-            searchTerm={searchTerm}
-            selectedCategory={selectedCategory}
-            selectedProducts={selectedProducts}
-            mounted={mounted}
-            productCurrentPage={productCurrentPage}
-            productItemsPerPage={productItemsPerPage}
-            onSelectedCategoryChange={setSelectedCategory}
-            onSelectedProductsChange={setSelectedProducts}
-            onProductCurrentPageChange={setProductCurrentPage}
-            onProductItemsPerPageChange={setProductItemsPerPage}
-            onOpenBulkActivate={() => setShowBulkActivateDialog(true)}
-            onOpenBulkDeactivate={() => setShowBulkDeactivateDialog(true)}
-            onOpenBulkDelete={() => setShowBulkDeleteDialog(true)}
-            onAddProduct={handleOpenProductDialog}
-            onEditProduct={(product) => {
-              handleProductEdit(product);
-              setShowProductDialog(true);
-            }}
-            onShareProduct={handleShare}
-            onDeleteProduct={handleProductDelete}
-          />
-        )}
-
-        {activeSection === "inquiries" && (
-          <BusinessInquiriesSection
-            inquiries={inquiries}
-            stats={stats}
-            formatDate={formatDate}
-            onStatusUpdate={handleInquiryStatusUpdate}
-          />
-        )}
-
-        {activeSection === "analytics" && (
-          <BusinessPlaceholderSection
-            heading="Analytics"
-            subtitle="Track your business performance"
-            cardTitle="Analytics Coming Soon"
-            cardDescription="Detailed analytics and insights will be available here"
-            icon={BarChart3}
-          />
-        )}
-
-        {activeSection === "settings" && (
-          <BusinessPlaceholderSection
-            heading="Settings"
-            subtitle="Manage your account and preferences"
-            cardTitle="Settings Coming Soon"
-            cardDescription="Account settings and preferences will be available here"
-            icon={Settings}
-          />
-        )}
-      </>
-    );
-  };
-
-  const renderOverlayContent = () => (
-    <>
-      <BusinessCategoryModal
-        isOpen={showCategoryModal}
-        editingCategory={editingCategory}
-        categoryFormData={categoryFormData}
-        setCategoryFormData={setCategoryFormData}
-        categories={categories}
-        sectionTitle={sectionTitles.categories}
-        onSectionTitleChange={(value) =>
-          setSectionTitles((prev) => ({
-            ...prev,
-            categories: value,
-          }))
-        }
-        savingCategory={savingCategory}
-        onClose={handleCloseCategoryModal}
-        onSave={handleSaveCategoryFromModal}
-      />
-
-      <BusinessProductModal
-        isOpen={showProductDialog}
-        editingProduct={editingProduct}
-        productFormData={productFormData}
-        setProductFormData={setProductFormData}
-        categories={categories}
-        brandContent={brandContent}
-        images={images}
-        mounted={mounted}
-        savingProduct={savingProduct}
-        newInfoKey={newInfoKey}
-        newInfoValue={newInfoValue}
-        onNewInfoKeyChange={setNewInfoKey}
-        onNewInfoValueChange={setNewInfoValue}
-        onAddInfo={handleAddInfo}
-        onRemoveInfo={handleRemoveInfo}
-        onClose={handleCloseProductDialog}
-        onSave={handleSaveProduct}
-      />
-
-      <BusinessConfirmationDialogs
-        showDeleteProductDialog={showDeleteProductDialog}
-        setShowDeleteProductDialog={setShowDeleteProductDialog}
-        productToDelete={productToDelete}
-        onConfirmDeleteProduct={confirmDeleteProduct}
-        showDeleteCategoryDialog={showDeleteCategoryDialog}
-        setShowDeleteCategoryDialog={setShowDeleteCategoryDialog}
-        categoryToDelete={categoryToDelete}
-        onConfirmDeleteCategory={confirmDeleteCategory}
-        showDeleteBrandDialog={showDeleteBrandDialog}
-        setShowDeleteBrandDialog={setShowDeleteBrandDialog}
-        brandToDeleteName={brandToDeleteName}
-        onConfirmDeleteBrand={confirmDeleteBrand}
-        showDeletePortfolioDialog={showDeletePortfolioDialog}
-        setShowDeletePortfolioDialog={setShowDeletePortfolioDialog}
-        onConfirmDeletePortfolio={confirmDeletePortfolio}
-        showBulkActivateDialog={showBulkActivateDialog}
-        setShowBulkActivateDialog={setShowBulkActivateDialog}
-        showBulkDeactivateDialog={showBulkDeactivateDialog}
-        setShowBulkDeactivateDialog={setShowBulkDeactivateDialog}
-        showBulkDeleteDialog={showBulkDeleteDialog}
-        setShowBulkDeleteDialog={setShowBulkDeleteDialog}
-        selectedProductsCount={selectedProducts.length}
-        onConfirmBulkActivate={confirmBulkActivate}
-        onConfirmBulkDeactivate={confirmBulkDeactivate}
-        onConfirmBulkDelete={confirmBulkDelete}
-      />
-    </>
-  );
 
   if (loading) {
-    return <BusinessLoadingLayout navItemCount={menuItems.length} />;
+    return (
+      <ThemeProvider>
+        <BusinessLoadingLayout navItemCount={menuItems.length} />
+      </ThemeProvider>
+    );
   }
 
   return (
-    <BusinessDashboardLayout
-      isMobile={isMobile}
-      navLinks={menuItems}
-      currentView={activeSection}
-      onViewChange={(view) => setActiveSection(view as BusinessView)}
-      onLogout={async () => {
-        await logout();
-        router.push("/login");
-      }}
-      onSettings={() => setActiveSection("settings")}
-      userName={user?.name || "Business Admin"}
-      userEmail={user?.email}
-      searchValue={commandSearchTerm}
-      onSearchChange={setCommandSearchTerm}
-      searchPlaceholder={getBusinessSearchPlaceholder()}
-      searchResults={headerSearchResults}
-      recentSearches={recentSearches}
-      onSearchResultSelect={handleSearchResultSelect}
-      middleContent={renderMiddleContent()}
-      overlayContent={renderOverlayContent()}
-    />
+    <ThemeProvider>
+      <BusinessErrorBoundary>
+        <div className={`min-h-screen `}>
+          <BusinessDashboardLayout
+            isMobile={false}
+            navLinks={menuItems}
+            currentView={activeSection}
+            onViewChange={(view: string) => setActiveSection(view as BusinessView)}
+            onLogout={async () => {
+              await logout();
+              router.push("/login");
+            }}
+            onSettings={() => setActiveSection("settings")}
+            userName={user?.name || "Business Admin"}
+            userEmail={user?.email}
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder={getBusinessSearchPlaceholder()}
+            searchResults={transformedSearchResults}
+            recentSearches={transformedRecentSearches}
+            onSearchResultSelect={handleTransformedSearchResultSelect}
+            middleContent={renderCurrentView()}
+            overlayContent={null}
+          />
+        </div>
+      </BusinessErrorBoundary>
+    </ThemeProvider>
   );
 }

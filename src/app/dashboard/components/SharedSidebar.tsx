@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LogOut,
   MoreHorizontal,
@@ -40,8 +41,20 @@ export default function SharedSidebar({
   headerTitle,
   headerIcon: HeaderIcon,
 }: SharedSidebarProps) {
+  const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  const handleNavigation = (view: string) => {
+    // Update URL with view parameter
+    const params = new URLSearchParams(window.location.search);
+    params.set("view", view);
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+    router.push(newUrl);
+    
+    // Call onViewChange to update the view state
+    onViewChange(view);
+  };
 
   const handleToggleCollapse = () => {
     const newCollapsed = !isCollapsed;
@@ -58,7 +71,7 @@ export default function SharedSidebar({
             return (
               <button
                 key={item.value}
-                onClick={() => onViewChange(item.value)}
+                onClick={() => handleNavigation(item.value)}
                 className={`flex flex-col items-center justify-center py-2 w-full rounded-none transition-all duration-200 ${
                   currentView === item.value
                     ? " text-orange-400 font-extrabold border-t-4 rounded-none border-orange-400"
@@ -101,7 +114,7 @@ export default function SharedSidebar({
                         <button
                           key={item.value}
                           onClick={() => {
-                            onViewChange(item.value);
+                            handleNavigation(item.value);
                             setShowMoreMenu(false);
                           }}
                           className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md transition-all duration-200 ${
@@ -118,36 +131,41 @@ export default function SharedSidebar({
                       );
                     })}
 
-                    {/* Settings */}
+                    {/* Settings & Logout Group */}
                     {onSettings && (
-                      <button
-                        onClick={() => {
-                          onSettings();
-                          setShowMoreMenu(false);
-                        }}
-                        className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl transition-all duration-200 ${
-                          currentView === "settings"
-                            ? "bg-slate-800 text-white"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        <Settings className="h-5 w-5" />
-                        <span className="text-sm font-medium">Settings</span>
-                      </button>
-                    )}
+                      <div className="pt-2 mt-2 border-t border-gray-100">
+                        {/* Settings */}
+                        {onSettings && (
+                          <button
+                            onClick={() => {
+                              onSettings();
+                              setShowMoreMenu(false);
+                            }}
+                            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl transition-all duration-200 ${
+                              currentView === "settings"
+                                ? "bg-slate-800 text-white"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            <Settings className="h-5 w-5" />
+                            <span className="text-sm font-medium">Settings</span>
+                          </button>
+                        )}
 
-                    {/* Logout */}
-                    {onLogout && (
-                      <button
-                        onClick={() => {
-                          onLogout();
-                          setShowMoreMenu(false);
-                        }}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl transition-all duration-200 text-red-600 hover:bg-red-50"
-                      >
-                        <LogOut className="h-5 w-5" />
-                        <span className="text-sm font-medium">Logout</span>
-                      </button>
+                        {/* Logout */}
+                        {onLogout && (
+                          <button
+                            onClick={() => {
+                              onLogout();
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl transition-all duration-200 text-red-600 hover:bg-red-50"
+                          >
+                            <LogOut className="h-5 w-5" />
+                            <span className="text-sm font-medium">Logout</span>
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -189,7 +207,7 @@ export default function SharedSidebar({
           {navLinks.map((item) => (
             <li key={item.value}>
               <button
-                onClick={() => onViewChange(item.value)}
+                onClick={() => handleNavigation(item.value)}
                 className={`w-full bg-gray-100 flex items-center ${isCollapsed ? "justify-center" : "space-x-3"} cursor-pointer px-3 py-2 rounded-md text-left transition-colors ${
                   currentView === item.value
                     ? "bg-slate-800 text-white"
@@ -205,32 +223,34 @@ export default function SharedSidebar({
         </ul>
       </nav>
 
-      {/* Bottom Actions Section */}
+      {/* Settings & Logout Section */}
       <div
-        className={`p-4 border-t border-gray-200 mb-5 mt-auto space-y-2 ${isCollapsed ? "px-2" : ""}`}
+        className={`p-4 border-t border-gray-200 mb-5 mt-auto ${isCollapsed ? "px-2" : ""}`}
       >
-        {onSettings && (
+        <div className="space-y-2">
+          {onSettings && (
+            <button
+              onClick={onSettings}
+              className={`w-full flex items-center ${isCollapsed ? "justify-center" : "space-x-3"} px-3 py-2 rounded-md text-left transition-all duration-200 ${
+                currentView === "settings"
+                  ? "bg-slate-800 text-white shadow-sm"
+                  : "text-gray-700 bg-gray-50 hover:bg-gray-100"
+              }`}
+              title={isCollapsed ? "Settings" : undefined}
+            >
+              <Settings className={isCollapsed ? "h-6 w-6" : "h-5 w-5"} />
+              {!isCollapsed && <span>Settings</span>}
+            </button>
+          )}
           <button
-            onClick={onSettings}
-            className={`w-full flex bg-gray-100 items-center ${isCollapsed ? "justify-center" : "space-x-3"} px-3 py-2 rounded-md text-left transition-colors ${
-              currentView === "settings"
-                ? "bg-slate-800 text-white"
-                : "text-gray-700 bg-gray-50 hover:bg-gray-100"
-            }`}
-            title={isCollapsed ? "Settings" : undefined}
+            onClick={onLogout}
+            className={`w-full flex items-center ${isCollapsed ? "justify-center" : "space-x-3"} px-3 py-2 rounded-md text-left transition-all duration-200 text-red-600 bg-red-50 hover:bg-red-100 hover:shadow-sm`}
+            title={isCollapsed ? "Logout" : undefined}
           >
-            <Settings className={isCollapsed ? "h-6 w-6" : "h-5 w-5"} />
-            {!isCollapsed && <span>Settings</span>}
+            <LogOut className={isCollapsed ? "h-6 w-6" : "h-5 w-5"} />
+            {!isCollapsed && <span>Logout</span>}
           </button>
-        )}
-        <button
-          onClick={onLogout}
-          className={`w-full flex items-center cursor-pointer ${isCollapsed ? "justify-center" : "space-x-3"} px-3 py-2 rounded-md text-left transition-colors text-red-600 bg-red-50 hover:bg-red-100`}
-          title={isCollapsed ? "Logout" : undefined}
-        >
-          <LogOut className={isCollapsed ? "h-6 w-6" : "h-5 w-5"} />
-          {!isCollapsed && <span>Logout</span>}
-        </button>
+        </div>
       </div>
     </div>
   );

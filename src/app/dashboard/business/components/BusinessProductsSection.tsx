@@ -100,7 +100,7 @@ export function BusinessProductsSection({
             onProductCurrentPageChange(1);
           }}
         >
-          <SelectTrigger className="w-full bg-white sm:w-48 rounded-2xl">
+          <SelectTrigger className="w-full bg-white sm:w-48 rounded-3xl">
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
@@ -217,11 +217,11 @@ export function BusinessProductsSection({
                             format: "auto",
                           })}
                           alt={product.name}
-                          className="w-12 h-12 object-cover rounded-2xl"
+                          className="w-12 h-12 object-cover rounded-3xl"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded-2xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-gray-200 rounded-3xl flex items-center justify-center">
                           <ImageIcon className="h-6 w-6 text-gray-400" />
                         </div>
                       )}
