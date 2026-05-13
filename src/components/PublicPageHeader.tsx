@@ -203,7 +203,7 @@ export default function PublicPageHeader({
                 )}
                 asChild
               >
-                <Link href="/register">Make Your Profile</Link>
+                <Link href="/register">Get Listed Free</Link>
               </Button>
               <Button
                 variant="outline"
@@ -214,7 +214,7 @@ export default function PublicPageHeader({
                 )}
                 asChild
               >
-                <Link href="/login">Login</Link>
+                <Link href="/login">Sign In</Link>
               </Button>
             </div>
 

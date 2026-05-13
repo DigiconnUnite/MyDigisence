@@ -58,7 +58,7 @@ export default function HeroSectionOne() {
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
                 <span className="text-xs sm:text-sm font-medium text-gray-300 tracking-wide">
-                  India&apos;s Trusted Business Platform
+                  India's Fastest-Growing Business Discovery Platform
                 </span>
               </div>
             </motion.div>
@@ -67,7 +67,7 @@ export default function HeroSectionOne() {
             <h1 className="mb-5 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] xl:text-6xl 2xl:text-7xl font-extrabold text-white leading-[1.08] tracking-tight">
               <div className="flex flex-col">
                 <div>
-                  {"Connect, Discover &".split(" ").map((word, index) => (
+                  {"Get Found by Customers".split(" ").map((word, index) => (
                     <motion.span
                       key={index}
                       initial={{ opacity: 0, filter: "blur(40px)", y: 15 }}
@@ -84,7 +84,7 @@ export default function HeroSectionOne() {
                   ))}
                 </div>
                 <div>
-                  {"Grow Your Business".split(" ").map((word, index) => (
+                  {"Who Are Already Searching".split(" ").map((word, index) => (
                     <motion.span
                       key={index + 10}
                       initial={{ opacity: 0, filter: "blur(40px)", y: 15 }}
@@ -124,18 +124,19 @@ export default function HeroSectionOne() {
               <Link href="/register/business" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto min-w-[140px] md:min-w-[180px] lg:w-48 xl:w-60 transform rounded-lg px-4 sm:px-6 py-2 sm:py-2.5 font-medium text-sm sm:text-base text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary bg-gray-800 hover:shadow-lg border border-white/50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                  variant="outline"
+                  className="w-full sm:w-auto min-w-[140px] md:min-w-[180px] lg:w-48 xl:w-60 transform rounded-lg border border-gray-300 bg-white px-4 sm:px-6 py-2 sm:py-2.5 font-medium text-sm sm:text-base text-black transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-100 hover:shadow-lg dark:border-gray-700 dark:bg-black dark:text-white dark:hover:bg-gray-900"
                 >
-                  Go Online
+               
+                  List My Business Free
                 </Button>
               </Link>
               <Link href="/businesses" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto min-w-[140px] md:min-w-[180px] lg:w-48 xl:w-60 transform rounded-lg border border-gray-300 bg-white px-4 sm:px-6 py-2 sm:py-2.5 font-medium text-sm sm:text-base text-black transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-100 hover:shadow-lg dark:border-gray-700 dark:bg-black dark:text-white dark:hover:bg-gray-900"
+                  className="w-full sm:w-auto min-w-[140px] md:min-w-[180px] lg:w-48 xl:w-60 transform rounded-lg px-4 sm:px-6 py-2 sm:py-2.5 font-medium text-sm sm:text-base text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary bg-gray-800 hover:shadow-lg border border-white/50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                 >
-                  Browse
+                  Browse 5,000+ Businesses
                 </Button>
               </Link>
             </motion.div>
