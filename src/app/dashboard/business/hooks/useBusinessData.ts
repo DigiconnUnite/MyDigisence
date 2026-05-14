@@ -61,6 +61,8 @@ export function useBusinessData(): UseBusinessDataReturn {
       data,
       stats: nextStats,
       images: nextImages,
+      viewSeries: nextViewSeries,
+      statsSnapshot: nextStatsSnapshot,
     }: {
       data: { business: Business | null; categories: Category[]; products: Product[]; inquiries: Inquiry[] };
       stats: ReturnType<typeof buildBusinessStats>;
@@ -73,20 +75,20 @@ export function useBusinessData(): UseBusinessDataReturn {
       setProducts(data.products);
       setInquiries(data.inquiries);
       setImages(nextImages);
-      if (statsSnapshot) {
+      if (nextStatsSnapshot) {
         setStats({
-          totalProducts: statsSnapshot.products.total,
-          activeProducts: statsSnapshot.products.active,
-          totalInquiries: statsSnapshot.inquiries.total,
-          newInquiries: statsSnapshot.inquiries.new,
-          readInquiries: statsSnapshot.inquiries.read,
-          repliedInquiries: statsSnapshot.inquiries.replied,
+          totalProducts: nextStatsSnapshot.products.total,
+          activeProducts: nextStatsSnapshot.products.active,
+          totalInquiries: nextStatsSnapshot.inquiries.total,
+          newInquiries: nextStatsSnapshot.inquiries.new,
+          readInquiries: nextStatsSnapshot.inquiries.read,
+          repliedInquiries: nextStatsSnapshot.inquiries.replied,
         });
       } else {
         setStats(nextStats);
       }
-      setViewSeries(viewSeries);
-      setStatsSnapshot(statsSnapshot);
+      setViewSeries(nextViewSeries);
+      setStatsSnapshot(nextStatsSnapshot);
     },
     []
   );

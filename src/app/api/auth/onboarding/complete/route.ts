@@ -117,6 +117,9 @@ export async function POST(request: Request) {
           );
         }
 
+
+        
+
         // Create professional record
         const professionalSlug = await generateUniqueProfessionalSlug(onboardingData.professionalName);
         await db.professional.create({

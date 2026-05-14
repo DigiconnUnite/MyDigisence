@@ -61,10 +61,10 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
   const recentInquiries = inquiries.slice(0, 5)
   const recentActivity = activity.slice(0, 10)
 
-  const handleViewProfile = () => {}
+  const handleViewProfile = () => router.push(`/p/${user?.username || user?.id || ''}`)
   const handleEditProfile = () => router.push('/dashboard/user/settings')
   const handleImproveProfile = () => router.push('/dashboard/user/settings')
-  const handleManageSubscription = () => {}
+  const handleManageSubscription = () => router.push('/pricing')
 
   const quickActions = [
     { id: "browse-businesses", label: "Browse Businesses", icon: () => <span>🏢</span>, onClick: () => router.push('/businesses') },
@@ -76,9 +76,9 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       <div className="mb-8">
-        <h1 className="text-lg font-bold text-gray-900">Overview</h1>
-        <p className="text-md text-gray-600">
-          Welcome back{user?.name ? `, ${user.name}` : ''}! Here's what's happening with your account.
+        <h1 className="text-xl font-bold text-gray-900">Overview</h1>
+        <p className="text-sm text-gray-500">
+          Welcome back{user?.name ? `, ${user.name}` : ''}! Here&apos;s what&apos;s happening with your account.
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
             {stats.map((stat, index) => {
               const Icon = stat.icon
               return (
-                <Card key={index} className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg">
+                <Card key={index} className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-gray-900">{stat.title}</CardTitle>
                     <Icon className="h-4 w-4 text-gray-400" />
@@ -102,14 +102,14 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
             })}
           </div>
 
-          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+          <Card className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md p-0">
             <UserActivityChart />
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-6">
+            <Card className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Inquiries</h3>
+                <h3 className="text-base font-semibold text-gray-900">Recent Inquiries</h3>
                 <button
                   onClick={() => router.push('/dashboard/user?view=inquiries')}
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
@@ -127,7 +127,7 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
                 <div className="space-y-3">
                   {recentInquiries.map((inquiry: any) => (
                     <div key={inquiry.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                         <FileText className="h-4 w-4 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -137,10 +137,10 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
                         <p className="text-xs text-gray-500 line-clamp-2">{inquiry.message}</p>
                         <div className="flex items-center mt-1 space-x-2">
                           <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                            inquiry.status === 'NEW' ? 'bg-blue-100 text-blue-700' :
-                            inquiry.status === 'READ' ? 'bg-gray-100 text-gray-700' :
-                            inquiry.status === 'REPLIED' ? 'bg-green-100 text-green-700' :
-                            'bg-red-100 text-red-700'
+                            inquiry.status === 'NEW' ? 'bg-red-50 text-red-600' :
+                            inquiry.status === 'READ' ? 'bg-blue-50 text-blue-600' :
+                            inquiry.status === 'REPLIED' ? 'bg-green-50 text-green-600' :
+                            'bg-gray-100 text-gray-500'
                           }`}>
                             {inquiry.status}
                           </span>
@@ -156,7 +156,7 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
               )}
             </Card>
 
-            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-6">
+            <Card className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
                 <button
@@ -197,7 +197,7 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
         </div>
 
         <div className="space-y-6">
-          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+          <Card className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md p-0">
             <UserProfilePreview
               user={{
                 name: user?.name,
@@ -211,20 +211,21 @@ export default function UserOverview({ data, inquiries, activity, savedItems }: 
             />
           </Card>
 
-          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+          <Card className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md p-0">
             <UserAccountProgress onImproveProfile={handleImproveProfile} />
           </Card>
 
-          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+          <Card className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md p-0">
             <UserAccountSummary
               memberSince="Jan 2024"
               plan="Free Plan"
               status="active"
+              nextBillingDate="—"
               onManageSubscription={handleManageSubscription}
             />
           </Card>
 
-          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+          <Card className="bg-white border border-gray-200 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-md p-0">
             <UserQuickActions actions={quickActions} />
           </Card>
         </div>

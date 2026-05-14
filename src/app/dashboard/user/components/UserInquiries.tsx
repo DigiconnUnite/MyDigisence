@@ -54,11 +54,11 @@ export default function UserInquiries({ inquiries }: UserInquiriesProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-3xl border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">My Inquiries</h2>
-            <p className="text-gray-600 mt-1">Track your business and professional inquiries</p>
+            <h2 className="text-xl font-bold text-gray-900">My Inquiries</h2>
+            <p className="text-sm text-gray-500 mt-1">Track your business and professional inquiries</p>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-500">Total: {inquiries.length}</span>
@@ -68,22 +68,22 @@ export default function UserInquiries({ inquiries }: UserInquiriesProps) {
 
       {/* Inquiries List */}
       {inquiries.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+        <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center">
           <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No inquiries yet</h3>
-          <p className="text-gray-600 mb-6">
+          <h3 className="text-base font-semibold text-gray-900 mb-2">No inquiries yet</h3>
+          <p className="text-sm text-gray-500 mb-6">
             Start exploring businesses and professionals to make inquiries
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href="/businesses"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
             >
               Browse Businesses
             </a>
             <a
               href="/professionals"
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="px-6 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
             >
               Find Professionals
             </a>
@@ -94,7 +94,7 @@ export default function UserInquiries({ inquiries }: UserInquiriesProps) {
           {inquiries.map((inquiry) => (
             <div
               key={inquiry.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+              className="bg-white rounded-3xl border border-gray-200 p-6"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
@@ -158,8 +158,8 @@ export default function UserInquiries({ inquiries }: UserInquiriesProps) {
       )}
 
       {/* Tips Section */}
-      <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-3">💡 Tips for Better Inquiries</h3>
+      <div className="bg-blue-50 rounded-3xl border border-blue-200 p-6">
+        <h3 className="text-base font-semibold text-blue-900 mb-3">Tips for Better Inquiries</h3>
         <ul className="space-y-2 text-sm text-blue-800">
           <li className="flex items-start">
             <span className="mr-2">•</span>

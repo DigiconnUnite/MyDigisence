@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/hooks/use-toast'
 import { User, Mail, Phone, Shield, Bell, Globe, Eye, EyeOff } from 'lucide-react'
 
 export default function UserSettings() {
   const { user, logout } = useAuth()
+  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
@@ -38,11 +40,21 @@ export default function UserSettings() {
     setLoading(true)
     
     try {
-      // This would be replaced with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // Update user context or redirect to show success
-    } catch (error) {
-      console.error('Profile update failed:', error)
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(profileForm),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update profile')
+      }
+
+      toast({ title: 'Profile updated', description: 'Your profile has been saved successfully.' })
+    } catch (error: any) {
+      toast({ title: 'Update failed', description: error.message || 'Please try again.', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -52,28 +64,42 @@ export default function UserSettings() {
     e.preventDefault()
     
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('New passwords do not match')
+      toast({ title: 'Passwords do not match', description: 'Please ensure both passwords are identical.', variant: 'destructive' })
       return
     }
 
     if (passwordForm.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long')
+      toast({ title: 'Password too short', description: 'Password must be at least 8 characters long.', variant: 'destructive' })
       return
     }
 
     setLoading(true)
     
     try {
-      // This would be replaced with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const res = await fetch('/api/user/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update password')
+      }
+
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       })
       setShowPasswordForm(false)
-    } catch (error) {
-      console.error('Password update failed:', error)
+      toast({ title: 'Password updated', description: 'Your password has been changed successfully.' })
+    } catch (error: any) {
+      toast({ title: 'Update failed', description: error.message || 'Please try again.', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -84,10 +110,21 @@ export default function UserSettings() {
     setLoading(true)
     
     try {
-      // This would be replaced with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    } catch (error) {
-      console.error('Preferences update failed:', error)
+      const res = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(preferences),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to update preferences')
+      }
+
+      toast({ title: 'Preferences saved', description: 'Your preferences have been updated.' })
+    } catch (error: any) {
+      toast({ title: 'Update failed', description: error.message || 'Please try again.', variant: 'destructive' })
     } finally {
       setLoading(false)
     }

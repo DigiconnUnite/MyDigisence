@@ -409,9 +409,12 @@ describe('Socket Sync Hooks', () => {
 
 describe('Notification Center', () => {
   it('renders notification bell with zero unread', () => {
+    const React = require('react')
     const { render } = require('@testing-library/react')
     const NotificationBell = require('../src/app/dashboard/components/NotificationBell').default
-    const { container } = render(<NotificationBell userId="user-123" />)
+    const { container } = render(
+      React.createElement(NotificationBell, { userId: 'user-123' })
+    )
     expect(container.querySelector('[aria-label="Notifications"]')).toBeTruthy()
   })
 })
@@ -452,25 +455,28 @@ describe('User Dashboard API', () => {
 
 describe('RoleDashboardLayout', () => {
   it('renders loading state', () => {
+    const React = require('react')
     const { render } = require('@testing-library/react')
     const RoleDashboardLayout = require('../src/app/dashboard/components/RoleDashboardLayout').default
     const { container } = render(
-      <RoleDashboardLayout
-        role="USER"
-        title="Test Dashboard"
-        headerIcon={{} as any}
-        navLinks={[]}
-        currentView="overview"
-        onViewChange={() => {}}
-        onLogout={() => {}}
-        userName="Test"
-        searchValue=""
-        onSearchChange={() => {}}
-        searchPlaceholder="Search..."
-        isLoading={true}
-      >
-        <div>Content</div>
-      </RoleDashboardLayout>
+      React.createElement(
+        RoleDashboardLayout,
+        {
+          role: 'USER',
+          title: 'Test Dashboard',
+          headerIcon: {} as any,
+          navLinks: [],
+          currentView: 'overview',
+          onViewChange: () => {},
+          onLogout: () => {},
+          userName: 'Test',
+          searchValue: '',
+          onSearchChange: () => {},
+          searchPlaceholder: 'Search...',
+          isLoading: true,
+        },
+        React.createElement('div', null, 'Content')
+      )
     )
     expect(container.textContent).toContain('Loading')
   })

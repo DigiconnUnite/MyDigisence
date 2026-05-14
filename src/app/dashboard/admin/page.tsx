@@ -904,7 +904,7 @@ export default function SuperAdminDashboard() {
       const result = await requestAdminMutation(
         `/api/admin/businesses/${editingBusiness.id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
@@ -1188,7 +1188,7 @@ export default function SuperAdminDashboard() {
       const result = await requestAdminMutation(
         `/api/admin/professionals/${editingProfessional.id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
@@ -1444,6 +1444,13 @@ export default function SuperAdminDashboard() {
       mobileIcon: UserCheck,
       value: "registration-requests",
       mobileTitle: "Registrations",
+    },
+    {
+      title: "Business Listings",
+      icon: Building,
+      mobileIcon: Grid3X3,
+      value: "business-listings",
+      mobileTitle: "Listings",
     },
     {
       title: "Analytics",

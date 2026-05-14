@@ -42,27 +42,27 @@ export default function UserSavedItems({ savedItems }: UserSavedItemsProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Saved Items</h2>
-        <p className="text-gray-600">
-          Businesses and professionals you've saved for quick access
+      <div className="bg-white rounded-3xl border border-gray-200 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Saved Items</h2>
+        <p className="text-sm text-gray-500">
+          Businesses and professionals you&apos;ve saved for quick access
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+      <div className="bg-white rounded-3xl border border-gray-200 p-2">
         <div className="flex space-x-1">
           <button
             onClick={() => setActiveTab('businesses')}
             className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
               activeTab === 'businesses'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
             <Building2 className="h-4 w-4" />
             <span className="font-medium">Businesses</span>
-            <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
               {savedBusinesses.length}
             </span>
           </button>
@@ -70,13 +70,13 @@ export default function UserSavedItems({ savedItems }: UserSavedItemsProps) {
             onClick={() => setActiveTab('professionals')}
             className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
               activeTab === 'professionals'
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
             <User className="h-4 w-4" />
             <span className="font-medium">Professionals</span>
-            <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
               {savedProfessionals.length}
             </span>
           </button>
@@ -87,15 +87,15 @@ export default function UserSavedItems({ savedItems }: UserSavedItemsProps) {
       {activeTab === 'businesses' && (
         <div>
           {savedBusinesses.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+            <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center">
               <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No saved businesses</h3>
-              <p className="text-gray-600 mb-6">
-                Start exploring and save businesses you're interested in
+              <h3 className="text-base font-semibold text-gray-900 mb-2">No saved businesses</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Start exploring and save businesses you&apos;re interested in
               </p>
               <a
                 href="/businesses"
-                className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
               >
                 <Building2 className="h-4 w-4 mr-2" />
                 Browse Businesses
@@ -106,7 +106,7 @@ export default function UserSavedItems({ savedItems }: UserSavedItemsProps) {
               {savedBusinesses.map((business) => (
                 <div
                   key={business.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-3xl border border-gray-200 p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -164,15 +164,15 @@ export default function UserSavedItems({ savedItems }: UserSavedItemsProps) {
       {activeTab === 'professionals' && (
         <div>
           {savedProfessionals.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+            <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center">
               <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No saved professionals</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">No saved professionals</h3>
+              <p className="text-sm text-gray-500 mb-6">
                 Discover and save professionals you want to work with
               </p>
               <a
                 href="/professionals"
-                className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
               >
                 <User className="h-4 w-4 mr-2" />
                 Find Professionals
@@ -183,7 +183,7 @@ export default function UserSavedItems({ savedItems }: UserSavedItemsProps) {
               {savedProfessionals.map((professional) => (
                 <div
                   key={professional.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-3xl border border-gray-200 p-6 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
@@ -238,8 +238,8 @@ export default function UserSavedItems({ savedItems }: UserSavedItemsProps) {
       )}
 
       {/* Tips Section */}
-      <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
-        <h3 className="text-lg font-semibold text-blue-900 mb-3">🔖 How to Use Saved Items</h3>
+      <div className="bg-blue-50 rounded-3xl border border-blue-200 p-6">
+        <h3 className="text-base font-semibold text-blue-900 mb-3">How to Use Saved Items</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
           <div>
             <h4 className="font-medium mb-2">Quick Access</h4>
