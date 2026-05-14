@@ -6,10 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const token = getTokenFromRequest(request) || request.cookies.get('auth-token')?.value
 
-    console.log('Auth me check - Token present:', !!token)
-    console.log('Auth me check - Token from cookie:', !!request.cookies.get('auth-token')?.value)
-    console.log('Auth me check - Token from header:', !!getTokenFromRequest(request))
-
+    
     if (!token) {
       console.log('Auth me check failed: No token provided')
       return NextResponse.json(
@@ -28,7 +25,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('Auth me check - Token payload:', { userId: payload.userId, email: payload.email, role: payload.role })
+
 
     const user = await getUserById(payload.userId)
 

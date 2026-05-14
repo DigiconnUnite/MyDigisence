@@ -818,7 +818,41 @@ export default function BusinessAdminDashboardRefactored() {
         return <OverviewView {...viewProps} />;
       case "profile":
         if (!business) {
-          return <div className="p-6">Loading business data...</div>;
+          if (error) {
+            return (
+              <div className="p-6">
+                <div className="text-center">
+                  <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Business Data</h2>
+                  <p className="text-gray-600 mb-4">{error}</p>
+                  <button
+                    onClick={fetchData}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          if (isLoading) {
+            return <div className="p-6">Loading business data...</div>;
+          }
+          return (
+            <div className="p-6">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">No Business Found</h2>
+                <p className="text-gray-600 mb-4">
+                  No business profile is associated with your account. Please contact support or create a business profile.
+                </p>
+                <button
+                  onClick={fetchData}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+          );
         }
         return <BusinessProfile business={business as any} />;
       case "products":

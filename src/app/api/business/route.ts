@@ -112,12 +112,16 @@ async function getBusinessAdmin(request: NextRequest) {
   const token =
     getTokenFromRequest(request) || request.cookies.get("auth-token")?.value;
 
+  console.log("getBusinessAdmin - Token present:", !!token);
   if (!token) {
+    console.log("getBusinessAdmin - No token found");
     return null;
   }
 
   const payload = verifyToken(token);
+  console.log("getBusinessAdmin - Payload:", payload ? { userId: payload.userId, role: payload.role } : null);
   if (!payload || payload.role !== "BUSINESS_ADMIN") {
+    console.log("getBusinessAdmin - Invalid payload or role:", payload?.role);
     return null;
   }
 
@@ -126,11 +130,15 @@ async function getBusinessAdmin(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("GET /api/business - Starting request");
     const admin = await getBusinessAdmin(request);
+    console.log("GET /api/business - Admin:", admin ? { userId: admin.userId, role: admin.role } : null);
     if (!admin) {
+      console.log("GET /api/business - Unauthorized: No admin found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    console.log("GET /api/business - Fetching business for adminId:", admin.userId);
     const business = await db.business.findUnique({
       where: { adminId: admin.userId },
       include: {
@@ -156,7 +164,9 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log("GET /api/business - Business found:", !!business);
     if (!business) {
+      console.log("GET /api/business - Business not found for adminId:", admin.userId);
       return NextResponse.json(
         { error: "Business not found" },
         { status: 404 },
@@ -174,11 +184,14 @@ export async function GET(request: NextRequest) {
     businessWithContent.portfolioContent =
       businessWithContent.portfolioContent || { images: [] };
 
+    console.log("GET /api/business - Successfully returning business data");
     return NextResponse.json({ business: businessWithContent });
   } catch (error) {
-    console.error("Business fetch error:", error);
+    console.error("GET /api/business - Error:", error);
+    console.error("GET /api/business - Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error("GET /api/business - Error message:", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 },
     );
   }

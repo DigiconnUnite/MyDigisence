@@ -43,6 +43,7 @@ export const useBusinessDataLoader = ({
     const requestId = requestIdRef.current;
 
     try {
+      console.log("Fetching business data from endpoints:", BUSINESS_FETCH_ENDPOINTS);
       const [businessRes, categoriesRes, productsRes, inquiriesRes, statsRes] = await Promise.all([
         fetchBusinessJsonOrNull<BusinessResponse>(BUSINESS_FETCH_ENDPOINTS.business, controller.signal),
         fetchBusinessJsonOrNull<CategoriesResponse>(BUSINESS_FETCH_ENDPOINTS.categories, controller.signal),
@@ -50,6 +51,14 @@ export const useBusinessDataLoader = ({
         fetchBusinessJsonOrNull<InquiriesResponse>(BUSINESS_FETCH_ENDPOINTS.inquiries, controller.signal),
         fetchBusinessJsonOrNull<BusinessStatsResponse>(BUSINESS_FETCH_ENDPOINTS.stats, controller.signal),
       ]);
+
+      console.log("API responses:", {
+        businessRes: !!businessRes,
+        categoriesRes: !!categoriesRes,
+        productsRes: !!productsRes,
+        inquiriesRes: !!inquiriesRes,
+        statsRes: !!statsRes,
+      });
 
       if (controller.signal.aborted || requestId !== requestIdRef.current) {
         return;

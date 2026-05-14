@@ -14,31 +14,20 @@ interface Inquiry {
   respondedAt?: string
 }
 
-export default function UserInquiries() {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([])
-  const [loading, setLoading] = useState(true)
+interface UserInquiriesProps {
+  inquiries: any[]
+}
 
-  useEffect(() => {
-    // Simulate fetching user inquiries
-    const fetchInquiries = async () => {
-      setLoading(true)
-      // This would be replaced with actual API call
-      setTimeout(() => {
-        setInquiries([])
-        setLoading(false)
-      }, 1000)
-    }
-
-    fetchInquiries()
-  }, [])
-
+export default function UserInquiries({ inquiries }: UserInquiriesProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />
-      case 'replied':
+      case 'NEW':
+        return <Clock className="h-4 w-4 text-blue-500" />
+      case 'READ':
+        return <CheckCircle className="h-4 w-4 text-yellow-500" />
+      case 'REPLIED':
         return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'closed':
+      case 'CLOSED':
         return <XCircle className="h-4 w-4 text-gray-500" />
       default:
         return <FileText className="h-4 w-4 text-gray-400" />
@@ -47,35 +36,20 @@ export default function UserInquiries() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'NEW':
+        return 'bg-blue-50 text-blue-700 border-blue-200'
+      case 'READ':
         return 'bg-yellow-50 text-yellow-700 border-yellow-200'
-      case 'replied':
+      case 'REPLIED':
         return 'bg-green-50 text-green-700 border-green-200'
-      case 'closed':
+      case 'CLOSED':
         return 'bg-gray-50 text-gray-700 border-gray-200'
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200'
     }
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-64 mb-4"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-full mb-1"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // No loading state - parent fetches data
 
   return (
     <div className="space-y-6">

@@ -37,6 +37,42 @@ interface NotificationData {
   dashboardUrl?: string
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const token = getTokenFromRequest(request) || request.cookies.get('auth-token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const user = verifyToken(token) as any
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const unreadOnly = searchParams.get('unread') === 'true'
+
+    const where: any = { userId: user.userId }
+    if (unreadOnly) where.read = false
+
+    const notifications = await db.notification?.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    }) || []
+
+    const unreadCount = await db.notification?.count({
+      where: { userId: user.userId, read: false },
+    }) || 0
+
+    return NextResponse.json({ notifications, unreadCount })
+  } catch (error) {
+    console.error('Notifications fetch error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const data: NotificationData = await request.json()

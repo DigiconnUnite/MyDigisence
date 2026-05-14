@@ -93,6 +93,7 @@ export function useBusinessData(): UseBusinessDataReturn {
 
   const onError = useCallback(
     (message: string) => {
+      console.error("Business data fetch error:", message);
       setError(message);
       toast({
         title: "Error",

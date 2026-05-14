@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { generateUniqueBusinessSlug, generateUniqueProfessionalSlug } from "@/lib/slug-helpers";
+import { generateUniqueBusinessSlug, generateUniqueProfessionalSlug, generateUniqueCategorySlug } from "@/lib/slug-helpers";
 
 const completeOnboardingSchema = z.object({
   userId: z.string(),
@@ -31,7 +31,22 @@ const completeOnboardingSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    // 1. Parse FormData instead of JSON
+    const formData = await request.formData();
+    
+    // 2. Extract text fields and files into separate objects
+    const body: Record<string, any> = {};
+    const files: Record<string, File> = {};
+
+    formData.forEach((value, key) => {
+      if (value instanceof File) {
+        files[key] = value; // Store files separately (logo, cover, resume, etc.)
+      } else {
+        body[key] = value; // Store text fields for Zod validation
+      }
+    });
+
+    // 3. Validate the text fields with Zod
     const { userId, path, ...onboardingData } = completeOnboardingSchema.parse(body);
 
     // Get current user
@@ -59,21 +74,37 @@ export async function POST(request: Request) {
           );
         }
 
+        // Find or create category
+        let category = await db.category.findFirst({
+          where: { name: onboardingData.category, type: 'BUSINESS' }
+        });
+
+        if (!category) {
+          const categorySlug = await generateUniqueCategorySlug(onboardingData.category);
+          category = await db.category.create({
+            data: {
+              name: onboardingData.category,
+              slug: categorySlug,
+              type: 'BUSINESS',
+            }
+          });
+        }
+
         // Create business record
         const businessSlug = await generateUniqueBusinessSlug(onboardingData.businessName);
-        const business = await db.business.create({
+        await db.business.create({
           data: {
             name: onboardingData.businessName,
             slug: businessSlug,
-            category: onboardingData.category,
-            location: onboardingData.location,
+            categoryId: category.id,
+            address: onboardingData.location,
             phone: onboardingData.phone,
             email: currentUser.email,
             website: onboardingData.website,
             description: onboardingData.description,
             adminId: userId,
           }
-        } as any);
+        });
 
         roleUpdate = { role: 'BUSINESS_ADMIN' as any };
         break;
@@ -88,7 +119,7 @@ export async function POST(request: Request) {
 
         // Create professional record
         const professionalSlug = await generateUniqueProfessionalSlug(onboardingData.professionalName);
-        const professional = await db.professional.create({
+        await db.professional.create({
           data: {
             name: onboardingData.professionalName,
             slug: professionalSlug,
@@ -118,11 +149,6 @@ export async function POST(request: Request) {
         ...roleUpdate,
         userPath: path,
         onboardingCompleted: true,
-        // Store preferences as JSON
-        ...(path === "NORMAL_USER" && {
-          // You might need to add a preferences field to the User model
-          // For now, we'll skip storing preferences
-        })
       }
     } as any);
 
@@ -137,7 +163,8 @@ export async function POST(request: Request) {
         userPath: updatedUser.userPath,
         onboardingCompleted: updatedUser.onboardingCompleted,
       },
-      redirectPath: getRedirectPath(updatedUser.role, updatedUser.userPath)
+      // Removed updatedUser.userPath argument since it wasn't being used in the function
+      redirectPath: getRedirectPath(updatedUser.role)
     });
 
   } catch (error) {
@@ -157,7 +184,8 @@ export async function POST(request: Request) {
   }
 }
 
-function getRedirectPath(role: string, userPath: string): string {
+// Updated signature to accept null and removed unused userPath parameter
+function getRedirectPath(role: string | null): string {
   switch (role) {
     case 'BUSINESS_ADMIN':
       return '/dashboard/business';

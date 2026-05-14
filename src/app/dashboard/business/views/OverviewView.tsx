@@ -6,10 +6,10 @@ import { Eye, MessageSquare, Package, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import DashboardStatsCard from "@/components/dashboard/shared/DashboardStatsCard";
-import ProfileViewsChart from "../../professional/components/ProfileViewsChart";
-import AccountProgress from "../../professional/components/AccountProgress";
-import AccountSummary from "../../professional/components/AccountSummary";
-import QuickActions from "../../professional/components/QuickActions";
+import BusinessProfileViewsChart from "../components/BusinessProfileViewsChart";
+import BusinessAccountProgress from "../components/BusinessAccountProgress";
+import BusinessAccountSummary from "../components/BusinessAccountSummary";
+import QuickActions from "../components/QuickActions";
 import BusinessProfilePreview from "../components/BusinessProfilePreview";
 import type { Business, Inquiry, ViewSeriesByRange } from "../types";
 
@@ -140,7 +140,7 @@ export default function OverviewView({
         <div className="xl:col-span-2 space-y-6">
           {/* Chart */}
           <div className={CARD}>
-            <ProfileViewsChart dataByRange={chartDataByRange} />
+            <BusinessProfileViewsChart dataByRange={chartDataByRange} />
           </div>
 
           {/* Two-Column Details */}
@@ -237,14 +237,14 @@ export default function OverviewView({
           </div>
 
           <div className={CARD}>
-            <AccountProgress
+            <BusinessAccountProgress
               items={completionItems}
               onImproveProfile={onNavigateToInfo}
             />
           </div>
 
           <div className={CARD}>
-            <AccountSummary
+            <BusinessAccountSummary
               memberSince={
                 business?.createdAt
                   ? new Date(business.createdAt).toLocaleDateString("en-US", {
@@ -261,7 +261,13 @@ export default function OverviewView({
           </div>
 
           <div className={CARD}>
-            <QuickActions actions={quickActions} />
+            <QuickActions
+              onNavigateToProducts={onNavigateToProducts}
+              onNavigateToInfo={onNavigateToInfo}
+              onNavigateToInquiries={onNavigateToInquiries}
+              onOpenCatalogPreview={onOpenCatalogPreview}
+              hasBusinessSlug={!!business?.slug}
+            />
           </div>
         </div>
       </div>
