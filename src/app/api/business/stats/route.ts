@@ -56,12 +56,13 @@ export async function GET(request: NextRequest) {
       readInquiries,
       repliedInquiries,
       closedInquiries,
+      businessSnapshot,
     ] = await Promise.all([
       db.product.count({
-        where: { businessId: admin.businessId, isActive: true }
+        where: { businessId: admin.businessId }
       }),
       db.product.count({
-        where: { businessId: admin.businessId }
+        where: { businessId: admin.businessId, isActive: true }
       }),
       db.inquiry.count({
         where: { businessId: admin.businessId }
@@ -77,6 +78,10 @@ export async function GET(request: NextRequest) {
       }),
       db.inquiry.count({
         where: { businessId: admin.businessId, status: 'CLOSED' }
+      }),
+      db.business.findUnique({
+        where: { id: admin.businessId },
+        select: { profileViews: true },
       }),
     ])
 
@@ -104,7 +109,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Get views count (mock data - in real implementation, this would track page views)
-    const totalViews = Math.floor(Math.random() * 1000) + 500
+    const totalViews = businessSnapshot?.profileViews ?? 0
 
     const stats = {
       products: {

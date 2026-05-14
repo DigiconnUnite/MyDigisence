@@ -2,11 +2,13 @@
 
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
   Table,
@@ -29,14 +31,10 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { Category } from "../types";
+import AdminSectionHeader from "../../admin/components/AdminSectionHeader";
+import AdminViewControls from "../../admin/components/AdminViewControls";
+import { SlidersHorizontal } from "lucide-react";
 
 interface CategoriesViewProps {
   categories: Category[];
@@ -111,35 +109,30 @@ export default function CategoriesView({
 
   return (
     <div className="space-y-6 pb-20 md:pb-0 animate-fadeIn">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-lg md:text-xl font-bold text-slate-800 mb-2">
-          Categories Management
-        </h1>
-        <p className="text-sm md:text-base text-gray-600">
-          Organize your products with categories and subcategories.
-        </p>
-      </div>
+      <AdminSectionHeader
+        title="Categories Management"
+        description="Organize your products with categories and subcategories."
+      />
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex gap-2 flex-1 w-full sm:w-auto">
-          {/* Search */}
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 rounded-xl border-gray-300"
-            />
-          </div>
-
-          {/* Filter */}
+      <AdminViewControls
+        actions={
+          <Button
+            onClick={onAddCategory}
+            className="rounded-xl bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white hover:opacity-90 transition-opacity"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Category
+          </Button>
+        }
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search categories..."
+        filterContent={
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[140px] rounded-xl border-gray-300">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
+            <SelectTrigger className="rounded-none rounded-r-xl border-0 border-l border-gray-200 bg-transparent shadow-none hover:bg-gray-100 h-[42px] w-[42px] px-0 flex items-center justify-center cursor-pointer [&>svg]:hidden">
+              <span className="flex items-center justify-center">
+                <SlidersHorizontal className="h-4 w-4 text-gray-500" />
+              </span>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All ({categories.length})</SelectItem>
@@ -151,17 +144,8 @@ export default function CategoriesView({
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        {/* Add Category Button */}
-        <Button
-          onClick={onAddCategory}
-          className="rounded-xl bg-linear-90 from-[#5757FF] to-[#A89CFE] text-white hover:opacity-90 transition-opacity"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Category
-        </Button>
-      </div>
+        }
+      />
 
       {/* Bulk Actions */}
       {selectedCategories.size > 0 && (
@@ -199,18 +183,19 @@ export default function CategoriesView({
           <Table>
             <TableHeader className="bg-gray-50 border-b border-gray-200">
               <TableRow>
-                <TableHead className="w-12">
+                <TableHead className="w-12 text-gray-700 font-medium">
                   <Checkbox
                     checked={filteredCategories.length > 0 && filteredCategories.every(c => selectedCategories.has(c.id))}
                     onCheckedChange={handleSelectAll}
+                    className="border-gray-400"
                   />
                 </TableHead>
-                <TableHead className="w-14">SN.</TableHead>
-                <TableHead>Category Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Parent Category</TableHead>
-                <TableHead className="text-center">Products</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead className="w-14 text-gray-700 font-medium">SN.</TableHead>
+                <TableHead className="text-gray-700 font-medium">Category Name</TableHead>
+                <TableHead className="text-gray-700 font-medium">Slug</TableHead>
+                <TableHead className="text-gray-700 font-medium">Parent Category</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium">Products</TableHead>
+                <TableHead className="text-center text-gray-700 font-medium">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

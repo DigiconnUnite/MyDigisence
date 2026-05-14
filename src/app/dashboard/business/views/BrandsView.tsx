@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import { Building2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2 } from "lucide-react";
 import { BusinessBrandsSection } from "../components/BusinessBrandsSection";
 import type { BrandContent } from "../types";
+import AdminSectionHeader from "../../admin/components/AdminSectionHeader";
 
 interface BrandsViewProps {
   sectionTitle: string;
@@ -34,14 +33,10 @@ export default function BrandsView({
 }: BrandsViewProps) {
   return (
     <div className="space-y-6 pb-20 md:pb-0 animate-fadeIn">
-      <div className="mb-8">
-        <h1 className="text-lg md:text-xl font-bold text-slate-800 mb-2">
-          Brands Management
-        </h1>
-        <p className="text-sm md:text-base text-gray-600">
-          Manage your brand portfolio and partnerships.
-        </p>
-      </div>
+      <AdminSectionHeader
+        title="Brands Management"
+        description="Manage your brand portfolio and partnerships."
+      />
 
       {/* Brands Section */}
       <BusinessBrandsSection

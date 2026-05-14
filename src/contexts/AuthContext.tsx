@@ -19,7 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   const checkAuth = useCallback(async () => {
     try {
-      console.log('[DEBUG] AuthContext - checkAuth starting');
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
@@ -33,18 +32,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       clearTimeout(timeoutId)
 
-      console.log('[DEBUG] AuthContext - /api/auth/me response:', response.ok, response.status);
-
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
-        console.log('[DEBUG] AuthContext - User set to:', data.user);
       } else {
         setUser(null)
-        console.log('[DEBUG] AuthContext - No valid auth, user set to null');
       }
     } catch (error) {
-      console.log('[DEBUG] AuthContext - checkAuth error:', error);
       setUser(null)
     } finally {
       setLoading(false)

@@ -9,6 +9,7 @@
     "dev:server": "node server.js",
     "lint": "eslint .",
     "test:admin-hooks": "tsx test-suite/admin-hooks-smoke-tests.ts",
+    "test:business-hooks": "tsx test-suite/business-hooks-smoke-tests.ts",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",

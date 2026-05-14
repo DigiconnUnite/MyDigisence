@@ -77,6 +77,7 @@ model Business {
    // Stats and display fields for profile page
    totalReviews      Int       @default(0)
    averageRating     Float     @default(0)
+   profileViews      Int       @default(0)
    happyCustomers    String?   // e.g., "50K+"
    teamSize          String?   // e.g., "25+"
    yearsInBusiness   String?   // e.g., "10+"

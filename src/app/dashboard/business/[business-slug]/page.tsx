@@ -20,18 +20,34 @@ import { BusinessErrorBoundary } from "../components/BusinessErrorBoundary";
 import { useBusinessSearch } from "../hooks/useBusinessSearch";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useBusinessData } from "../hooks/useBusinessData";
+import { useBusinessMutations } from "../hooks/useBusinessMutations";
+import { useProductMutations } from "../hooks/useProductMutations";
+import { useInquiryMutations } from "../hooks/useInquiryMutations";
+import { useCategoryMutations } from "../hooks/useCategoryMutations";
 import { BusinessDashboardLayout, BusinessLoadingLayout } from "../components/BusinessLayouts";
-import type { Product, Inquiry, Business } from "../types";
+import type {
+  Product,
+  Inquiry,
+  Business,
+  BrandContent,
+  ProductFormData,
+  Category,
+  CategoryFormData,
+  PortfolioItem,
+  BusinessInfoFormData,
+} from "../types";
 import BusinessProfile from "@/components/BusinessProfile";
 
 // View Components
 import OverviewView from "../views/OverviewView";
 import ProductsView from "../views/ProductsView";
 import InquiriesView from "../views/InquiriesView";
+import CategoriesView from "../views/CategoriesView";
 import BrandsView from "../views/BrandsView";
 import PortfolioView from "../views/PortfolioView";
 import AnalyticsView from "../views/AnalyticsView";
 import SettingsView from "../views/SettingsView";
+import { BusinessCategoryModal } from "../components/BusinessCategoryModal";
 
 type BusinessView = "dashboard" | "profile" | "products" | "inquiries" | "categories" | "brands" | "portfolio" | "analytics" | "settings";
 
@@ -67,7 +83,31 @@ export default function BusinessAdminDashboardRefactored() {
     error,
     fetchData,
     cancelLoad,
+    updateBusinessState,
   } = useBusinessData();
+
+  const { updateBusinessInfo, updateBrandContent, updatePortfolioContent } = useBusinessMutations();
+  const { saveProduct, deleteProduct, bulkSetProductActiveState, bulkDeleteProducts } = useProductMutations();
+  const { updateInquiryStatus } = useInquiryMutations();
+  const { saveCategory, deleteCategory } = useCategoryMutations();
+
+  const emptyProductFormData: ProductFormData = {
+    name: "",
+    description: "",
+    price: "",
+    image: "",
+    categoryId: "",
+    brandName: "",
+    additionalInfo: {},
+    inStock: true,
+    isActive: true,
+  };
+
+  const emptyCategoryFormData: CategoryFormData = {
+    name: "",
+    description: "",
+    parentId: "",
+  };
 
   // State management for views
   const [viewSearchTerm, setViewSearchTerm] = useState("");
@@ -77,12 +117,21 @@ export default function BusinessAdminDashboardRefactored() {
   const [productItemsPerPage, setProductItemsPerPage] = useState(10);
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productFormData, setProductFormData] = useState<any>({});
+  const [productFormData, setProductFormData] = useState<ProductFormData>(emptyProductFormData);
   const [savingProduct, setSavingProduct] = useState(false);
   const [newInfoKey, setNewInfoKey] = useState("");
   const [newInfoValue, setNewInfoValue] = useState("");
   const [updatingInquiry, setUpdatingInquiry] = useState<string | null>(null);
   const [sectionTitle, setSectionTitle] = useState("");
+  const [brandContentDraft, setBrandContentDraft] = useState<BrandContent>({
+    brands: [],
+    newBrandName: "",
+    newBrandLogo: "",
+  });
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [categoryFormData, setCategoryFormData] = useState<CategoryFormData>(emptyCategoryFormData);
   const [savingBrand, setSavingBrand] = useState(false);
   const [savingPortfolio, setSavingPortfolio] = useState(false);
   const [portfolioContent, setPortfolioContent] = useState<any>({ images: [] });
@@ -91,7 +140,17 @@ export default function BusinessAdminDashboardRefactored() {
   const handleNavigateToProducts = () => setActiveSection("products");
   const handleNavigateToInfo = () => setActiveSection("settings");
   const handleNavigateToInquiries = () => setActiveSection("inquiries");
-  const handleOpenCatalogPreview = () => console.log("Catalog preview");
+  const handleOpenCatalogPreview = () => {
+    if (!business?.slug) {
+      toast({
+        title: "Missing business slug",
+        description: "Save your business profile before previewing the catalog.",
+        variant: "destructive",
+      });
+      return;
+    }
+    window.open(`/b/${business.slug}`, "_blank");
+  };
   
   // Form handlers
   const handleSearchTermChange = (term: string) => setViewSearchTerm(term);
@@ -99,35 +158,339 @@ export default function BusinessAdminDashboardRefactored() {
   const handleSelectedProductsChange = (products: string[]) => setSelectedProducts(products);
   const handleProductCurrentPageChange = (page: number) => setProductCurrentPage(page);
   const handleProductItemsPerPageChange = (limit: number) => setProductItemsPerPage(limit);
-  const handleOpenProductDialog = () => setShowProductDialog(true);
-  const handleCloseProductDialog = () => setShowProductDialog(false);
-  const handleProductEdit = (product: Product) => setEditingProduct(product);
-  const handleProductDelete = (product: Product) => console.log("Delete product:", product);
-  const handleProductSave = async () => console.log("Save product");
-  const handleProductFormDataChange = (data: any) => setProductFormData(data);
+  const handleOpenProductDialog = () => {
+    setEditingProduct(null);
+    setProductFormData(emptyProductFormData);
+    setShowProductDialog(true);
+  };
+  const handleCloseProductDialog = () => {
+    setShowProductDialog(false);
+    setEditingProduct(null);
+    setProductFormData(emptyProductFormData);
+    setNewInfoKey("");
+    setNewInfoValue("");
+  };
+  const handleProductEdit = (product: Product) => {
+    setEditingProduct(product);
+    setProductFormData({
+      name: product.name,
+      description: product.description ?? "",
+      price: product.price ? String(product.price) : "",
+      image: product.image ?? "",
+      categoryId: product.categoryId ?? "",
+      brandName: product.brandName ?? "",
+      additionalInfo: product.additionalInfo ?? {},
+      inStock: product.inStock,
+      isActive: product.isActive,
+    });
+    setShowProductDialog(true);
+  };
+  const handleProductDelete = async (product: Product) => {
+    if (!window.confirm(`Delete ${product.name}?`)) {
+      return;
+    }
+    const result = await deleteProduct(product.id);
+    if (!result.ok) {
+      toast({
+        title: "Delete failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Product deleted" });
+    await fetchData();
+  };
+  const handleProductSave = async () => {
+    if (!productFormData.name.trim()) {
+      toast({
+        title: "Product name required",
+        description: "Please enter a product name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingProduct(true);
+    const result = await saveProduct(productFormData, editingProduct?.id);
+    setSavingProduct(false);
+
+    if (!result.ok) {
+      toast({
+        title: "Save failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({ title: editingProduct ? "Product updated" : "Product added" });
+    handleCloseProductDialog();
+    await fetchData();
+  };
+  const handleProductFormDataChange = (data: ProductFormData) => setProductFormData(data);
   const handleNewInfoKeyChange = (value: string) => setNewInfoKey(value);
   const handleNewInfoValueChange = (value: string) => setNewInfoValue(value);
-  const handleAddInfo = () => console.log("Add info");
-  const handleRemoveInfo = (key: string) => console.log("Remove info:", key);
-  const handleShare = (product: Product) => console.log("Share product:", product);
-  const handleBulkActivate = () => console.log("Bulk activate");
-  const handleBulkDeactivate = () => console.log("Bulk deactivate");
-  const handleBulkDelete = () => console.log("Bulk delete");
-  const handleInquiryStatusUpdate = async (id: string, status: string) => console.log("Update inquiry:", id, status);
+  const handleAddInfo = () => {
+    const key = newInfoKey.trim();
+    const value = newInfoValue.trim();
+    if (!key || !value) {
+      toast({
+        title: "Missing info",
+        description: "Provide both a key and value.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setProductFormData((prev) => ({
+      ...prev,
+      additionalInfo: {
+        ...(prev.additionalInfo ?? {}),
+        [key]: value,
+      },
+    }));
+    setNewInfoKey("");
+    setNewInfoValue("");
+  };
+  const handleRemoveInfo = (key: string) => {
+    setProductFormData((prev) => {
+      const nextInfo = { ...(prev.additionalInfo ?? {}) };
+      delete nextInfo[key];
+      return {
+        ...prev,
+        additionalInfo: nextInfo,
+      };
+    });
+  };
+  const handleShare = async (product: Product) => {
+    const shareText = `${product.name}`;
+    await navigator.clipboard.writeText(shareText);
+    toast({ title: "Copied", description: "Product name copied to clipboard." });
+  };
+  const handleBulkActivate = async () => {
+    if (selectedProducts.length === 0) {
+      return;
+    }
+    await bulkSetProductActiveState(selectedProducts, true);
+    setSelectedProducts([]);
+    await fetchData();
+  };
+  const handleBulkDeactivate = async () => {
+    if (selectedProducts.length === 0) {
+      return;
+    }
+    await bulkSetProductActiveState(selectedProducts, false);
+    setSelectedProducts([]);
+    await fetchData();
+  };
+  const handleBulkDelete = async () => {
+    if (selectedProducts.length === 0) {
+      return;
+    }
+    if (!window.confirm(`Delete ${selectedProducts.length} products?`)) {
+      return;
+    }
+    await bulkDeleteProducts(selectedProducts);
+    setSelectedProducts([]);
+    await fetchData();
+  };
+  const handleInquiryStatusUpdate = async (id: string, status: string) => {
+    setUpdatingInquiry(id);
+    const result = await updateInquiryStatus(id, status as any);
+    setUpdatingInquiry(null);
+
+    if (!result.ok) {
+      toast({
+        title: "Update failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+    await fetchData();
+  };
   const handleSectionTitleChange = (title: string) => setSectionTitle(title);
   const handlePortfolioContentChange = (content: any) => setPortfolioContent(content);
-  const handleSavePortfolio = async () => console.log("Save portfolio");
-  const handleBusinessUpdate = async (business: Business) => console.log("Update business:", business);
+  const handleSavePortfolio = async (images: PortfolioItem[]) => {
+    const nextImages = images ?? portfolioContent.images ?? [];
+    setSavingPortfolio(true);
+    const result = await updatePortfolioContent(nextImages);
+    setSavingPortfolio(false);
+
+    if (!result.ok) {
+      toast({
+        title: "Save failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (result.data?.business) {
+      updateBusinessState(result.data.business as Business);
+    }
+    toast({ title: "Portfolio updated" });
+  };
+  const handleBusinessUpdate = async (payload: Partial<BusinessInfoFormData>) => {
+    const result = await updateBusinessInfo(payload);
+    if (!result.ok) {
+      toast({
+        title: "Update failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (result.data?.business) {
+      updateBusinessState(result.data.business as Business);
+    }
+    toast({ title: "Business updated" });
+  };
   const formatDate = (date: string) => new Date(date).toLocaleDateString();
   const heroSlidesCount = images.length;
   
   // BrandsView handlers
-  const handleBrandNameChange = (value: string) => console.log("Brand name change:", value);
-  const handleBrandLogoChange = (value: string) => console.log("Brand logo change:", value);
-  const handleBrandLogoUpload = (url: string) => console.log("Brand logo upload:", url);
-  const handleAddBrand = () => console.log("Add brand");
-  const handleEditBrand = (index: number) => console.log("Edit brand:", index);
-  const handleDeleteBrand = (index: number, name: string) => console.log("Delete brand:", index, name);
+  const handleBrandNameChange = (value: string) =>
+    setBrandContentDraft((prev) => ({ ...prev, newBrandName: value }));
+  const handleBrandLogoChange = (value: string) =>
+    setBrandContentDraft((prev) => ({ ...prev, newBrandLogo: value }));
+  const handleBrandLogoUpload = (url: string) =>
+    setBrandContentDraft((prev) => ({ ...prev, newBrandLogo: url }));
+  const handleAddBrand = async () => {
+    const name = (brandContentDraft.newBrandName || "").trim();
+    const logo = (brandContentDraft.newBrandLogo || "").trim();
+
+    if (!name) {
+      toast({
+        title: "Brand name required",
+        description: "Enter a brand name before saving.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const nextBrands = [...(brandContentDraft.brands || []), { name, logo: logo || undefined }];
+    setSavingBrand(true);
+    const result = await updateBrandContent(nextBrands);
+    setSavingBrand(false);
+
+    if (!result.ok) {
+      toast({
+        title: "Save failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (result.data?.business) {
+      updateBusinessState(result.data.business as Business);
+    }
+
+    setBrandContentDraft({ brands: nextBrands, newBrandName: "", newBrandLogo: "" });
+    toast({ title: "Brand added" });
+  };
+  const handleEditBrand = (index: number) => {
+    const brand = brandContentDraft.brands[index];
+    if (!brand) {
+      return;
+    }
+    setBrandContentDraft((prev) => ({
+      ...prev,
+      newBrandName: brand.name,
+      newBrandLogo: brand.logo || "",
+    }));
+  };
+  const handleDeleteBrand = async (index: number, name: string) => {
+    if (!window.confirm(`Delete brand ${name}?`)) {
+      return;
+    }
+    const nextBrands = brandContentDraft.brands.filter((_, i) => i !== index);
+    setSavingBrand(true);
+    const result = await updateBrandContent(nextBrands);
+    setSavingBrand(false);
+
+    if (!result.ok) {
+      toast({
+        title: "Delete failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (result.data?.business) {
+      updateBusinessState(result.data.business as Business);
+    }
+
+    setBrandContentDraft((prev) => ({
+      ...prev,
+      brands: nextBrands,
+    }));
+    toast({ title: "Brand deleted" });
+  };
+
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    setCategoryFormData(emptyCategoryFormData);
+    setShowCategoryDialog(true);
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setCategoryFormData({
+      name: category.name,
+      description: category.description || "",
+      parentId: category.parentId || "",
+    });
+    setShowCategoryDialog(true);
+  };
+
+  const handleDeleteCategory = async (category: Category) => {
+    if (!window.confirm(`Delete category ${category.name}?`)) {
+      return;
+    }
+    const result = await deleteCategory(category.id);
+    if (!result.ok) {
+      toast({
+        title: "Delete failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: "Category deleted" });
+    await fetchData();
+  };
+
+  const handleSaveCategory = async () => {
+    if (!categoryFormData.name.trim()) {
+      toast({
+        title: "Category name required",
+        description: "Please enter a category name.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSavingCategory(true);
+    const result = await saveCategory(categoryFormData, editingCategory?.id);
+    setSavingCategory(false);
+
+    if (!result.ok) {
+      toast({
+        title: "Save failed",
+        description: result.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({ title: editingCategory ? "Category updated" : "Category added" });
+    setShowCategoryDialog(false);
+    setEditingCategory(null);
+    setCategoryFormData(emptyCategoryFormData);
+    await fetchData();
+  };
 
   // Advanced search hook
   const {
@@ -251,13 +614,22 @@ export default function BusinessAdminDashboardRefactored() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    setPortfolioContent(business?.portfolioContent ?? { images: [] });
+    setBrandContentDraft({
+      brands: business?.brandContent?.brands ?? [],
+      newBrandName: "",
+      newBrandLogo: "",
+    });
+  }, [business?.brandContent?.brands, business?.portfolioContent]);
+
   // Calculate stats for views
   const stats = useMemo(() => ({
     totalProducts: products.length,
     activeProducts: products.filter((p: Product) => p.isActive).length,
     totalInquiries: inquiries.length,
     newInquiries: inquiries.filter((i: Inquiry) => i.status === "NEW").length,
-    profileViews: 0, // This would come from analytics API
+    profileViews: business?.profileViews ?? 0,
   }), [products, inquiries]);
 
   // Navigation menu items
@@ -398,13 +770,26 @@ export default function BusinessAdminDashboardRefactored() {
       onBulkActivate: handleBulkActivate,
       onBulkDeactivate: handleBulkDeactivate,
       onBulkDelete: handleBulkDelete,
+      // CategoriesView props
+      onAddCategory: handleAddCategory,
+      onEditCategory: handleEditCategory,
+      onDeleteCategory: handleDeleteCategory,
+      onCategorySelect: (categoryId: string) => setSelectedCategory(categoryId),
+      showCategoryDialog,
+      editingCategory,
+      savingCategory,
+      categoryFormData,
+      onCloseCategoryDialog: () => setShowCategoryDialog(false),
+      onSaveCategory: handleSaveCategory,
+      onCategoryFormDataChange: (data: Partial<CategoryFormData>) =>
+        setCategoryFormData((prev) => ({ ...prev, ...data })),
       // InquiriesView props
       updatingInquiry,
       onInquiryStatusUpdate: handleInquiryStatusUpdate,
       formatDate,
       // BrandsView props
       sectionTitle,
-      brandContent: { brands: brands },
+      brandContent: brandContentDraft,
       savingBrand,
       onSectionTitleChange: handleSectionTitleChange,
       onBrandNameChange: handleBrandNameChange,
@@ -435,7 +820,23 @@ export default function BusinessAdminDashboardRefactored() {
       case "inquiries":
         return <InquiriesView {...viewProps} />;
       case "categories":
-        return <div className="p-6"><h2 className="text-xl font-bold">Categories View</h2><p className="text-gray-600">Categories management coming soon...</p></div>;
+        return (
+          <>
+            <CategoriesView {...viewProps} />
+            <BusinessCategoryModal
+              isOpen={showCategoryDialog}
+              editingCategory={editingCategory}
+              categoryFormData={categoryFormData}
+              setCategoryFormData={setCategoryFormData}
+              categories={categories}
+              sectionTitle={sectionTitle}
+              onSectionTitleChange={handleSectionTitleChange}
+              savingCategory={savingCategory}
+              onClose={() => setShowCategoryDialog(false)}
+              onSave={handleSaveCategory}
+            />
+          </>
+        );
       case "brands":
         return <BrandsView {...viewProps} />;
       case "portfolio":

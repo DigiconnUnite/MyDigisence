@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import { Mail, Search, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mail } from "lucide-react";
 import { BusinessInquiriesSection } from "../components/BusinessInquiriesSection";
 import type { Inquiry } from "../types";
+import AdminSectionHeader from "../../admin/components/AdminSectionHeader";
+import AdminViewControls from "../../admin/components/AdminViewControls";
 
 interface InquiriesViewProps {
   inquiries: Inquiry[];
@@ -29,27 +28,16 @@ export default function InquiriesView({
 }: InquiriesViewProps) {
   return (
     <div className="space-y-6 pb-20 md:pb-0 animate-fadeIn">
-      <div className="mb-8">
-        <h1 className="text-lg md:text-xl font-bold text-slate-800 mb-2">
-          Inquiries Management
-        </h1>
-        <p className="text-sm md:text-base text-gray-600">
-          Manage and respond to customer inquiries.
-        </p>
-      </div>
+      <AdminSectionHeader
+        title="Inquiries Management"
+        description="Manage and respond to customer inquiries."
+      />
 
-      {/* Header Actions */}
-      <div className="flex gap-2 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search inquiries..."
-            value={searchTerm}
-            onChange={(e) => onSearchTermChange(e.target.value)}
-            className="pl-10 rounded-xl"
-          />
-        </div>
-      </div>
+      <AdminViewControls
+        searchValue={searchTerm}
+        onSearchChange={onSearchTermChange}
+        searchPlaceholder="Search inquiries..."
+      />
 
       {/* Inquiries Section */}
       <BusinessInquiriesSection

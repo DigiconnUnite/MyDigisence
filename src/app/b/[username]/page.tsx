@@ -17,6 +17,9 @@ const getBusinessBySlug = cache(async (slug: string) => {
     where: { slug },
     include: {
       category: true,
+      reviews: {
+        orderBy: { createdAt: "desc" },
+      },
       products: {
         where: { isActive: true },
         orderBy: { createdAt: "desc" },
@@ -34,8 +37,6 @@ const getBusinessBySlug = cache(async (slug: string) => {
   return business
 })
 
-// Enable dynamic rendering
-export const dynamic = "force-dynamic"
 export const revalidate = 3600 // Revalidate every hour
 
 export default async function BusinessPage({ params }: PageProps) {
@@ -110,7 +111,16 @@ export default async function BusinessPage({ params }: PageProps) {
     servicesList: rawData.servicesList || undefined,
     qrCodeUrl: rawData.qrCodeUrl || undefined,
     openingHours,
-    reviews: [],
+    reviews: businessData.reviews.map((review: any) => ({
+      id: review.id,
+      rating: review.rating,
+      title: review.title || undefined,
+      content: review.content,
+      authorName: review.authorName,
+      authorImage: review.authorImage || undefined,
+      isVerified: review.isVerified ?? false,
+      createdAt: review.createdAt.toISOString(),
+    })),
     products: businessData.products.map((product: any) => ({
       id: product.id,
       name: product.name,

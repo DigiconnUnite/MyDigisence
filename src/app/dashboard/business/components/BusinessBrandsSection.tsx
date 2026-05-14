@@ -42,11 +42,6 @@ export function BusinessBrandsSection({
 }: BusinessBrandsSectionProps) {
   return (
     <div className=" mx-auto">
-      <div className="mb-6">
-        <h1 className="text-lg font-bold text-gray-900">Brand Slider</h1>
-        <p className="text-md text-gray-600">Manage your brand slider</p>
-      </div>
-
       <div className="space-y-6">
         <div>
           <Label className="text-sm font-medium">Page Title for Brand Section</Label>
@@ -105,15 +100,15 @@ export function BusinessBrandsSection({
           </CardContent>
         </Card>
 
-        <Card className="p-0 overflow-hidden rounded-xl">
+        <Card className="p-0 overflow-hidden rounded-xl border border-gray-300">
           <CardContent className="p-0">
             {brandContent.brands?.length > 0 ? (
               <Table>
-                <TableHeader className="bg-[#080322] ">
+                <TableHeader className="bg-gray-50 border-b border-gray-200">
                   <TableRow>
-                    <TableHead className="text-white font-medium">Brand Name</TableHead>
-                    <TableHead className="text-white font-medium">Logo</TableHead>
-                    <TableHead className="w-32 text-white font-medium">Actions</TableHead>
+                    <TableHead className="text-gray-700 font-medium">Brand Name</TableHead>
+                    <TableHead className="text-gray-700 font-medium">Logo</TableHead>
+                    <TableHead className="w-32 text-gray-700 font-medium">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

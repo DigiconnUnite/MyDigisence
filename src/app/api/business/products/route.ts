@@ -132,32 +132,3 @@ export async function POST(request: NextRequest) {
 }
 
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await getBusinessAdmin(request)
-    if (!admin || !admin.businessId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { id: productId } = await params
-    
-    // Direct delete - Prisma handles non-existent records gracefully
-    await db.product.delete({
-      where: { id: productId, businessId: admin.businessId },
-    }).catch(() => null)
-
-    return NextResponse.json({
-      success: true,
-      message: 'Product deleted successfully',
-    })
-  } catch (error) {
-    console.error('Product deletion error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}

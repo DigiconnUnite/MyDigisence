@@ -19,11 +19,6 @@ export function BusinessInquiriesSection({
 }: BusinessInquiriesSectionProps) {
   return (
     <div className=" mx-auto">
-      <div className="mb-8">
-        <h1 className="text-lg font-bold text-gray-900">Customer Inquiries</h1>
-        <p className="text-md text-gray-600">View and respond to customer inquiries</p>
-      </div>
-
       {inquiries.length === 0 ? (
         <Card className="rounded-3xl">
           <CardContent className="text-center py-12">

@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import { Package, Plus, Search, Filter } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BusinessProductsSection } from "../components/BusinessProductsSection";
 import { BusinessProductModal } from "../components/BusinessProductModal";
 import type { Product, Category } from "../types";
+import AdminSectionHeader from "../../admin/components/AdminSectionHeader";
+import AdminViewControls from "../../admin/components/AdminViewControls";
 
 interface ProductsViewProps {
   products: Product[];
@@ -86,33 +86,22 @@ export default function ProductsView({
 }: ProductsViewProps) {
   return (
     <div className="space-y-6 pb-20 md:pb-0 animate-fadeIn">
-      <div className="mb-8">
-        <h1 className="text-lg md:text-xl font-bold text-slate-800 mb-2">
-          Products Management
-        </h1>
-        <p className="text-sm md:text-base text-gray-600">
-          Manage your product catalog and inventory.
-        </p>
-      </div>
+      <AdminSectionHeader
+        title="Products Management"
+        description="Manage your product catalog and inventory."
+      />
 
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex gap-2 flex-1 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => onSearchTermChange(e.target.value)}
-              className="pl-10 rounded-xl"
-            />
-          </div>
-        </div>
-        <Button onClick={onOpenProductDialog} className="rounded-xl">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
-        </Button>
-      </div>
+      <AdminViewControls
+        actions={
+          <Button onClick={onOpenProductDialog} className="rounded-xl">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Product
+          </Button>
+        }
+        searchValue={searchTerm}
+        onSearchChange={onSearchTermChange}
+        searchPlaceholder="Search products..."
+      />
 
       {/* Products Section */}
       <BusinessProductsSection

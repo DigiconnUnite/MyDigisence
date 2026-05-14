@@ -10,11 +10,11 @@ const isRedisConfigured = () => {
 };
 
 // Create a rate limiter with Upstash Redis
-// 10 requests per 60 seconds sliding window
+// 100 requests per 15 minutes sliding window
 export const rateLimiter = isRedisConfigured()
   ? new Ratelimit({
       redis: Redis.fromEnv(),
-      limiter: Ratelimit.slidingWindow(10, "60 s"),
+      limiter: Ratelimit.slidingWindow(100, "900 s"),
       timeout: 1000, // 1 second timeout
       analytics: true, // enable analytics
     })
@@ -79,7 +79,7 @@ class InMemoryRateLimiter {
 }
 
 // Create fallback limiter instance
-const fallbackLimiter = new InMemoryRateLimiter(10, 60);
+const fallbackLimiter = new InMemoryRateLimiter(100, 900);
 
 // Helper function for API routes
 export async function checkRateLimit(identifier: string): Promise<{

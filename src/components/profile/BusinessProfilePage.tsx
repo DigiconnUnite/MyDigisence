@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import type { BusinessProfile } from "@/types/profile"
+import { useEffect, useState, type FormEvent } from "react"
+import type { BusinessProfile, Review } from "@/types/profile"
 import ProfileHero from "./ProfileHero"
 import ProfileTabs from "./ProfileTabs"
 import StatCard from "./StatCard"
@@ -13,6 +13,7 @@ import SocialLinks from "./SocialLinks"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import {
@@ -44,13 +45,26 @@ export default function BusinessProfilePage({
   baseUrl,
 }: BusinessProfilePageProps) {
   const [activeTab, setActiveTab] = useState("overview")
+  const [reviewState, setReviewState] = useState(() => ({
+    reviews: business.reviews || [],
+    totalReviews: business.totalReviews,
+    averageRating: business.averageRating,
+  }))
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    authorName: "",
+    title: "",
+    content: "",
+  })
+  const [reviewError, setReviewError] = useState("")
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "services", label: "Services" },
     { id: "menu", label: "Menu/Products" },
     { id: "photos", label: "Photos" },
-    { id: "reviews", label: "Reviews", count: business.totalReviews },
+    { id: "reviews", label: "Reviews", count: reviewState.totalReviews },
     { id: "about", label: "About" },
     { id: "highlights", label: "Highlights" },
   ]
@@ -59,7 +73,7 @@ export default function BusinessProfilePage({
     ? business.servicesList
     : []
   const products = business.products || []
-  const reviews = business.reviews || []
+  const reviews = reviewState.reviews || []
   const tags = Array.isArray(business.customTags) ? business.customTags : []
   const highlights = Array.isArray(business.highlights)
     ? business.highlights
@@ -89,7 +103,7 @@ export default function BusinessProfilePage({
     },
     {
       icon: <Star className="w-5 h-5 text-blue-600" />,
-      value: business.averageRating.toFixed(1),
+      value: reviewState.averageRating.toFixed(1),
       label: "Rating",
     },
   ]
@@ -111,6 +125,88 @@ export default function BusinessProfilePage({
     } else {
       navigator.clipboard.writeText(`${baseUrl}/b/${business.slug}`)
     }
+  }
+
+  useEffect(() => {
+    if (!business.slug) {
+      return
+    }
+
+    const key = `business-viewed-${business.slug}`
+    const now = Date.now()
+    const lastView = localStorage.getItem(key)
+
+    if (lastView && now - Number(lastView) < 24 * 60 * 60 * 1000) {
+      return
+    }
+
+    fetch("/api/business/views", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ slug: business.slug }),
+    }).finally(() => {
+      localStorage.setItem(key, String(now))
+    })
+  }, [business.slug])
+
+  const handleReviewSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setReviewError("")
+
+    if (!reviewForm.authorName.trim() || !reviewForm.content.trim()) {
+      setReviewError("Please provide your name and review message.")
+      return
+    }
+
+    setSubmittingReview(true)
+
+    const response = await fetch("/api/business/reviews", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        slug: business.slug,
+        rating: reviewForm.rating,
+        title: reviewForm.title.trim() || undefined,
+        content: reviewForm.content.trim(),
+        authorName: reviewForm.authorName.trim(),
+      }),
+    })
+
+    const result = await response.json().catch(() => null)
+    setSubmittingReview(false)
+
+    if (!response.ok || !result?.review) {
+      setReviewError(result?.error || "Unable to submit review. Please try again.")
+      return
+    }
+
+    const newReview: Review = {
+      id: result.review.id,
+      rating: result.review.rating,
+      title: result.review.title || undefined,
+      content: result.review.content,
+      authorName: result.review.authorName,
+      authorImage: result.review.authorImage || undefined,
+      isVerified: result.review.isVerified || false,
+      createdAt: result.review.createdAt,
+    }
+
+    setReviewState((prev) => ({
+      reviews: [newReview, ...prev.reviews],
+      totalReviews: result.stats?.totalReviews ?? prev.totalReviews + 1,
+      averageRating: result.stats?.averageRating ?? prev.averageRating,
+    }))
+
+    setReviewForm({
+      rating: 5,
+      authorName: "",
+      title: "",
+      content: "",
+    })
   }
 
   const renderTabContent = () => {
@@ -608,11 +704,11 @@ export default function BusinessProfilePage({
           <Card className="border-slate-200">
             <CardHeader>
               <CardTitle>
-                Reviews ({business.totalReviews})
-                {business.averageRating > 0 && (
+                Reviews ({reviewState.totalReviews})
+                {reviewState.averageRating > 0 && (
                   <span className="ml-2 text-sm font-normal text-slate-500">
                     <Star className="w-4 h-4 inline fill-yellow-400 text-yellow-400 mr-1" />
-                    {business.averageRating.toFixed(1)} average
+                    {reviewState.averageRating.toFixed(1)} average
                   </span>
                 )}
                 {business.admin?.name && (
@@ -623,6 +719,87 @@ export default function BusinessProfilePage({
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <form onSubmit={handleReviewSubmit} className="mb-6 space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                      Your Name
+                    </label>
+                    <Input
+                      value={reviewForm.authorName}
+                      onChange={(event) =>
+                        setReviewForm((prev) => ({
+                          ...prev,
+                          authorName: event.target.value,
+                        }))
+                      }
+                      placeholder="Enter your name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                      Rating
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <Button
+                          key={value}
+                          type="button"
+                          variant={reviewForm.rating === value ? "default" : "outline"}
+                          className="h-9 w-9 p-0"
+                          onClick={() =>
+                            setReviewForm((prev) => ({
+                              ...prev,
+                              rating: value,
+                            }))
+                          }
+                        >
+                          <Star className="h-4 w-4" />
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    Review Title (Optional)
+                  </label>
+                  <Input
+                    value={reviewForm.title}
+                    onChange={(event) =>
+                      setReviewForm((prev) => ({
+                        ...prev,
+                        title: event.target.value,
+                      }))
+                    }
+                    placeholder="Share a headline"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    Your Review
+                  </label>
+                  <textarea
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                    rows={4}
+                    value={reviewForm.content}
+                    onChange={(event) =>
+                      setReviewForm((prev) => ({
+                        ...prev,
+                        content: event.target.value,
+                      }))
+                    }
+                    placeholder="Share your experience"
+                  />
+                </div>
+                {reviewError && (
+                  <p className="text-sm text-red-600">{reviewError}</p>
+                )}
+                <Button type="submit" disabled={submittingReview}>
+                  {submittingReview ? "Submitting..." : "Submit Review"}
+                </Button>
+              </form>
+
               {reviews.length > 0 ? (
                 <div className="space-y-4">
                   {reviews.map((review) => (
@@ -723,8 +900,8 @@ export default function BusinessProfilePage({
           banner={business.banner}
           heroContent={business.heroContent}
           location={business.address}
-          rating={business.averageRating}
-          reviewCount={business.totalReviews}
+          rating={reviewState.averageRating}
+          reviewCount={reviewState.totalReviews}
           isVerified={business.isVerified}
           verifiedBadge={business.verifiedBadge || "Verified"}
           tags={tags}

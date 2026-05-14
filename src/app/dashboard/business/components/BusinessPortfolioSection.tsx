@@ -49,11 +49,6 @@ export function BusinessPortfolioSection({
 
   return (
     <div className=" mx-auto">
-      <div className="mb-6">
-        <h1 className="text-lg font-bold text-gray-900">Portfolio Manager</h1>
-        <p className="text-md text-gray-600">Manage your portfolio images</p>
-      </div>
-
       <div className="space-y-6">
         <Card className="rounded-3xl overflow-hidden">
           <CardHeader className="pb-4">

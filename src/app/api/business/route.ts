@@ -1,32 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getTokenFromRequest, verifyToken } from "@/lib/jwt";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
-
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX_REQUESTS = 100; // Max requests per window
-
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const userLimit = rateLimitMap.get(identifier);
-
-  if (!userLimit || now > userLimit.resetTime) {
-    rateLimitMap.set(identifier, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
-    return true;
-  }
-
-  if (userLimit.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false;
-  }
-
-  userLimit.count++;
-  return true;
-}
 
 const updateBusinessSchema = z.object({
   name: z
@@ -216,7 +192,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Rate limiting
-    if (!checkRateLimit(`business_update_${admin.userId}`)) {
+    const rateLimitResult = await checkRateLimit(`business_update_${admin.userId}`);
+    if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
         { status: 429 },

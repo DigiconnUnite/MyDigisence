@@ -124,6 +124,7 @@ export interface Business {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  profileViews?: number;
   adminId: string;
   categoryId: string | null;
   heroContent: HeroContent;

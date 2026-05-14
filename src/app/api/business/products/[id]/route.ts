@@ -120,11 +120,6 @@ export async function DELETE(
       success: true,
       message: 'Product deleted successfully',
     })
-
-    return NextResponse.json({
-      success: true,
-      message: 'Product deleted successfully',
-    })
   } catch (error) {
     console.error('Product deletion error:', error)
     return NextResponse.json(

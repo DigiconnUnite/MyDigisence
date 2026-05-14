@@ -1,11 +1,19 @@
 "use client";
 
 import React from "react";
-import { Eye, Building, Package, Mail, Plus, Settings, ExternalLink } from "lucide-react";
+import {
+  Eye,
+  Building,
+  Package,
+  Mail,
+  TrendingUp,
+  BarChart3,
+  Pencil,
+  ExternalLink,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import StatCard from "../components/StatCard";
-import ActionCard from "../components/ActionCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import QuickActions from "../components/QuickActions";
 import type { Business, Inquiry } from "../types";
 
 interface OverviewViewProps {
@@ -15,6 +23,7 @@ interface OverviewViewProps {
     activeProducts: number;
     totalInquiries: number;
     newInquiries: number;
+    profileViews: number;
   };
   inquiries: Inquiry[];
   heroSlidesCount: number;
@@ -61,144 +70,235 @@ export default function OverviewView({
   };
 
   return (
-    <div className="space-y-6 pb-20 md:pb-0 animate-fadeIn">
+    <div className="space-y-6 pb-20 md:pb-0">
       <div className="mb-8">
-        <h1 className="text-lg md:text-xl font-bold text-slate-800 mb-2">
-          Business Dashboard Overview
-        </h1>
-        <p className="text-sm md:text-base text-gray-600">
-          Welcome back! Here's your business profile overview.
+        <h1 className="text-lg font-bold text-gray-900">Overview</h1>
+        <p className="text-md text-gray-600">
+          Welcome back! Here's what's happening with your business.
         </p>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Total Products"
-          value={stats.totalProducts.toString()}
-          subtitle={`${stats.activeProducts} active`}
-          icon={<Package className="h-4 w-4 text-gray-400" />}
-        />
-        <StatCard
-          title="Total Inquiries"
-          value={stats.totalInquiries.toString()}
-          subtitle={`${stats.newInquiries} new`}
-          icon={<Mail className="h-4 w-4 text-gray-400" />}
-        />
-        <StatCard
-          title="Profile Completion"
-          value={getProfileCompletion()}
-          subtitle="Profile completion"
-          icon={<Eye className="h-4 w-4 text-gray-400" />}
-        />
-        <StatCard
-          title="Business Health"
-          value={business?.isActive ? "Active" : "Inactive"}
-          subtitle="Current status"
-          icon={<Building className="h-4 w-4 text-gray-400" />}
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <ActionCard
-          title="Add New Product"
-          description="Add a new product to your catalog"
-          icon={<Plus className="h-5 w-5" />}
-          buttonText="Add Product"
-          buttonAction={onNavigateToProducts}
-        />
-        <ActionCard
-          title="View Catalog"
-          description="Preview your public business catalog"
-          icon={<ExternalLink className="h-5 w-5" />}
-          buttonText="View Public Catalog"
-          buttonAction={onOpenCatalogPreview}
-          disabled={!business?.slug}
-          variant="outline"
-        />
-        <ActionCard
-          title="Update Business Profile"
-          description="Edit your business information and settings"
-          icon={<Settings className="h-5 w-5" />}
-          buttonText="Edit Profile"
-          buttonAction={onNavigateToInfo}
-          variant="outline"
-        />
-        <ActionCard
-          title="Check Inquiries"
-          description="Review and respond to customer inquiries"
-          icon={<Mail className="h-5 w-5" />}
-          buttonText="View Inquiries"
-          buttonAction={onNavigateToInquiries}
-          variant="outline"
-        />
-      </div>
-
-      {/* Recent Activity */}
-      <Card className="rounded-3xl transition-all duration-300 hover:shadow-lg">
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest updates and interactions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {inquiries.slice(0, 3).map((inquiry) => (
-              <div
-                key={inquiry.id}
-                className="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl"
-              >
-                <div className="shrink-0">
-                  <Mail className="h-5 w-5 text-blue-500" />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 xl:grid-cols-8 gap-6">
+            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-900">Profile Views</CardTitle>
+                <Eye className="h-4 w-4 text-gray-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-900">
+                  {stats.profileViews.toLocaleString()}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    New inquiry from {inquiry.name}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {formatDate(inquiry.createdAt)}
-                  </p>
+                <p className="text-xs text-gray-500">Total views</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-900">Customer Inquiries</CardTitle>
+                <Mail className="h-4 w-4 text-gray-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-900">
+                  {stats.totalInquiries.toLocaleString()}
                 </div>
-                <div
-                  className={`flex items-center gap-1.5 px-1.5 w-fit py-0.5 rounded-full border text-xs font-medium ${
-                    inquiry.status === "NEW"
-                      ? "bg-red-500/10 border-red-500/30 text-red-600"
-                      : inquiry.status === "READ"
-                        ? "bg-blue-500/10 border-blue-500/30 text-blue-700"
-                        : inquiry.status === "REPLIED"
-                          ? "bg-green-500/10 border-green-500/30 text-green-700"
-                          : "bg-gray-500/10 border-gray-500/30 text-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      inquiry.status === "NEW"
-                        ? "bg-red-500"
-                        : inquiry.status === "READ"
-                          ? "bg-blue-500"
-                          : inquiry.status === "REPLIED"
-                            ? "bg-green-500"
-                            : "bg-gray-500"
-                    }`}
-                  ></span>
-                  {inquiry.status === "NEW"
-                    ? "New"
-                    : inquiry.status === "READ"
-                      ? "Read"
-                      : inquiry.status === "REPLIED"
-                        ? "Replied"
-                        : "Closed"}
+                <p className="text-xs text-gray-500">{stats.newInquiries} new</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-900">Products</CardTitle>
+                <Package className="h-4 w-4 text-gray-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-900">
+                  {stats.totalProducts.toLocaleString()}
+                </div>
+                <p className="text-xs text-gray-500">{stats.activeProducts} active</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg xl:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-900">Profile Completion</CardTitle>
+                <TrendingUp className="h-4 w-4 text-gray-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-900">
+                  {getProfileCompletion()}
+                </div>
+                <p className="text-xs text-gray-500">Keep improving</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+            <CardHeader>
+              <CardTitle className="text-base">Profile Views Trend</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-48 rounded-2xl bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Views tracking is enabled and will chart here.
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+              <CardHeader>
+                <CardTitle className="text-base">Product Snapshot</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.totalProducts === 0 ? (
+                  <p className="text-sm text-gray-500">No products added yet.</p>
+                ) : (
+                  <p className="text-sm text-gray-600">
+                    You have {stats.totalProducts} products, {stats.activeProducts} active.
+                  </p>
+                )}
+                <div className="mt-4">
+                  <Button variant="outline" onClick={onNavigateToProducts} className="rounded-xl">
+                    Manage Products
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+              <CardHeader>
+                <CardTitle className="text-base">Business Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Building className="h-4 w-4 text-gray-400" />
+                  {business?.isActive ? "Active" : "Inactive"}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Keep your profile updated to stay visible.
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <Button onClick={onNavigateToInfo} className="rounded-xl">
+                    Update Profile
+                  </Button>
+                  <Button variant="outline" onClick={onOpenCatalogPreview} className="rounded-xl">
+                    Preview
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+            <CardHeader>
+              <CardTitle className="text-base">Recent Inquiries</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {inquiries.slice(0, 3).map((inquiry) => (
+                  <div
+                    key={inquiry.id}
+                    className="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl"
+                  >
+                    <div className="shrink-0">
+                      <Mail className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {inquiry.name}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">
+                        {formatDate(inquiry.createdAt)}
+                      </p>
+                    </div>
+                    <div
+                      className={`flex items-center gap-1.5 px-1.5 w-fit py-0.5 rounded-full border text-xs font-medium ${
+                        inquiry.status === "NEW"
+                          ? "bg-red-500/10 border-red-500/30 text-red-600"
+                          : inquiry.status === "READ"
+                            ? "bg-blue-500/10 border-blue-500/30 text-blue-700"
+                            : inquiry.status === "REPLIED"
+                              ? "bg-green-500/10 border-green-500/30 text-green-700"
+                              : "bg-gray-500/10 border-gray-500/30 text-gray-600"
+                      }`}
+                    >
+                      {inquiry.status}
+                    </div>
+                  </div>
+                ))}
+                {inquiries.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No recent inquiries
+                  </p>
+                )}
+              </div>
+              <div className="mt-4">
+                <Button variant="outline" onClick={onNavigateToInquiries} className="rounded-xl">
+                  View All Inquiries
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+            <CardHeader>
+              <CardTitle className="text-base">Business Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-gray-100 flex items-center justify-center">
+                  <Building className="h-6 w-6 text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{business?.name || "Your Business"}</p>
+                  <p className="text-xs text-gray-500">{business?.category?.name || "No category"}</p>
                 </div>
               </div>
-            ))}
-            {inquiries.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">
-                No recent activity
+              <div className="mt-4 flex gap-2">
+                <Button onClick={onNavigateToInfo} className="rounded-xl">
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Button variant="outline" onClick={onOpenCatalogPreview} className="rounded-xl">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+            <CardHeader>
+              <CardTitle className="text-base">Profile Completion</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600">{getProfileCompletion()} complete</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Add more details to improve visibility.
               </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
+            <CardHeader>
+              <CardTitle className="text-base">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <QuickActions
+                onNavigateToProducts={onNavigateToProducts}
+                onNavigateToInfo={onNavigateToInfo}
+                onNavigateToInquiries={onNavigateToInquiries}
+                onOpenCatalogPreview={onOpenCatalogPreview}
+                hasBusinessSlug={!!business?.slug}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -77,21 +77,6 @@ export function BusinessProductsSection({
 
   return (
     <div className=" mx-auto">
-      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">Products & Services</h1>
-          <p className="text-md text-gray-600">Manage your product offerings</p>
-        </div>
-        <Button
-          variant="default"
-          onClick={onAddProduct}
-          className="rounded-xl  hover:opacity-90 transition-opacity"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
-        </Button>
-      </div>
-
       <div className="mb-6 flex justify-end">
         <Select
           value={selectedCategory}
@@ -114,7 +99,7 @@ export function BusinessProductsSection({
         </Select>
       </div>
 
-      <Card className="p-0 bg-white rounded-xl overflow-hidden">
+      <Card className="p-0 bg-white rounded-xl border border-gray-300 overflow-hidden">
         <CardContent className="p-0">
           {mounted && selectedProducts.length > 0 && (
             <div className="p-4 bg-blue-50 border-b border-blue-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -162,11 +147,11 @@ export function BusinessProductsSection({
             </div>
           )}
 
-          <div className="overflow-x-auto border border-gray-200 rounded-md ">
+          <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-[#080322] ">
+              <TableHeader className="bg-gray-50 border-b border-gray-200">
                 <TableRow>
-                  <TableHead className="w-12 text-white font-medium">
+                  <TableHead className="w-12 text-gray-700 font-medium">
                     <Checkbox
                       checked={
                         selectedProducts.length === filteredProducts.length &&
@@ -179,15 +164,16 @@ export function BusinessProductsSection({
                           onSelectedProductsChange([]);
                         }
                       }}
+                      className="border-gray-400"
                     />
                   </TableHead>
-                  <TableHead className="text-white font-medium">Image</TableHead>
-                  <TableHead className="text-white font-medium">Name</TableHead>
-                  <TableHead className="text-white font-medium">Category</TableHead>
-                  <TableHead className="text-white font-medium">Brand</TableHead>
-                  <TableHead className="text-white font-medium">Price</TableHead>
-                  <TableHead className="text-white font-medium">Status</TableHead>
-                  <TableHead className="w-32 text-white font-medium">Actions</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Image</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Name</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Category</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Brand</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Price</TableHead>
+                  <TableHead className="text-gray-700 font-medium">Status</TableHead>
+                  <TableHead className="w-32 text-gray-700 font-medium">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
