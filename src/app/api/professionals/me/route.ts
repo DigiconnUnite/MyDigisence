@@ -26,27 +26,12 @@ export async function GET(request: NextRequest) {
 
     const professional = await db.professional.findFirst({
       where: { adminId: admin.userId },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        professionalHeadline: true,
-        aboutMe: true,
-        profilePicture: true,
-        banner: true,
-        resume: true,
-        location: true,
-        phone: true,
-        email: true,
-        website: true,
-        facebook: true,
-        twitter: true,
-        instagram: true,
-        linkedin: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-        adminId: true,
+      include: {
+        workExperience: true,
+        education: true,
+        services: true,
+        portfolio: true,
+        skills: true,
       },
     });
 

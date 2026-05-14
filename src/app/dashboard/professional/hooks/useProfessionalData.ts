@@ -52,30 +52,14 @@ export function useProfessionalData(): UseProfessionalDataReturn {
       }
 
       const data = await response.json();
-      setProfessional(data.professional);
+      const { professional, workExperience, education, services, portfolio, skills } = data;
 
-      // Fetch related data in parallel
-      const [expRes, eduRes, svcRes, portRes, skillRes] = await Promise.all([
-        fetch("/api/professionals/experience", { cache: "no-store" }),
-        fetch("/api/professionals/education", { cache: "no-store" }),
-        fetch("/api/professionals/services", { cache: "no-store" }),
-        fetch("/api/professionals/portfolio", { cache: "no-store" }),
-        fetch("/api/professionals/skills", { cache: "no-store" }),
-      ]);
-
-      const [expData, eduData, svcData, portData, skillData] = await Promise.all([
-        expRes.ok ? expRes.json() : { workExperience: [] },
-        eduRes.ok ? eduRes.json() : { education: [] },
-        svcRes.ok ? svcRes.json() : { services: [] },
-        portRes.ok ? portRes.json() : { portfolio: [] },
-        skillRes.ok ? skillRes.json() : { skills: [] },
-      ]);
-
-      setWorkExperience(expData.workExperience || []);
-      setEducation(eduData.education || []);
-      setServices(svcData.services || []);
-      setPortfolio(portData.portfolio || []);
-      setSkills(skillData.skills || []);
+      setProfessional(professional);
+      setWorkExperience(workExperience || []);
+      setEducation(education || []);
+      setServices(services || []);
+      setPortfolio(portfolio || []);
+      setSkills(skills || []);
     } catch (error) {
       console.error("Error fetching professional data:", error);
       toast({

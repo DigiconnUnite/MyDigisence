@@ -147,6 +147,10 @@ export interface Business {
   catalogPdf?: string | null;
   openingHours?: { day: string; open: string; close: string }[];
   gstNumber?: string | null;
+  totalReviews?: number;
+  averageRating?: number;
+  isVerified?: boolean;
+  yearsInBusiness?: number;
   admin: {
     id?: string;
     name?: string | null;
