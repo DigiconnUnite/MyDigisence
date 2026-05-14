@@ -58,6 +58,11 @@ export default function ProfessionalDashboard() {
   // Custom hook for data
   const {
     professional,
+    workExperience,
+    education,
+    services,
+    portfolio,
+    skills,
     loading: dataLoading,
     fetchData,
   } = useProfessionalData();
@@ -198,14 +203,32 @@ export default function ProfessionalDashboard() {
 
     switch (currentView) {
       case "overview":
-        return <OverviewView {...viewProps} onNavigate={handleViewChange} />;
+        return (
+          <OverviewView
+            professional={professional}
+            services={services}
+            portfolio={portfolio}
+            isLoading={dataLoading}
+            onNavigate={handleViewChange}
+          />
+        );
       case "profile":
       case "my-profile":
-        return <MyProfileView {...viewProps} />;
+        return (
+          <MyProfileView
+            professional={professional}
+            services={services}
+            portfolio={portfolio}
+            workExperience={workExperience}
+            education={education}
+            skills={skills}
+            isLoading={dataLoading}
+          />
+        );
       case "services":
-        return <ServicesView {...viewProps} />;
+        return <ServicesView services={services} isLoading={dataLoading} />;
       case "projects":
-        return <ProjectsView {...viewProps} />;
+        return <ProjectsView portfolio={portfolio} isLoading={dataLoading} />;
       case "enquiries":
         return <EnquiriesView {...viewProps} />;
       case "messages":

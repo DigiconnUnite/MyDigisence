@@ -26,16 +26,16 @@ import {
 import { cn } from "@/lib/utils";
 
 interface Service {
-  id: string;
+  id?: string;
   name: string;
-  category: string;
-  description: string;
-  price: number;
-  currency: string;
-  status: "active" | "inactive";
-  views: number;
-  inquiries: number;
-  createdAt: string;
+  category?: string | null;
+  description?: string | null;
+  price?: number | string | null;
+  currency?: string | null;
+  status?: "active" | "inactive" | null;
+  views?: number | null;
+  inquiries?: number | null;
+  createdAt?: string | null;
 }
 
 interface ServicesViewProps {
@@ -46,14 +46,6 @@ interface ServicesViewProps {
   onDeleteService?: (id: string) => void;
   onViewService?: (id: string) => void;
 }
-
-const defaultServices: Service[] = [
-  { id: "1", name: "Web Development", category: "Development", description: "Custom websites and web applications", price: 35000, currency: "USD", status: "active", views: 1245, inquiries: 42, createdAt: "2024-01-15" },
-  { id: "2", name: "API Development", category: "Development", description: "RESTful APIs and backend services", price: 25000, currency: "USD", status: "active", views: 890, inquiries: 28, createdAt: "2024-02-20" },
-  { id: "3", name: "Database Design", category: "Database", description: "Database architecture & optimization", price: 15000, currency: "USD", status: "active", views: 567, inquiries: 15, createdAt: "2024-03-10" },
-  { id: "4", name: "Mobile App Development", category: "Mobile", description: "iOS and Android applications", price: 50000, currency: "USD", status: "inactive", views: 423, inquiries: 12, createdAt: "2024-01-05" },
-  { id: "5", name: "Website Maintenance", category: "Maintenance", description: "Website updates and bug fixes", price: 5000, currency: "USD", status: "active", views: 2341, inquiries: 89, createdAt: "2024-04-01" },
-];
 
 export default function ServicesView({
   services,
@@ -67,26 +59,32 @@ export default function ServicesView({
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [sortBy, setSortBy] = useState<"name" | "price" | "views">("name");
 
-  const data = services || defaultServices;
+  const data = services || [];
+  const getPriceValue = (value?: number | string | null) => {
+    if (value == null) {
+      return 0;
+    }
+    return typeof value === "number" ? value : Number(value) || 0;
+  };
 
   const filteredServices = data
     .filter(s => 
-      (statusFilter === "all" || s.status === statusFilter) &&
+      (statusFilter === "all" || (s.status || "active") === statusFilter) &&
       (s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       s.category.toLowerCase().includes(searchQuery.toLowerCase()))
+       (s.category || "").toLowerCase().includes(searchQuery.toLowerCase()))
     )
     .sort((a, b) => {
-      if (sortBy === "price") return b.price - a.price;
-      if (sortBy === "views") return b.views - a.views;
+      if (sortBy === "price") return getPriceValue(b.price) - getPriceValue(a.price);
+      if (sortBy === "views") return (b.views || 0) - (a.views || 0);
       return a.name.localeCompare(b.name);
     });
 
   const stats = {
     total: data.length,
-    active: data.filter(s => s.status === "active").length,
+    active: data.filter(s => (s.status || "active") === "active").length,
     inactive: data.filter(s => s.status === "inactive").length,
-    totalViews: data.reduce((acc, s) => acc + s.views, 0),
-    totalInquiries: data.reduce((acc, s) => acc + s.inquiries, 0),
+    totalViews: data.reduce((acc, s) => acc + (s.views || 0), 0),
+    totalInquiries: data.reduce((acc, s) => acc + (s.inquiries || 0), 0),
   };
 
   if (isLoading) {
@@ -226,8 +224,8 @@ export default function ServicesView({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredServices.map((service) => (
-                    <TableRow key={service.id} className="hover:bg-gray-50">
+                  {filteredServices.map((service, index) => (
+                    <TableRow key={service.id || `${service.name}-${index}`} className="hover:bg-gray-50">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 bg-black rounded-lg flex items-center justify-center">
@@ -235,23 +233,28 @@ export default function ServicesView({
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">{service.name}</p>
-                            <p className="text-sm text-gray-500 truncate max-w-xs">{service.description}</p>
+                            <p className="text-sm text-gray-500 truncate max-w-xs">{service.description || "-"}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{service.category}</TableCell>
-                      <TableCell>${service.price.toLocaleString()}</TableCell>
+                      <TableCell>{service.category || "-"}</TableCell>
+                      <TableCell>${getPriceValue(service.price).toLocaleString()}</TableCell>
                       <TableCell>
-                        <Badge 
-                          className={cn(
-                            service.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                          )}
-                        >
-                          {service.status.charAt(0).toUpperCase() + service.status.slice(1)}
-                        </Badge>
+                        {(() => {
+                          const status = service.status === "inactive" ? "inactive" : "active";
+                          return (
+                            <Badge 
+                              className={cn(
+                                status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                              )}
+                            >
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
-                      <TableCell>{service.views.toLocaleString()}</TableCell>
-                      <TableCell>{service.inquiries}</TableCell>
+                      <TableCell>{(service.views || 0).toLocaleString()}</TableCell>
+                      <TableCell>{service.inquiries || 0}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

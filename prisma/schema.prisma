@@ -92,6 +92,7 @@ model Business {
 
    // Relations
    reviews           Review[]
+   viewDaily         BusinessViewDaily[]
 
    // Indexes for performance
    @@index([isActive])
@@ -101,6 +102,21 @@ model Business {
    @@index([isActive, createdAt])
    @@index([categoryId, isActive])
    @@map("businesses")
+}
+
+model BusinessViewDaily {
+   id         String   @id @default(cuid()) @map("_id")
+   businessId String
+   date       DateTime
+   views      Int      @default(0)
+   createdAt  DateTime @default(now())
+   updatedAt  DateTime @updatedAt
+
+   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+   @@unique([businessId, date])
+   @@index([businessId, date])
+   @@map("business_view_daily")
 }
 
 model Professional {

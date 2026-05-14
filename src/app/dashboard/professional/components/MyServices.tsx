@@ -8,12 +8,12 @@ import { Plus, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Service {
-  id: string;
+  id?: string;
   name: string;
-  category: string;
-  price: number;
-  currency: string;
-  status: "active" | "inactive";
+  category?: string | null;
+  price?: number | string | null;
+  currency?: string | null;
+  status?: "active" | "inactive" | null;
   icon?: React.ReactNode;
 }
 
@@ -23,41 +23,6 @@ interface MyServicesProps {
   onViewAll?: () => void;
   onAddService?: () => void;
 }
-
-const defaultServices: Service[] = [
-  {
-    id: "1",
-    name: "Web Development",
-    category: "Development",
-    price: 35000,
-    currency: "USD",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "API Development",
-    category: "Development",
-    price: 10000,
-    currency: "USD",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Database Design",
-    category: "Database",
-    price: 8000,
-    currency: "USD",
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Website Maintenance",
-    category: "Maintenance",
-    price: 5000,
-    currency: "USD",
-    status: "active",
-  },
-];
 
 const statusConfig = {
   active: { label: "Active", className: "bg-green-100 text-green-700" },
@@ -70,7 +35,7 @@ export default function MyServices({
   onViewAll,
   onAddService,
 }: MyServicesProps) {
-  const data = services || defaultServices;
+  const data = services || [];
 
   if (isLoading) {
     return (
@@ -118,44 +83,56 @@ export default function MyServices({
       </div>
 
       <div className="space-y-3">
-        {data.map((service) => {
-          const status = statusConfig[service.status];
+        {data.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+            No services yet. Add your first service to show it here.
+          </div>
+        ) : (
+          data.map((service, index) => {
+            const statusKey = service.status === "inactive" ? "inactive" : "active";
+            const status = statusConfig[statusKey];
+            const priceValue =
+              typeof service.price === "number"
+                ? service.price
+                : Number(service.price);
+            const showPrice = Number.isFinite(priceValue);
 
-          return (
-            <div
-              key={service.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Wrench className="h-5 w-5 text-blue-600" />
+            return (
+              <div
+                key={service.id || `${service.name}-${index}`}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Wrench className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900">
+                      {service.name}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {service.category || "Service"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900">
-                    {service.name}
-                  </h4>
-                  <p className="text-xs text-gray-500">
-                    {service.category}
-                  </p>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-900">
+                    {showPrice ? `$${priceValue.toLocaleString()}` : "-"}
+                  </span>
+                  <Badge
+                    className={cn(
+                      "text-xs font-medium px-2 py-0.5",
+                      status.className
+                    )}
+                  >
+                    {status.label}
+                  </Badge>
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-900">
-                  ${service.price.toLocaleString()}
-                </span>
-                <Badge
-                  className={cn(
-                    "text-xs font-medium px-2 py-0.5",
-                    status.className
-                  )}
-                >
-                  {status.label}
-                </Badge>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <Button

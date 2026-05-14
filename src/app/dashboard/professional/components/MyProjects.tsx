@@ -10,44 +10,24 @@ import { cn } from "@/lib/utils";
 interface Project {
   id: string;
   title: string;
-  description: string;
-  image: string;
-  technologies: string[];
-  status: "completed" | "in-progress";
+  description?: string;
+  image?: string | null;
+  technologies?: string[];
+  status?: "completed" | "in-progress";
+}
+
+interface PortfolioItem {
+  title?: string;
+  description?: string;
+  url?: string;
 }
 
 interface MyProjectsProps {
   projects?: Project[];
+  portfolio?: PortfolioItem[];
   isLoading?: boolean;
   onViewAll?: () => void;
 }
-
-const defaultProjects: Project[] = [
-  {
-    id: "1",
-    title: "E-Commerce Platform",
-    description: "Next.js, Node.js, MongoDB",
-    image: "/project-1.jpg",
-    technologies: ["Next.js", "Node.js", "MongoDB"],
-    status: "completed",
-  },
-  {
-    id: "2",
-    title: "Task Management App",
-    description: "React, TypeScript, Node.js",
-    image: "/project-2.jpg",
-    technologies: ["React", "TypeScript", "Node.js"],
-    status: "in-progress",
-  },
-  {
-    id: "3",
-    title: "Real Estate Website",
-    description: "Next.js, Tailwind CSS",
-    image: "/project-3.jpg",
-    technologies: ["Next.js", "Tailwind CSS"],
-    status: "in-progress",
-  },
-];
 
 const statusConfig = {
   completed: { label: "Completed", className: "bg-green-100 text-green-700" },
@@ -56,10 +36,18 @@ const statusConfig = {
 
 export default function MyProjects({
   projects,
+  portfolio,
   isLoading = false,
   onViewAll,
 }: MyProjectsProps) {
-  const data = projects || defaultProjects;
+  const data: Project[] = projects
+    ?? (portfolio || []).map((item, index) => ({
+      id: `portfolio-${index}`,
+      title: item.title || `Project ${index + 1}`,
+      description: item.description || "",
+      image: item.url || null,
+      status: "completed",
+    }));
 
   if (isLoading) {
     return (
@@ -102,50 +90,57 @@ export default function MyProjects({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {data.map((project) => {
-          const status = statusConfig[project.status];
+        {data.length === 0 ? (
+          <div className="col-span-full rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500">
+            No projects yet. Add portfolio items to showcase your work.
+          </div>
+        ) : (
+          data.map((project) => {
+            const status = statusConfig[project.status ?? "completed"];
 
-          return (
-            <div
-              key={project.id}
-              className="group bg-gray-50 rounded-lg overflow-hidden hover:bg-gray-100 transition-colors cursor-pointer"
-            >
-              <div className="relative h-32 bg-gradient-to-br from-slate-200 to-slate-300">
-                <Image
-                  src={project.image}
-                  alt={project.title}
-                  fill
-                  className="object-cover"
-                  onError={(e) => {
-                    // Fallback if image doesn't exist
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-2 left-2 right-2">
-                  <Badge
-                    className={cn(
-                      "text-xs font-medium px-2 py-0.5",
-                      status.className
-                    )}
-                  >
-                    {status.label}
-                  </Badge>
+            return (
+              <div
+                key={project.id}
+                className="group bg-gray-50 rounded-lg overflow-hidden hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <div className="relative h-32 bg-linear-to-br from-slate-200 to-slate-300">
+                  {project.image ? (
+                    <Image
+                      src={project.image}
+                      alt={project.title}
+                      fill
+                      className="object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                      }}
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <Badge
+                      className={cn(
+                        "text-xs font-medium px-2 py-0.5",
+                        status.className
+                      )}
+                    >
+                      {status.label}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {project.title}
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {project.description || project.technologies?.join(", ") || "Project details"}
+                  </p>
                 </div>
               </div>
-
-              <div className="p-4">
-                <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {project.title}
-                </h4>
-                <p className="text-xs text-gray-500 mt-1">
-                  {project.technologies.join(", ")}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </Card>
   );

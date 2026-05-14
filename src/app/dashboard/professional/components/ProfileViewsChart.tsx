@@ -23,6 +23,7 @@ type TimeRange = "week" | "month" | "year";
 
 interface ProfileViewsChartProps {
   data?: ChartData[];
+  dataByRange?: Record<TimeRange, ChartData[]>;
   isLoading?: boolean;
 }
 
@@ -54,11 +55,15 @@ const defaultYearData: ChartData[] = [
 
 export default function ProfileViewsChart({
   data,
+  dataByRange,
   isLoading = false,
 }: ProfileViewsChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
 
-  const chartData = data || (timeRange === "week" ? defaultWeekData : timeRange === "month" ? defaultMonthData : defaultYearData);
+  const chartData =
+    dataByRange?.[timeRange] ||
+    data ||
+    (timeRange === "week" ? defaultWeekData : timeRange === "month" ? defaultMonthData : defaultYearData);
 
   const timeRanges: { value: TimeRange; label: string }[] = [
     { value: "week", label: "This Week" },

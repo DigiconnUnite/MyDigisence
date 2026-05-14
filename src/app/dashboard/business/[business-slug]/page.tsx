@@ -79,6 +79,8 @@ export default function BusinessAdminDashboardRefactored() {
     inquiries,
     brands,
     images,
+    viewSeries,
+    statsSnapshot,
     isLoading,
     error,
     fetchData,
@@ -347,7 +349,10 @@ export default function BusinessAdminDashboardRefactored() {
     toast({ title: "Business updated" });
   };
   const formatDate = (date: string) => new Date(date).toLocaleDateString();
-  const heroSlidesCount = images.length;
+  const heroSlidesCount =
+    business?.portfolioContent?.images?.length
+    ?? business?.heroContent?.slides?.length
+    ?? 0;
   
   // BrandsView handlers
   const handleBrandNameChange = (value: string) =>
@@ -625,12 +630,12 @@ export default function BusinessAdminDashboardRefactored() {
 
   // Calculate stats for views
   const stats = useMemo(() => ({
-    totalProducts: products.length,
-    activeProducts: products.filter((p: Product) => p.isActive).length,
-    totalInquiries: inquiries.length,
-    newInquiries: inquiries.filter((i: Inquiry) => i.status === "NEW").length,
-    profileViews: business?.profileViews ?? 0,
-  }), [products, inquiries]);
+    totalProducts: statsSnapshot?.products.total ?? products.length,
+    activeProducts: statsSnapshot?.products.active ?? products.filter((p: Product) => p.isActive).length,
+    totalInquiries: statsSnapshot?.inquiries.total ?? inquiries.length,
+    newInquiries: statsSnapshot?.inquiries.new ?? inquiries.filter((i: Inquiry) => i.status === "NEW").length,
+    profileViews: statsSnapshot?.views ?? business?.profileViews ?? 0,
+  }), [products, inquiries, business, statsSnapshot]);
 
   // Navigation menu items
   const menuItems = useMemo(() => [
@@ -738,6 +743,7 @@ export default function BusinessAdminDashboardRefactored() {
       onNavigateToInfo: handleNavigateToInfo,
       onNavigateToInquiries: handleNavigateToInquiries,
       onOpenCatalogPreview: handleOpenCatalogPreview,
+      viewSeries,
       // ProductsView props
       searchTerm: viewSearchTerm,
       selectedCategory,

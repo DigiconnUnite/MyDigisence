@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useBusinessDataLoader } from "./useBusinessDataLoader";
 import { buildBusinessStats, getUniqueProductImages } from "./businessDataHelpers";
-import type { Business, Category, Inquiry, Product, BrandContent, PortfolioContent } from "../types";
+import type { Business, Category, Inquiry, Product, BrandContent, PortfolioContent, ViewSeriesByRange, BusinessStatsResponse } from "../types";
 
 interface BusinessData {
   business: Business | null;
@@ -23,6 +23,8 @@ interface BusinessData {
     readInquiries: number;
     repliedInquiries: number;
   };
+  viewSeries: ViewSeriesByRange | null;
+  statsSnapshot: BusinessStatsResponse["stats"] | null;
 }
 
 interface UseBusinessDataReturn extends BusinessData {
@@ -51,6 +53,8 @@ export function useBusinessData(): UseBusinessDataReturn {
     readInquiries: 0,
     repliedInquiries: 0,
   });
+  const [viewSeries, setViewSeries] = useState<ViewSeriesByRange | null>(null);
+  const [statsSnapshot, setStatsSnapshot] = useState<BusinessStatsResponse["stats"] | null>(null);
 
   const onSuccess = useCallback(
     ({
@@ -61,13 +65,28 @@ export function useBusinessData(): UseBusinessDataReturn {
       data: { business: Business | null; categories: Category[]; products: Product[]; inquiries: Inquiry[] };
       stats: ReturnType<typeof buildBusinessStats>;
       images: string[];
+      viewSeries: ViewSeriesByRange | null;
+      statsSnapshot: BusinessStatsResponse["stats"] | null;
     }) => {
       setBusiness(data.business);
       setCategories(data.categories);
       setProducts(data.products);
       setInquiries(data.inquiries);
       setImages(nextImages);
-      setStats(nextStats);
+      if (statsSnapshot) {
+        setStats({
+          totalProducts: statsSnapshot.products.total,
+          activeProducts: statsSnapshot.products.active,
+          totalInquiries: statsSnapshot.inquiries.total,
+          newInquiries: statsSnapshot.inquiries.new,
+          readInquiries: statsSnapshot.inquiries.read,
+          repliedInquiries: statsSnapshot.inquiries.replied,
+        });
+      } else {
+        setStats(nextStats);
+      }
+      setViewSeries(viewSeries);
+      setStatsSnapshot(statsSnapshot);
     },
     []
   );
@@ -122,6 +141,8 @@ export function useBusinessData(): UseBusinessDataReturn {
     isLoading: loading,
     error,
     stats,
+    viewSeries,
+    statsSnapshot,
     fetchData,
     updateBusinessState,
     cancelLoad,

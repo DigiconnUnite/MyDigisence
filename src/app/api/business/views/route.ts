@@ -13,6 +13,10 @@ function getClientIdentifier(request: NextRequest, slug: string) {
   return `business_view:${slug}:${ip}`;
 }
 
+function startOfDayUtc(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -26,12 +30,19 @@ export async function POST(request: NextRequest) {
     const business = await db.business.update({
       where: { slug },
       data: { profileViews: { increment: 1 } },
-      select: { profileViews: true },
+      select: { id: true, profileViews: true },
     }).catch(() => null);
 
     if (!business) {
       return NextResponse.json({ error: "Business not found" }, { status: 404 });
     }
+
+    const today = startOfDayUtc(new Date());
+    await db.businessViewDaily.upsert({
+      where: { businessId_date: { businessId: business.id, date: today } },
+      update: { views: { increment: 1 } },
+      create: { businessId: business.id, date: today, views: 1 },
+    });
 
     return NextResponse.json({ success: true, views: business.profileViews });
   } catch (error) {

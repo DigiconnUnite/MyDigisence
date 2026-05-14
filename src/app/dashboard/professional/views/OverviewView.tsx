@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { CalendarDays, Eye, MessageSquare, Briefcase, TrendingUp, Users, Activity } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Eye, MessageSquare, Briefcase, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import StatCards from "../components/StatCards";
 import ProfileViewsChart from "../components/ProfileViewsChart";
 import RecentEnquiries from "../components/RecentEnquiries";
 import MyServices from "../components/MyServices";
@@ -12,10 +11,13 @@ import ProfilePreview from "../components/ProfilePreview";
 import AccountProgress from "../components/AccountProgress";
 import AccountSummary from "../components/AccountSummary";
 import QuickActions from "../components/QuickActions";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import type { Professional, Service, PortfolioItem } from "../types/professional";
 
 interface OverviewViewProps {
+  professional?: Professional | null;
+  services?: Service[];
+  portfolio?: PortfolioItem[];
   isLoading?: boolean;
   onNavigate?: (view: string) => void;
 }
@@ -23,19 +25,25 @@ interface OverviewViewProps {
 interface DashboardStats {
   profileViews: number;
   inquiries: number;
-  activeServices: number;
-  completedProjects: number;
 }
 
-export default function OverviewView({ isLoading: initialLoading = false, onNavigate }: OverviewViewProps) {
+export default function OverviewView({
+  professional,
+  services,
+  portfolio,
+  isLoading: initialLoading = false,
+  onNavigate,
+}: OverviewViewProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(initialLoading);
   const [stats, setStats] = useState<DashboardStats>({
     profileViews: 0,
     inquiries: 0,
-    activeServices: 0,
-    completedProjects: 0,
   });
+
+  useEffect(() => {
+    setIsLoading(initialLoading);
+  }, [initialLoading]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -45,15 +53,9 @@ export default function OverviewView({ isLoading: initialLoading = false, onNavi
         const analyticsRes = await fetch('/api/professionals/analytics?timeRange=30d');
         const analyticsData = analyticsRes.ok ? await analyticsRes.json() : null;
 
-        // Fetch services count
-        const servicesRes = await fetch('/api/professionals/services');
-        const servicesData = servicesRes.ok ? await servicesRes.json() : null;
-
         setStats({
           profileViews: analyticsData?.profileViews?.total || 0,
           inquiries: analyticsData?.inquiries?.total || 0,
-          activeServices: servicesData?.services?.length || 0,
-          completedProjects: 0, // TODO: Add projects API endpoint
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -78,6 +80,31 @@ export default function OverviewView({ isLoading: initialLoading = false, onNavi
   const handleEditProfile = () => onNavigate?.("edit-profile");
   const handleImproveProfile = () => onNavigate?.("edit-profile");
   const handleManageSubscription = () => onNavigate?.("subscription");
+
+  const completedProjects = portfolio?.length ?? 0;
+  const activeServices = services?.length ?? 0;
+
+  const previewStats = useMemo(() => ({
+    projects: completedProjects,
+  }), [completedProjects]);
+
+  const previewProfessional = useMemo(() => {
+    if (!professional) {
+      return undefined;
+    }
+
+    return {
+      id: professional.id,
+      name: professional.name,
+      headline: professional.professionalHeadline ?? "",
+      location: professional.location ?? "",
+      about: professional.aboutMe ?? "",
+      avatar: professional.profilePicture ?? "",
+      banner: professional.banner ?? "",
+      isVerified: false,
+      stats: previewStats,
+    };
+  }, [professional, previewStats]);
 
   return (
     <div className="space-y-6 pb-20 md:pb-0">
@@ -125,7 +152,7 @@ export default function OverviewView({ isLoading: initialLoading = false, onNavi
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">
-                  {isLoading ? '-' : stats.activeServices}
+                  {isLoading ? '-' : activeServices}
                 </div>
                 <p className="text-xs text-gray-500">Currently listed</p>
               </CardContent>
@@ -138,7 +165,7 @@ export default function OverviewView({ isLoading: initialLoading = false, onNavi
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">
-                  {isLoading ? '-' : stats.completedProjects}
+                  {isLoading ? '-' : completedProjects}
                 </div>
                 <p className="text-xs text-gray-500">Total delivered</p>
               </CardContent>
@@ -154,6 +181,7 @@ export default function OverviewView({ isLoading: initialLoading = false, onNavi
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
               <MyServices
+                services={services}
                 isLoading={isLoading}
                 onViewAll={handleViewAllServices}
                 onAddService={handleAddService}
@@ -161,6 +189,7 @@ export default function OverviewView({ isLoading: initialLoading = false, onNavi
             </Card>
             <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
               <MyProjects
+                portfolio={portfolio}
                 isLoading={isLoading}
                 onViewAll={handleViewAllProjects}
               />
@@ -181,6 +210,7 @@ export default function OverviewView({ isLoading: initialLoading = false, onNavi
           {/* Profile Preview */}
           <Card className="bg-white border border-gray-300 overflow-hidden shadow-none rounded-3xl transition-all duration-300 hover:shadow-lg p-0">
             <ProfilePreview
+              professional={previewProfessional}
               isLoading={isLoading}
               onViewProfile={handleViewProfile}
               onEditProfile={handleEditProfile}

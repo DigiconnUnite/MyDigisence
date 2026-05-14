@@ -12,6 +12,7 @@ import type {
   CategoriesResponse,
   InquiriesResponse,
   ProductsResponse,
+  BusinessStatsResponse,
 } from "../types";
 
 interface UseBusinessDataLoaderOptions {
@@ -19,6 +20,8 @@ interface UseBusinessDataLoaderOptions {
     data: BusinessDashboardData;
     stats: ReturnType<typeof buildBusinessStats>;
     images: string[];
+    viewSeries: BusinessStatsResponse["stats"]["viewSeries"] | null;
+    statsSnapshot: BusinessStatsResponse["stats"] | null;
   }) => void;
   onError?: (message: string) => void;
   onFinally?: () => void;
@@ -40,11 +43,12 @@ export const useBusinessDataLoader = ({
     const requestId = requestIdRef.current;
 
     try {
-      const [businessRes, categoriesRes, productsRes, inquiriesRes] = await Promise.all([
+      const [businessRes, categoriesRes, productsRes, inquiriesRes, statsRes] = await Promise.all([
         fetchBusinessJsonOrNull<BusinessResponse>(BUSINESS_FETCH_ENDPOINTS.business, controller.signal),
         fetchBusinessJsonOrNull<CategoriesResponse>(BUSINESS_FETCH_ENDPOINTS.categories, controller.signal),
         fetchBusinessJsonOrNull<ProductsResponse>(BUSINESS_FETCH_ENDPOINTS.products, controller.signal),
         fetchBusinessJsonOrNull<InquiriesResponse>(BUSINESS_FETCH_ENDPOINTS.inquiries, controller.signal),
+        fetchBusinessJsonOrNull<BusinessStatsResponse>(BUSINESS_FETCH_ENDPOINTS.stats, controller.signal),
       ]);
 
       if (controller.signal.aborted || requestId !== requestIdRef.current) {
@@ -63,6 +67,8 @@ export const useBusinessDataLoader = ({
         data: nextData,
         stats: buildBusinessStats(nextData.products, nextData.inquiries),
         images: getUniqueProductImages(nextData.products),
+        viewSeries: statsRes?.stats?.viewSeries ?? null,
+        statsSnapshot: statsRes?.stats ?? null,
       });
     } catch {
       if (!controller.signal.aborted) {

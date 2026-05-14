@@ -10,6 +10,7 @@ export const BUSINESS_FETCH_ENDPOINTS = {
   categories: "/api/business/categories",
   products: "/api/business/products",
   inquiries: "/api/business/inquiries",
+  stats: "/api/business/stats",
 } as const;
 
 export const buildBusinessStats = (

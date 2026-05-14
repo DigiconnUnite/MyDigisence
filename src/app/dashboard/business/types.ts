@@ -88,6 +88,17 @@ export interface Inquiry {
   };
 }
 
+export interface ViewSeriesPoint {
+  date: string;
+  views: number;
+}
+
+export interface ViewSeriesByRange {
+  week: ViewSeriesPoint[];
+  month: ViewSeriesPoint[];
+  year: ViewSeriesPoint[];
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -155,6 +166,15 @@ export interface BusinessStats {
   newInquiries: number;
   readInquiries: number;
   repliedInquiries: number;
+}
+
+export interface BusinessStatsResponse {
+  stats: {
+    products: { total: number; active: number };
+    inquiries: { total: number; new: number; read: number; replied: number; closed: number };
+    views: number;
+    viewSeries: ViewSeriesByRange;
+  };
 }
 
 export interface ProductFormData {
